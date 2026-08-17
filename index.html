@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=29">
+  <link rel="stylesheet" href="css/style.css?v=31">
 </head>
 
 <body>
@@ -244,7 +244,7 @@
           <span class="dashboard-hero-cta">さあ、読み始めよう</span>
         </button>
 
-        <!-- ダッシュボード：アプリ全体の活動をまとめて表示する（同じ集計は「記録」ページにもある） -->
+        <!-- ダッシュボード：アプリ全体の活動をまとめて表示する（「記録」ページのサマリーと同じ6枚構成に揃えている） -->
         <div id="dashboard">
           <div class="dashboard-tile dashboard-tile-primary">
             <span class="dashboard-icon icon-blue">🕐</span>
@@ -256,12 +256,17 @@
             <p class="dashboard-value" id="dashboard-book-count">0</p>
             <p class="dashboard-label">読んだ本</p>
           </div>
-          <!-- 実用書のときだけ表示（実践の状況） -->
-          <div class="dashboard-tile dashboard-tile-practical">
-            <span class="dashboard-icon icon-purple">💡</span>
-            <p class="dashboard-value" id="dashboard-learning-count">0</p>
-            <p class="dashboard-label">学んだこと</p>
+          <div class="dashboard-tile">
+            <span class="dashboard-icon icon-rose">📝</span>
+            <p class="dashboard-value" id="dashboard-session-count">0</p>
+            <p class="dashboard-label">記録回数</p>
           </div>
+          <div class="dashboard-tile">
+            <span class="dashboard-icon icon-purple" id="dashboard-learning-icon">💡</span>
+            <p class="dashboard-value" id="dashboard-learning-count">0</p>
+            <p class="dashboard-label" id="dashboard-learning-label">学んだこと</p>
+          </div>
+          <!-- 実用書のときだけ表示（実践の状況） -->
           <div class="dashboard-tile dashboard-tile-practical">
             <span class="dashboard-icon icon-orange">🎯</span>
             <p class="dashboard-value" id="dashboard-in-progress-count">0</p>
@@ -272,16 +277,9 @@
             <p class="dashboard-value" id="dashboard-done-count">0</p>
             <p class="dashboard-label">完了した実践</p>
           </div>
-
-          <!-- 小説のときだけ表示（実践の代わりに、好きな言葉の数） -->
-          <div class="dashboard-tile dashboard-tile-novel">
-            <span class="dashboard-icon icon-purple">💬</span>
-            <p class="dashboard-value" id="dashboard-quote-count">0</p>
-            <p class="dashboard-label">好きな言葉の数</p>
-          </div>
         </div>
 
-        <!-- モチベーションカード：進捗（読了まであと◯%）と、自分が登録した好きな言葉／今日の一歩を
+        <!-- モチベーションカード：自分が登録した好きな言葉／今日の一歩を
              本ごとにスライドで見せる。半日〜1日単位で表示内容が変わり、リロードのたびには変わらない。
              「今読んでいる本」が無ければ丸ごと隠す -->
         <section id="motivation-carousel" class="motivation-carousel" hidden>
@@ -304,7 +302,7 @@
         </div>
 
         <!-- 今読んでいる本：進捗つきで、押すとそのまま続きから読める（最大5冊を横に並べる） -->
-        <section id="currently-reading-section" class="currently-reading-section">
+        <section id="currently-reading-section" class="currently-reading-section" hidden>
           <h2>今読んでいる本</h2>
           <ul id="currently-reading-list" class="currently-reading-list">
             <!-- ここに読書中の本がJavaScriptで追加されていきます -->
@@ -342,19 +340,22 @@
               <p class="reading-status-label">読書ステータス</p>
               <div class="reading-status-toggle" id="reading-status-toggle" role="group" aria-label="読書ステータスを選ぶ">
                 <button type="button" class="reading-status-option active" data-want-to-read="false">📖 今から読む</button>
-                <button type="button" class="reading-status-option" data-want-to-read="true">🔖 あとで読む（読みたい本）</button>
+                <button type="button" class="reading-status-option" data-want-to-read="true">🔖 あとで読む</button>
               </div>
               <input type="checkbox" id="book-want-to-read" form="book-form" hidden>
             </div>
 
-            <!-- タイトルでGoogle Books APIを検索し、候補から自動入力する。候補を選ぶだけでそのまま本棚に追加される -->
+            <!-- タイトルまたは著者名でGoogle Books APIを検索し、候補から自動入力する。候補を選ぶだけでそのまま本棚に追加される -->
             <p class="book-form-section-label">🔍 検索して追加</p>
             <div class="book-search">
+              <div class="reading-status-toggle" id="book-search-mode-toggle" role="group" aria-label="検索方法を選ぶ">
+                <button type="button" class="reading-status-option active" data-search-mode="title">タイトルで検索</button>
+                <button type="button" class="reading-status-option" data-search-mode="author">著者で検索</button>
+              </div>
               <div class="book-search-row">
-                <input type="text" id="book-search-input" placeholder="タイトルで検索（例：嫌われる勇気）">
+                <input type="text" id="book-search-input" placeholder="タイトルで検索">
                 <button type="button" id="book-search-button">検索</button>
               </div>
-              <p class="field-hint">候補をタップすると、表紙・著者・ページ数まで入った状態でそのまま本棚に追加されます。</p>
               <ul id="book-search-results" class="book-search-results" hidden>
                 <!-- ここに検索結果がJavaScriptで追加されていきます -->
               </ul>
@@ -529,6 +530,10 @@
                 <button type="button" id="timer-toggle-button" class="timer-primary-button">スタート</button>
                 <button type="button" id="timer-reset-button" class="timer-secondary-button">リセット</button>
               </div>
+
+              <!-- ▼▼▼ テスト用（あとで削除する）：タイマーを3秒にセットするだけのデバッグボタン ▼▼▼ -->
+              <button type="button" id="debug-test-timer-button" class="timer-secondary-button">🧪 3秒テスト</button>
+              <!-- ▲▲▲ テスト用ここまで ▲▲▲ -->
             </div>
           </div>
 
@@ -542,6 +547,7 @@
                   aria-label="閉じる">×</button>
               </div>
               <form id="record-form">
+                <p class="field-hint">ページ数とひとことメモだけでも保存できます。他の項目は任意です。</p>
                 <label>
                   今日読んだページ
                   <input type="text" inputmode="numeric" id="record-pages">
@@ -550,33 +556,39 @@
                 <!-- 実用書のときだけ表示 -->
                 <div id="record-fields-practical">
                   <label>
-                    今日学んだこと
+                    今日学んだこと（任意）
                     <textarea id="record-learning" rows="3"></textarea>
                   </label>
-                  <label>
-                    名言・印象に残った言葉（任意）
-                    <input type="text" id="record-quote">
-                  </label>
+                  <details id="record-details-practical">
+                    <summary>詳しく記録する（任意）</summary>
+                    <label>
+                      名言・印象に残った言葉（任意）
+                      <input type="text" id="record-quote">
+                    </label>
+                  </details>
                 </div>
 
                 <!-- 小説のときだけ表示 -->
                 <div id="record-fields-novel" hidden>
                   <label>
-                    今日の感想
+                    今日の感想（任意）
                     <textarea id="record-impression" rows="3"></textarea>
                   </label>
-                  <label>
-                    印象に残ったセリフ
-                    <input type="text" id="record-memorable-quote">
-                  </label>
-                  <label>
-                    好きな登場人物
-                    <input type="text" id="record-favorite-character">
-                  </label>
-                  <label>
-                    考察メモ
-                    <textarea id="record-notes" rows="3"></textarea>
-                  </label>
+                  <details id="record-details-novel">
+                    <summary>詳しく記録する（任意）</summary>
+                    <label>
+                      印象に残ったセリフ（任意）
+                      <input type="text" id="record-memorable-quote">
+                    </label>
+                    <label>
+                      好きな登場人物（任意）
+                      <input type="text" id="record-favorite-character">
+                    </label>
+                    <label>
+                      考察メモ（任意）
+                      <textarea id="record-notes" rows="3"></textarea>
+                    </label>
+                  </details>
                 </div>
 
                 <button type="submit" id="record-save-button">保存</button>
@@ -952,7 +964,7 @@
             <p class="dashboard-label">読んだ本</p>
           </div>
           <div class="dashboard-tile">
-            <span class="dashboard-icon icon-green">📝</span>
+            <span class="dashboard-icon icon-rose">📝</span>
             <p class="dashboard-value" id="records-session-count">0</p>
             <p class="dashboard-label">記録回数</p>
           </div>
@@ -973,6 +985,8 @@
             <p class="dashboard-label">完了した実践</p>
           </div>
         </div>
+
+        <hr class="records-divider">
 
         <ul id="all-records-list" class="record-list">
           <!-- ここにすべての記録がJavaScriptで追加されていきます -->
@@ -1248,8 +1262,9 @@
       <!-- 読み終えた直後だけ表示する、達成感を伝える控えめなヘッダー -->
       <div id="review-celebration-header" class="review-celebration-header" hidden>
         <div class="review-celebration-cover" id="review-celebration-cover"></div>
-        <p class="review-celebration-label">読み終えました</p>
+        <p class="review-celebration-label">🎉 読了しました！</p>
         <p class="review-celebration-stat" id="review-celebration-stat"></p>
+        <p class="review-celebration-stat" id="review-celebration-stat-secondary"></p>
       </div>
 
       <h3 id="review-modal-title">この本はどうでしたか？</h3>
@@ -1321,7 +1336,7 @@
           <h4>📖 本を登録する</h4>
           <ul>
             <li>本一覧の「＋ 新しい本を追加」からタイトルを検索し、候補をタップすると表紙・著者・ページ数まで入った状態でそのまま本棚に追加されます。</li>
-            <li>「今から読む」「あとで読む（読みたい本）」を選んでから追加できます。</li>
+            <li>「今から読む」「あとで読む」を選んでから追加できます。</li>
           </ul>
         </section>
 
@@ -1444,8 +1459,8 @@
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=24"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=24"></script>
-  <script src="js/screens/bookSearch.js?v=25"></script>
+  <script src="js/screens/books.js?v=25"></script>
+  <script src="js/screens/bookSearch.js?v=26"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/timer.js?v=24"></script>
   <script src="js/screens/records.js?v=24"></script>
@@ -1458,7 +1473,7 @@
   <script src="js/screens/motivationCard.js?v=24"></script>
   <script src="js/screens/settings.js?v=24"></script>
   <script src="js/screens/aiCoach.js?v=24"></script>
-  <script src="js/screens/aiAnalysis.js?v=24"></script>
+  <script src="js/screens/aiAnalysis.js?v=25"></script>
   <!-- assist.jsは、aiAnalysis.jsのbuildRecommendationCardとAssistViewModelを両方使うため、それらの後に読み込む -->
   <script src="js/screens/assist.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>

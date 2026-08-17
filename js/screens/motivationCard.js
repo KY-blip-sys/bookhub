@@ -1,7 +1,6 @@
 // ---------- ダッシュボードのモチベーションカード（横スライドカルーセル） ----------
 // 「これまでに何ページ読みました」という実績表示の代わりに、
-// 「今読んでいる本」ごとに、進捗（📖 読了まであと◯%）と、
-// 自分が登録した好きな言葉／今日の一歩（💬・💡）をスライドで見せる。
+// 「今読んでいる本」ごとに、自分が登録した好きな言葉／今日の一歩（💬・💡）をスライドで見せる。
 //
 // ハイライト（好きな言葉／今日の一歩）の中身は、半日単位のバケットID（日付＋午前午後）を
 // もとにした決定的なハッシュで選ぶ。乱数は使わないため、同じ半日のうちはリロードしても
@@ -32,13 +31,9 @@ function hashStringToInt(str) {
   return Math.abs(hash);
 }
 
-// 1冊ぶんのカードを組み立てる（進捗カード・ハイライトカードの最大2枚。候補が無い種類は作らない）
+// 1冊ぶんのカードを組み立てる（好きな言葉／今日の一歩カードの最大1枚。候補が無ければ作らない）
 function buildMotivationCardsForBook(book, bucketId, actions) {
   const cards = [];
-
-  if (book.pageCount) {
-    cards.push({ type: "progress", book: book });
-  }
 
   if (book.category === "novel") {
     const quotes = getCombinedQuotes("novel").filter(function (quote) {
@@ -122,7 +117,7 @@ function renderMotivationCarouselFrame() {
 
 // カード1枚ぶんのDOMを組み立てる（押すとその本の詳細画面に移動する）。
 // 1行目：アイコン＋本のタイトル（どの本の情報か一目でわかるように必ず表示）
-// 2行目：進捗／好きな言葉／今日の一歩の本文
+// 2行目：好きな言葉／今日の一歩の本文
 function buildMotivationCardEl(card) {
   const el = document.createElement("div");
   el.className = "motivation-carousel-card";
@@ -130,7 +125,7 @@ function buildMotivationCardEl(card) {
     showDetailScreen(card.book.id);
   });
 
-  const icon = card.type === "progress" ? "📖" : card.type === "quote" ? "💬" : "💡";
+  const icon = card.type === "quote" ? "💬" : "💡";
 
   const titleEl = document.createElement("p");
   titleEl.className = "motivation-carousel-book-title";
@@ -140,10 +135,7 @@ function buildMotivationCardEl(card) {
   const mainTextEl = document.createElement("p");
   mainTextEl.className = "motivation-carousel-main-text";
 
-  if (card.type === "progress") {
-    const remainingPercent = 100 - getBookProgressPercent(card.book);
-    mainTextEl.textContent = "読了まであと" + remainingPercent + "%";
-  } else if (card.type === "quote") {
+  if (card.type === "quote") {
     mainTextEl.textContent = "「" + card.quote.quote + "」";
   } else {
     mainTextEl.textContent = "今日は「" + card.stepText + "」してみよう";

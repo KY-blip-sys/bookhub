@@ -9,11 +9,13 @@ enableFlexibleDigitInput(recordPagesInput); // 全角数字で入力しても半
 const recordFieldsPractical = document.getElementById("record-fields-practical");
 const recordLearningInput = document.getElementById("record-learning");
 const recordQuoteInput = document.getElementById("record-quote");
+const recordDetailsPractical = document.getElementById("record-details-practical");
 const recordFieldsNovel = document.getElementById("record-fields-novel");
 const recordImpressionInput = document.getElementById("record-impression");
 const recordMemorableQuoteInput = document.getElementById("record-memorable-quote");
 const recordFavoriteCharacterInput = document.getElementById("record-favorite-character");
 const recordNotesInput = document.getElementById("record-notes");
+const recordDetailsNovel = document.getElementById("record-details-novel");
 
 // 本ごとの記録表示に使う要素を取得しておく
 const statsTotalMinutes = document.getElementById("stats-total-minutes");
@@ -68,6 +70,8 @@ function showRecordForm() {
 function hideRecordForm() {
   recordFormSection.hidden = true;
   recordForm.reset();
+  recordDetailsPractical.open = false; // 「詳しく記録する」も、次に開いたときはたたんだ状態から始める
+  recordDetailsNovel.open = false;
   editingRecordIndex = null;
   recordSaveButton.textContent = "保存";
 }
@@ -101,9 +105,12 @@ function startEditingRecord(index) {
     recordMemorableQuoteInput.value = record.memorableQuote || "";
     recordFavoriteCharacterInput.value = record.favoriteCharacter || "";
     recordNotesInput.value = record.notes || "";
+    // すでに詳細項目に内容があれば、編集時に見落とさないよう開いた状態で表示する
+    recordDetailsNovel.open = !!(record.memorableQuote || record.favoriteCharacter || record.notes);
   } else {
     recordLearningInput.value = record.learning || "";
     recordQuoteInput.value = record.quote || "";
+    recordDetailsPractical.open = !!record.quote;
   }
 
   recordSaveButton.textContent = "更新";
@@ -130,6 +137,13 @@ function deleteRecord(index) {
   saveBooks(books);
   renderBookStats();
   renderReadingProgress(); // 記録の合計ページ数が変わるので、進捗表示も更新する
+  renderReadingRing(); // 削除した記録が今日の分だった場合に備えて、サイドバーのリングも更新する
+
+  // 削除によって読了状態が変わることがあるため、記録保存時と同じくヘッダー表示も最新化する
+  const statusInfo = getBookStatusInfo(book);
+  detailStatusBadge.textContent = statusInfo.label;
+  detailStatusBadge.className = "status-badge detail-status-badge status-" + statusInfo.key;
+  updateShareSectionVisibility(book);
 }
 
 // 読書履歴1件ぶんのカードを組み立てる（名言・学んだことのカードと同じ雰囲気に揃える）
@@ -537,6 +551,14 @@ recordForm.addEventListener("submit", function (event) {
   renderBookStats();
   renderReadingProgress(); // 記録の合計ページ数が変わるので、進捗表示も更新する
   renderReadingRing(); // 今日の読書時間が変わるので、サイドバーのリングも更新する
+
+  // ページ数の合計が変わって読了状態が切り替わることがあるため、
+  // 詳細画面ヘッダーのステータスバッジと「読了カードを見る」の表示もこの場で最新化する
+  // （これまでは画面を開き直すまで「読書中」のまま表示が古くなっていた）
+  const statusInfo = getBookStatusInfo(book);
+  detailStatusBadge.textContent = statusInfo.label;
+  detailStatusBadge.className = "status-badge detail-status-badge status-" + statusInfo.key;
+  updateShareSectionVisibility(book);
 
   if (isNewRecord) {
     // 読み終えていて、まだレビューを書いていなければレビューを促す。

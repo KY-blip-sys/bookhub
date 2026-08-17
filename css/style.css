@@ -288,9 +288,11 @@ html.dark-mode .main-content::before {
     display: none;
 }
 
-/* ページを切り替えるたびに、ふわっと浮かび上がるように表示する
-   （hidden属性が外れて display:none → block に変わるたびに、このアニメーションが最初から再生される） */
-.page {
+/* ページを切り替えるたびに、ふわっと浮かび上がるように表示する。
+   以前はdisplay:none→blockへの変化だけで再生されると想定していたが、連続で画面を切り替えた場合など
+   ブラウザ側の描画タイミング次第で再生されないことがあったため、表示するたびにjs/screens/app.jsの
+   showPage()でこのクラスを一度外してから付け直し、確実に最初から再生されるようにしている */
+.page.page-enter {
     animation: page-fade-in 0.35s var(--ease-standard);
 }
 
@@ -325,16 +327,49 @@ html.dark-mode .main-content::before {
 .action-group,
 .achievement-card {
     /* fill-modeは"backwards"のみにする（"both"だと終了後もアニメーションのtransformが残り、
-       .currently-reading-card:hover等の :hover 時のtransformが効かなくなってしまうため） */
-    animation: card-fade-in-up 0.4s var(--ease-standard) backwards;
+       .currently-reading-card:hover等の :hover 時のtransformが効かなくなってしまうため）。
+       時間を0.4s→0.28sに短縮しているのは、遅延の長い後ろの方の要素ほど、画面を素早く
+       切り替えたときにanimation-delayの途中でページごと非表示になり再生されずに終わる
+       （＝発動しないように見える）ことがあったため。段ずらしの間隔も下のnth-childルールで
+       あわせて詰め、連続で画面を切り替えても最後の要素まで発動しきれるようにしている */
+    animation: card-fade-in-up 0.28s var(--ease-standard) backwards;
 }
 
-.book-card:nth-child(2), .currently-reading-card:nth-child(2), .dashboard-tile:nth-child(2) { animation-delay: 0.04s; }
-.book-card:nth-child(3), .currently-reading-card:nth-child(3), .dashboard-tile:nth-child(3) { animation-delay: 0.08s; }
-.book-card:nth-child(4), .currently-reading-card:nth-child(4), .dashboard-tile:nth-child(4) { animation-delay: 0.12s; }
-.book-card:nth-child(5), .currently-reading-card:nth-child(5), .dashboard-tile:nth-child(5) { animation-delay: 0.16s; }
-.book-card:nth-child(6) { animation-delay: 0.2s; }
-.book-card:nth-child(n+7) { animation-delay: 0.24s; }
+/* .dashboard-tile（#dashboardや.records-summaryのタイル）は本一覧のカードと違って画面遷移のたびに
+   作り直されず、中身のテキストだけ更新される静的な要素のため、上のフェードインはdisplay:none→block
+   への復帰だけに頼ることになり、連続で画面を切り替えると再生されないことがあった。
+   このクラスが付いている間は一時的にアニメーションを止め、js/screens/app.jsの
+   replayDashboardTileEntrance()で一度これを付けてから外すことで、毎回確実に再生させる */
+.card-entrance-reset {
+    animation: none;
+}
+
+.book-card:nth-child(2), .currently-reading-card:nth-child(2), .dashboard-tile:nth-child(2) { animation-delay: 0.005s; }
+.book-card:nth-child(3), .currently-reading-card:nth-child(3), .dashboard-tile:nth-child(3) { animation-delay: 0.01s; }
+.book-card:nth-child(4), .currently-reading-card:nth-child(4), .dashboard-tile:nth-child(4) { animation-delay: 0.015s; }
+.book-card:nth-child(5), .currently-reading-card:nth-child(5), .dashboard-tile:nth-child(5) { animation-delay: 0.02s; }
+.book-card:nth-child(6), .dashboard-tile:nth-child(6) { animation-delay: 0.025s; }
+
+/* 本一覧は「＋ 新しい本を追加」カードが常に先頭（1番目）に入るぶん本が1つずつ後ろにずれるうえ、
+   これまでは6冊目以降が.book-card:nth-child(n+7)で一括りにされ、そこから先が同時に出現していたため、
+   実用書・小説どちらの本棚でも本が増えるほど「順番に出現」に見えなくなっていた。
+   本一覧でよくある冊数までは1冊ずつ遅延をつなげ、それ以上は最後の遅延のまま揃って出現するようにする */
+.book-card:nth-child(7) { animation-delay: 0.03s; }
+.book-card:nth-child(8) { animation-delay: 0.035s; }
+.book-card:nth-child(9) { animation-delay: 0.04s; }
+.book-card:nth-child(10) { animation-delay: 0.045s; }
+.book-card:nth-child(11) { animation-delay: 0.05s; }
+.book-card:nth-child(12) { animation-delay: 0.055s; }
+.book-card:nth-child(13) { animation-delay: 0.06s; }
+.book-card:nth-child(14) { animation-delay: 0.065s; }
+.book-card:nth-child(15) { animation-delay: 0.07s; }
+.book-card:nth-child(16) { animation-delay: 0.075s; }
+.book-card:nth-child(17) { animation-delay: 0.08s; }
+.book-card:nth-child(18) { animation-delay: 0.085s; }
+.book-card:nth-child(19) { animation-delay: 0.09s; }
+.book-card:nth-child(20) { animation-delay: 0.095s; }
+.book-card:nth-child(21) { animation-delay: 0.1s; }
+.book-card:nth-child(n+22) { animation-delay: 0.1s; }
 
 /* モチベーションカルーセル：カードが切り替わるたびに、横からふわっとスライドインする */
 @keyframes motivation-card-in {
@@ -350,7 +385,7 @@ html.dark-mode .main-content::before {
 
 /* 画面の動きを最小限にしたい人（前庭障害など）への配慮：OSの「視差効果を減らす」設定時はアニメーションを止める */
 @media (prefers-reduced-motion: reduce) {
-    .page,
+    .page-enter,
     .book-card,
     .currently-reading-card,
     .dashboard-tile,
@@ -1285,12 +1320,30 @@ h1 {
 }
 
 /* ---------- 記録画面 ---------- */
-/* タイル数がカテゴリで変わる（実用書6枚／小説4枚）ため、固定列数ではなく幅に応じて折り返す */
+/* auto-fitだと画面幅によって列数が変わり、タイルが1〜2枚だけ次の段にはみ出す中途半端な見た目になっていたため、
+   カテゴリごとの枚数（実用書6枚／小説4枚）にきれいに収まる固定列数にする */
 .records-summary {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
     margin-bottom: 28px;
+}
+
+.records-summary.records-novel-mode {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+/* 「読書時間」「読んだ本」タイルだけ数字が大きく、段の高さがずれて他タイルのラベル位置が揃わなくなるため、
+   記録画面のサマリーではタイルごとの文字サイズを統一する */
+.records-summary .dashboard-tile-primary .dashboard-value {
+    font-size: 24px;
+}
+
+/* 上部6枚のサマリータイルと、下に並ぶ個別の記録一覧を視覚的に仕切る区切り線 */
+.records-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 0 0 28px;
 }
 
 /* ---------- 記録画面：本ごとの四角いブロック（押すと詳細モーダルを開く） ---------- */
@@ -1729,6 +1782,11 @@ button[type="submit"]:hover {
     margin-bottom: 16px;
 }
 
+/* タイトル／著者の検索方法トグル（.reading-status-toggleと見た目を揃える） */
+#book-search-mode-toggle {
+    margin-bottom: 10px;
+}
+
 .book-search-row {
     display: flex;
     gap: 8px;
@@ -2038,31 +2096,30 @@ button[type="submit"]:hover {
 }
 
 /* ---------- ダッシュボード：統計タイル ---------- */
+/* 「記録」ページのサマリーと同じ6枚構成（実用書6枚＝3列2段／小説4枚＝2列2段）に揃えている。
+   下のモチベーションカード・今読んでいる本の一覧と見分けやすいよう、区切り線とゆとりを入れている。 */
 #dashboard {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 16px;
-    margin-bottom: 8px;
+    margin-bottom: 24px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--color-border);
 }
 
-/* 小説のときは「実践」系のタイルを隠し、代わりに「好きな言葉の数」だけを見せる */
+/* 小説のときは「実践」系のタイルを隠し、タイルが4枚（2列）になる */
 #dashboard.dashboard-novel-mode {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
 }
 
 #dashboard.dashboard-novel-mode .dashboard-tile-practical {
     display: none;
 }
 
-#dashboard:not(.dashboard-novel-mode) .dashboard-tile-novel {
-    display: none;
-}
-
-/* 小説モードでは実用書用タイル（非表示）がDOM上で間に挟まっているため、
-   nth-childによる順番だけでは正しく遅延がつかない（3枠目のタイルが1枠目と同時に動いてしまう）。
-   実際に見える3枠目として、このタイルにも明示的に遅延を指定する。 */
-#dashboard.dashboard-novel-mode .dashboard-tile-novel {
-    animation-delay: 0.08s;
+/* 「読書時間」「読んだ本」タイルだけ数字が大きく、段の高さがずれて他タイルのラベル位置が揃わなくなるため、
+   記録画面のサマリーと同じく文字サイズを統一する */
+#dashboard .dashboard-tile-primary .dashboard-value {
+    font-size: 24px;
 }
 
 .dashboard-tile {
@@ -2129,6 +2186,11 @@ button[type="submit"]:hover {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%236fb8a8' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 90V46'/%3E%3Cpath d='M50 46c0-18 14-30 30-30 0 18-12 30-30 30Z'/%3E%3Cpath d='M50 60c0-14-12-24-26-24 0 14 10 24 26 24Z'/%3E%3C/svg%3E");
 }
 
+/* 「記録回数」は「読んだ本」と同じ緑にしていたため背景イラストが重複していた。書き込み中のノートを表す線画に差し替えて区別する */
+.dashboard-tile:has(.icon-rose)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23cf7a94' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='22' y='12' width='56' height='76' rx='8'/%3E%3Cpath d='M34 34h32'/%3E%3Cpath d='M34 50h32'/%3E%3Cpath d='M34 66h20'/%3E%3C/svg%3E");
+}
+
 /* 統計画面の「期間別の読書時間」はアイコン要素を持たないため、4枚ともカレンダーのイラストを背景として敷く */
 .stats-period-grid .dashboard-tile::before {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23cf8f6a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='14' y='20' width='72' height='66' rx='8'/%3E%3Cpath d='M14 40h72'/%3E%3Cpath d='M32 10v18'/%3E%3Cpath d='M68 10v18'/%3E%3C/svg%3E");
@@ -2169,6 +2231,7 @@ html.dark-mode .dashboard-tile::after {
 .icon-purple { background-image: linear-gradient(135deg, #f4ecf3, #e6d5e4); }
 .icon-orange { background-image: linear-gradient(135deg, #fcf1e0, #f5dcb8); }
 .icon-teal { background-image: linear-gradient(135deg, #eaf5f2, #cfe6df); }
+.icon-rose { background-image: linear-gradient(135deg, #f9eef1, #f0d5dd); }
 
 .dashboard-value {
     font-size: 24px;
@@ -3678,6 +3741,37 @@ html.dark-mode .dashboard-tile::after {
     margin-bottom: 4px;
 }
 
+#record-form .field-hint {
+    margin-bottom: 12px;
+}
+
+/* 「詳しく記録する」：名言・セリフ・登場人物・考察メモなど、任意の詳細項目をたたんでおき、
+   必要なときだけ開けるようにする（ページ数・ひとことメモだけの入力でも圧迫感が出ないように） */
+#record-form details {
+    margin-bottom: 12px;
+}
+
+#record-form details summary {
+    list-style: none;
+    cursor: pointer;
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    color: var(--color-accent);
+    margin-bottom: 12px;
+}
+
+#record-form details summary::-webkit-details-marker {
+    display: none;
+}
+
+#record-form details summary::before {
+    content: "▸ ";
+}
+
+#record-form details[open] summary::before {
+    content: "▾ ";
+}
+
 .action-form-buttons {
     display: flex;
     gap: 8px;
@@ -4673,6 +4767,7 @@ html.dark-mode .icon-green { background-image: linear-gradient(135deg, rgba(111,
 html.dark-mode .icon-purple { background-image: linear-gradient(135deg, rgba(191, 148, 199, 0.28), rgba(191, 148, 199, 0.1)); }
 html.dark-mode .icon-orange { background-image: linear-gradient(135deg, rgba(224, 168, 62, 0.28), rgba(224, 168, 62, 0.1)); }
 html.dark-mode .icon-teal { background-image: linear-gradient(135deg, rgba(90, 191, 173, 0.28), rgba(90, 191, 173, 0.1)); }
+html.dark-mode .icon-rose { background-image: linear-gradient(135deg, rgba(207, 122, 148, 0.28), rgba(207, 122, 148, 0.1)); }
 
 /* ダッシュボードのヒーローバナーも、他の写真背景と同じく暗い色味と噛み合わないため、写真を消して元のグラデーションに戻す */
 html.dark-mode .dashboard-hero-banner {
@@ -4701,6 +4796,10 @@ html.dark-mode .dashboard-hero-banner {
     }
 
     .sidebar-brand {
+        /* 縦並びレイアウト用の width:100% を引き継ぐと、横並びバーではロゴがほぼ全幅を占めてしまい、
+           右側のナビ（.sidebar-nav、flex:1）に残り幅がなくなって幅0で表示されなくなるため上書きする */
+        width: auto;
+        flex-shrink: 0;
         margin-bottom: 0;
     }
 
@@ -4777,6 +4876,15 @@ html.dark-mode .dashboard-hero-banner {
         display: none;
     }
 
+    /* 本の詳細画面のタブ（記録・タイマー／読書履歴／学んだこと／好きな言葉／実践リスト）は
+       width:fit-contentのままだと幅に収まりきらず、ページ全体が横スクロールしてしまうため、
+       タブの帯自体を画面幅に収めて横スクロールできるようにする */
+    .pill-tabs {
+        max-width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
     #dashboard {
         grid-template-columns: repeat(2, 1fr);
     }
@@ -4833,6 +4941,19 @@ html.dark-mode .dashboard-hero-banner {
 
     .modal-card {
         padding: 20px;
+    }
+
+    /* スマホ幅では、ロゴ＋カテゴリ切り替え＋ダークモードスイッチだけで横並びバーの幅を
+       使い切ってしまい、ナビ（.sidebar-nav）の残り幅が0になって押せなくなるため、
+       ナビを折り返して専用の2段目（横スクロール）に切り出す */
+    .sidebar {
+        flex-wrap: wrap;
+        row-gap: 10px;
+    }
+
+    .sidebar-nav {
+        order: 1;
+        flex: 1 1 100%;
     }
 }
 
