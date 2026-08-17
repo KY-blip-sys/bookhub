@@ -4812,67 +4812,130 @@ html.dark-mode .dashboard-hero-banner {
     background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
 }
 
-/* ---------- レスポンシブ対応（iPadなど、少し幅が狭い画面） ---------- */
+/* ---------- モバイル用トップバー（☰メニュー＋アプリ名。PC幅では使わないので常に非表示） ---------- */
+.mobile-topbar {
+    display: none;
+}
+
+/* ---------- サイドバーの裏に敷く暗幕（ドロワー表示中だけ、JSでhidden属性を外して表示する） ---------- */
+.sidebar-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 15;
+    border: none;
+    padding: 0;
+    background-color: rgba(0, 0, 0, 0.45);
+}
+
+/* サイドバーを閉じるボタン（◀）。PC幅では常時表示のサイドバーに閉じる操作は不要なので隠す */
+.sidebar-close-button {
+    display: none;
+}
+
+/* ---------- レスポンシブ対応（スマホ・タブレット幅：サイドバーをPCと同じ左パネルのまま、
+   普段は画面外に隠れる「ドロワー」にする。☰ボタンで開き、◀ボタンか裏の暗幕タップで閉じる） ---------- */
 @media (max-width: 900px) {
-    /* サイドバーを画面上部の横並びバーに切り替える */
     .app-shell {
         flex-direction: column;
     }
 
-    .sidebar {
-        width: 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
+    .mobile-topbar {
+        display: flex;
         align-items: center;
-        row-gap: 10px;
-        gap: 16px;
-        padding: 12px 16px;
-        border-right: none;
+        justify-content: space-between;
+        height: 56px;
+        padding: 0 12px;
+        background-color: var(--color-bg-secondary);
         border-bottom: 1px solid var(--color-border);
-        /* 横並びの上部バーになるので、縦方向の固定表示は解除する */
-        position: static;
-        height: auto;
-        overflow-y: visible;
+        /* メイン画面をスクロールしても、常に画面の一番上に留まる */
+        position: sticky;
+        top: 0;
+        z-index: 11;
     }
 
-    .sidebar-brand {
-        /* 縦並びレイアウト用の width:100% を引き継ぐと、横並びバーではロゴがほぼ全幅を占めてしまい、
-           右側のナビ（.sidebar-nav）に残り幅がなくなって幅0で表示されなくなるため上書きする */
-        width: auto;
+    .mobile-topbar-menu-button,
+    .mobile-topbar-spacer {
+        width: 40px;
+        height: 40px;
         flex-shrink: 0;
-        margin-bottom: 0;
     }
 
-    .category-switcher {
+    .mobile-topbar-menu-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: none;
+        border-radius: var(--radius-sm);
+        background: none;
+        color: var(--color-text);
+        cursor: pointer;
+        transition: background-color var(--transition-fast) var(--ease-standard);
+    }
+
+    .mobile-topbar-menu-button:hover {
+        background-color: var(--color-border);
+    }
+
+    .mobile-topbar-menu-button svg {
+        width: 22px;
+        height: 22px;
         flex-shrink: 0;
-        margin-bottom: 0;
     }
 
-    /* ナビ項目が1行に収まりきらない幅では、横スクロールにせず折り返して専用の行に表示する
-       （ロゴ＋カテゴリ切り替え＋ダークモードスイッチだけで1行目の幅を使い切ってしまうため） */
-    .sidebar-nav {
-        order: 1;
-        flex: 1 1 100%;
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 4px;
-    }
-
-    .nav-item {
-        flex-shrink: 0;
-        width: auto;
+    /* アプリ名はヘッダー中央に固定表示（左右のボタン幅を揃えているので、真ん中に来る） */
+    .mobile-topbar-title {
+        flex: 1;
+        min-width: 0;
+        text-align: center;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--color-text);
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
     }
 
-    /* 装飾的な「今日の一言」と読書時間リングは、幅が狭い画面では省略する */
-    .sidebar-quote,
-    .sidebar-reading-ring-card {
-        display: none;
+    /* サイドバーの中身（ロゴ・カテゴリ切り替え・ナビ・今日の一言・読書時間リング・ダークモード）は
+       PC版と同じ縦並びのまま、普段は画面外（左）に隠しておき、開いたときだけスライドインさせる */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 16;
+        width: min(84vw, 300px);
+        height: 100vh;
+        height: 100dvh;
+        box-shadow: var(--shadow-md);
+        transform: translateX(-100%);
+        transition: transform var(--transition-standard) var(--ease-standard);
     }
 
-    .sidebar-theme-toggle {
+    .sidebar.sidebar-open {
+        transform: translateX(0);
+    }
+
+    .sidebar-close-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 34px;
+        height: 34px;
+        margin-bottom: 10px;
+        border: none;
+        border-radius: var(--radius-sm);
+        background-color: var(--color-bg);
+        color: var(--color-text);
+        cursor: pointer;
+    }
+
+    .sidebar-close-button svg {
+        width: 18px;
+        height: 18px;
         flex-shrink: 0;
-        margin-top: 0;
+    }
+
+    .sidebar-close-button:hover {
+        background-color: var(--color-border);
     }
 
     .main-content {
@@ -4881,6 +4944,8 @@ html.dark-mode .dashboard-hero-banner {
     }
 
     .content-header {
+        /* モバイルトップバー（56px）の下に少し余白を空けて留まるようにする */
+        top: 72px;
         margin: -8px 0 24px;
         padding: 12px 20px;
     }
@@ -4911,11 +4976,6 @@ html.dark-mode .dashboard-hero-banner {
 
     h1 {
         font-size: 22px;
-    }
-
-    /* ダークモードのラベル文字は省略し、アイコンとスイッチだけにする */
-    .theme-toggle-label span:last-child {
-        display: none;
     }
 
     /* 本の詳細画面のタブ（記録・タイマー／読書履歴／学んだこと／好きな言葉／実践リスト）は

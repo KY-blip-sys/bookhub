@@ -51,6 +51,7 @@ function showCategorySelectScreen() {
   pauseTimer(); // 開いていた本のタイマーが動いていれば止めておく
   appShell.hidden = true;
   categorySelectScreen.hidden = false;
+  closeSidebarDrawer(); // スマホ・タブレット幅でドロワーを開いたまま戻っていた場合に備えて閉じておく
 }
 
 // サイドバー左上の「BookHub」ロゴが押されたら、最初のカテゴリ選択画面に戻る
@@ -73,6 +74,7 @@ categorySwitcherButtons.forEach(function (button) {
     const availableNavKeys = NAV_KEYS_BY_CATEGORY[category] || [];
     const nextNavKey = availableNavKeys.indexOf(currentNavKey) !== -1 ? currentNavKey : "dashboard";
     goToNavPage(nextNavKey);
+    closeSidebarDrawer(); // スマホ・タブレット幅でドロワーから切り替えたときは、選んだら自動で閉じる
   });
 });
 

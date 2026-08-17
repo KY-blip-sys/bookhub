@@ -170,6 +170,31 @@ deleteBookButton.addEventListener("click", function () {
   showBookListScreen();
 });
 
+// ---------- サイドバーの開閉（スマホ・タブレット幅のドロワー） ----------
+// PC幅では常時表示のサイドバーなのでこの開閉は使わないが、ボタン自体はCSSで隠れているだけで
+// 常に存在するため、幅を問わずイベントは登録しておいて問題ない
+
+const sidebarEl = document.querySelector(".sidebar");
+const sidebarOpenButton = document.getElementById("sidebar-open-button");
+const sidebarCloseButton = document.getElementById("sidebar-close-button");
+const sidebarBackdrop = document.getElementById("sidebar-backdrop");
+
+function openSidebarDrawer() {
+  sidebarEl.classList.add("sidebar-open");
+  sidebarBackdrop.hidden = false;
+}
+
+// ナビの項目を選んだときなど、明示的に閉じるボタンを押していなくても
+// ドロワーごと閉じたい場面が多いため、単体の関数にしておく
+function closeSidebarDrawer() {
+  sidebarEl.classList.remove("sidebar-open");
+  sidebarBackdrop.hidden = true;
+}
+
+sidebarOpenButton.addEventListener("click", openSidebarDrawer);
+sidebarCloseButton.addEventListener("click", closeSidebarDrawer);
+sidebarBackdrop.addEventListener("click", closeSidebarDrawer);
+
 // ---------- サイドバーのナビゲーション ----------
 
 const navItems = document.querySelectorAll(".nav-item");
@@ -293,6 +318,7 @@ navItems.forEach(function (navItem) {
         ReadingCoachViewModel.clearBookContext();
       }
       goToNavPage(navItem.dataset.nav);
+      closeSidebarDrawer(); // スマホ・タブレット幅でドロワーから選んだときは、選んだら自動で閉じる
     });
   });
 });
@@ -302,6 +328,7 @@ document.querySelectorAll("[data-nav-target]").forEach(function (button) {
   button.addEventListener("click", function () {
     confirmLeaveWhileTimerRunning(function () {
       goToNavPage(button.dataset.navTarget);
+      closeSidebarDrawer();
     });
   });
 });
