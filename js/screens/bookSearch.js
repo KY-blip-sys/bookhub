@@ -30,11 +30,26 @@ function searchBooksByTitle(query, onSuccess, onError) {
     encodeURIComponent("intitle:" + query) +
     keyParam;
 
-  fetch(url)
+  // 注：referrerPolicyを明示しないと、クロスオリジン向けのfetchはブラウザの既定挙動で
+  // Referer（参照元URL）のパス部分を送らずオリジンのみを送ってしまう。
+  // Google Cloud側のAPIキー制限はパス込みのURL（例：.../bookhub/*）で設定されることが多く、
+  // パスが送られないと「リファラー制限違反」としてAPIキーが拒否されてしまうため、明示的に指定する。
+  fetch(url, { referrerPolicy: "no-referrer-when-downgrade" })
     .then(function (response) {
       if (!response.ok) {
-        // ステータスコードを含めることで、Consoleで原因（429=Quota超過など）を判別できるようにする
-        throw new Error("検索に失敗しました（ステータスコード: " + response.status + "）");
+        // ステータスコードだけでなく、Googleが返す本文中のエラー理由（キー無効・リファラー制限など）も
+        // Consoleで確認できるようにする（本文が読めない場合はステータスコードのみになる）
+        return response
+          .json()
+          .catch(function () {
+            return {};
+          })
+          .then(function (body) {
+            const detail = body.error && body.error.message ? body.error.message : "";
+            throw new Error(
+              "検索に失敗しました（ステータスコード: " + response.status + "）" + (detail ? "：" + detail : "")
+            );
+          });
       }
       return response.json();
     })
