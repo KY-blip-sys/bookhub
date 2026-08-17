@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=33">
+  <link rel="stylesheet" href="css/style.css?v=34">
 </head>
 
 <body>
@@ -62,7 +62,9 @@
           <line x1="4" y1="17" x2="20" y2="17" />
         </svg>
       </button>
-      <span class="mobile-topbar-title">BookHub</span>
+      <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すと最初のカテゴリ選択画面に戻る。
+           ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
+      <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button" aria-label="最初の画面に戻る">BookHub</button>
       <!-- ☰ボタンと同じ幅の余白。無いとタイトルの中央揃えが左に寄って見える -->
       <span class="mobile-topbar-spacer" aria-hidden="true"></span>
     </header>
@@ -1509,7 +1511,7 @@
   <script src="js/screens/app.js?v=25"></script>
   <!-- categorySelect.jsは、appの起動判定（カテゴリ選択画面 or ダッシュボード）を担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
-  <script src="js/screens/categorySelect.js?v=25"></script>
+  <script src="js/screens/categorySelect.js?v=26"></script>
 </body>
 
 </html>
