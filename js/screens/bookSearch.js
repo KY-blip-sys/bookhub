@@ -30,6 +30,18 @@ function searchBooksByTitle(query, onSuccess, onError) {
     encodeURIComponent("intitle:" + query) +
     keyParam;
 
+  // デバッグ用：実際に送るリクエストの中身をConsoleに残す
+  // （APIキーの値そのものは出さず、「設定されているか」と「何文字か」だけを出す。
+  // 　URLも念のためキー部分を***に置き換えてから出す）
+  console.log(
+    "[Google Books検索] APIキー:",
+    apiKey ? "設定あり（" + apiKey.length + "文字）" : "未設定（共有の無料枠を使用）"
+  );
+  console.log(
+    "[Google Books検索] リクエストURL:",
+    apiKey ? url.replace(encodeURIComponent(apiKey), "***") : url
+  );
+
   // 注：referrerPolicyを明示しないと、クロスオリジン向けのfetchはブラウザの既定挙動で
   // Referer（参照元URL）のパス部分を送らずオリジンのみを送ってしまう。
   // Google Cloud側のAPIキー制限はパス込みのURL（例：.../bookhub/*）で設定されることが多く、
