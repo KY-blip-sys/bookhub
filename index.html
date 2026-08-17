@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=32">
+  <link rel="stylesheet" href="css/style.css?v=33">
 </head>
 
 <body>
@@ -51,8 +51,36 @@
 
   <div class="app-shell" hidden>
 
-    <!-- 左側に常時表示するサイドバー -->
+    <!-- スマホ・タブレット幅だけに表示するトップバー：☰ボタンでサイドバーをドロワーとして開閉する
+         （PC幅では常時表示のサイドバーがあるため、このバー自体をCSSで非表示にする） -->
+    <header class="mobile-topbar">
+      <button type="button" class="mobile-topbar-menu-button" id="sidebar-open-button" aria-label="メニューを開く">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <line x1="4" y1="12" x2="20" y2="12" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+        </svg>
+      </button>
+      <span class="mobile-topbar-title">BookHub</span>
+      <!-- ☰ボタンと同じ幅の余白。無いとタイトルの中央揃えが左に寄って見える -->
+      <span class="mobile-topbar-spacer" aria-hidden="true"></span>
+    </header>
+
+    <!-- スマホ・タブレット幅でサイドバーをドロワー表示にしたとき、裏のメイン画面を暗くして
+         押せなくする幕。押すとサイドバーが閉じる（PC幅では常にhiddenのまま使わない） -->
+    <div class="sidebar-backdrop" id="sidebar-backdrop" hidden></div>
+
+    <!-- 左側に常時表示するサイドバー（スマホ・タブレット幅では、普段は画面外に隠れたドロワーになる） -->
     <aside class="sidebar">
+      <!-- スマホ・タブレット幅のドロワー表示のときだけ見える、閉じるボタン（PC幅ではCSSで非表示） -->
+      <button type="button" class="sidebar-close-button" id="sidebar-close-button" aria-label="メニューを閉じる">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       <!-- 押すと最初のカテゴリ選択画面に戻る -->
       <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="最初の画面に戻る">
         <span class="sidebar-brand-icon">
@@ -1478,10 +1506,10 @@
   <script src="js/screens/assist.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/recommend.js?v=25"></script>
-  <script src="js/screens/app.js?v=24"></script>
+  <script src="js/screens/app.js?v=25"></script>
   <!-- categorySelect.jsは、appの起動判定（カテゴリ選択画面 or ダッシュボード）を担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
-  <script src="js/screens/categorySelect.js?v=24"></script>
+  <script src="js/screens/categorySelect.js?v=25"></script>
 </body>
 
 </html>
