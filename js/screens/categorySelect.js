@@ -6,6 +6,7 @@ const categorySelectCards = document.querySelectorAll(".category-select-card");
 const categorySwitcherButtons = document.querySelectorAll(".category-switcher-button");
 const sidebarNav = document.querySelector(".sidebar-nav");
 const sidebarBrandButton = document.getElementById("sidebar-brand-button");
+const mobileTopbarTitleButton = document.getElementById("mobile-topbar-title-button");
 
 // カテゴリごとに、サイドバーに表示できる画面（nav属性の値）の一覧
 // カテゴリを切り替えたときに、今開いている画面がもう存在しなければダッシュボードに戻すために使う
@@ -56,6 +57,10 @@ function showCategorySelectScreen() {
 
 // サイドバー左上の「BookHub」ロゴが押されたら、最初のカテゴリ選択画面に戻る
 sidebarBrandButton.addEventListener("click", showCategorySelectScreen);
+
+// スマホ・タブレット幅では、同じ役割のボタンをヘッダー中央の「BookHub」に持たせている
+// （ドロワーの中にロゴを重複させない分、ナビ項目を大きくする余白にしている）
+mobileTopbarTitleButton.addEventListener("click", showCategorySelectScreen);
 
 // サイドバーの切り替えピルが押されたときの処理（アプリを開いたまま、いつでも切り替えられる）
 categorySwitcherButtons.forEach(function (button) {

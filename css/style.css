@@ -744,12 +744,12 @@ html.dark-mode #screen-category-select {
 
 .category-switcher-button {
     flex: 1;
-    padding: 6px 8px;
+    padding: 10px 10px;
     border: none;
     border-radius: 8px;
     background: none;
     color: var(--color-text-secondary);
-    font-size: 12px;
+    font-size: 15px;
     font-weight: 600;
     font-family: inherit;
     cursor: pointer;
@@ -4882,17 +4882,28 @@ html.dark-mode .dashboard-hero-banner {
         flex-shrink: 0;
     }
 
-    /* アプリ名はヘッダー中央に固定表示（左右のボタン幅を揃えているので、真ん中に来る） */
+    /* アプリ名はヘッダー中央に固定表示（左右のボタン幅を揃えているので、真ん中に来る）。
+       押すと最初のカテゴリ選択画面に戻るボタンなので、ボタンとしての見た目はリセットしておく */
     .mobile-topbar-title {
         flex: 1;
         min-width: 0;
+        border: none;
+        background: none;
+        padding: 8px 4px;
+        border-radius: var(--radius-sm);
         text-align: center;
         font-size: 16px;
         font-weight: 700;
+        font-family: inherit;
         color: var(--color-text);
+        cursor: pointer;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+
+    .mobile-topbar-title:hover {
+        background-color: var(--color-border);
     }
 
     /* サイドバーの中身（ロゴ・カテゴリ切り替え・ナビ・今日の一言・読書時間リング・ダークモード）は
@@ -4936,6 +4947,33 @@ html.dark-mode .dashboard-hero-banner {
 
     .sidebar-close-button:hover {
         background-color: var(--color-border);
+    }
+
+    /* 「最初の画面に戻る」ロゴは、ヘッダー中央の「BookHub」ボタン（#mobile-topbar-title-button）が
+       同じ役割を持つため、ドロワーの中では重複させない。空いた分はナビ項目を大きくする余白にする */
+    .sidebar-brand {
+        display: none;
+    }
+
+    /* スマホ・タブレットは指でタップする前提のため、PC版よりひと回り大きく・押しやすくする */
+    .category-switcher-button {
+        padding: 13px 10px;
+        font-size: 16px;
+    }
+
+    .sidebar-nav {
+        gap: 6px;
+    }
+
+    .nav-item {
+        gap: 14px;
+        padding: 14px 14px;
+        font-size: 16px;
+    }
+
+    .nav-icon {
+        width: 22px;
+        height: 22px;
     }
 
     .main-content {
