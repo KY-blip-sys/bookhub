@@ -546,13 +546,18 @@ html.dark-mode #screen-category-select {
     justify-content: flex-end;
 }
 
+/* white-space:nowrapのままだと、本の詳細画面などタイトルが長い本のときに
+   このgrid-column:2（auto幅）の列がタイトル全体の幅ぶん広がり、
+   左右の.content-header-side列を圧迫してヘッダーごと横にはみ出すことがあったため、
+   長いタイトルは折り返す */
 .content-header-title {
     grid-column: 2;
+    min-width: 0;
     font-size: 19px;
     font-weight: 800;
     letter-spacing: 0.2px;
     color: var(--color-text);
-    white-space: nowrap;
+    overflow-wrap: break-word;
     text-align: center;
 }
 
@@ -914,7 +919,7 @@ html.dark-mode #screen-category-select {
 }
 
 .reading-ring-goal {
-    font-size: 9px;
+    font-size: 11px;
     color: var(--color-text-secondary);
     margin-top: 1px;
 }
@@ -1150,7 +1155,10 @@ h1 {
     gap: 14px;
 }
 
+/* .currently-reading-authorがwhite-space:nowrapのため、min-width:0が無いとグリッドの
+   1fr列が著者名の長さぶん広がってしまい、カードやページが横にはみ出すことがあった */
 .currently-reading-card {
+    min-width: 0;
     padding: 14px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -1259,7 +1267,7 @@ h1 {
 }
 
 .currently-reading-progress-ring .mini-progress-ring-label {
-    font-size: 8px;
+    font-size: 9px;
 }
 
 /* ---------- ダッシュボード見出し（スローガン） ---------- */
@@ -1355,6 +1363,7 @@ h1 {
 }
 
 .record-book-card {
+    min-width: 0;
     padding: 18px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -2501,6 +2510,7 @@ html.dark-mode .dashboard-tile::after {
 .action-content {
     font-weight: bold;
     margin-bottom: 4px;
+    overflow-wrap: break-word;
 }
 
 .action-meta {
@@ -2591,6 +2601,7 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .achievement-card {
+    min-width: 0;
     padding: 16px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -2646,12 +2657,20 @@ html.dark-mode .dashboard-tile::after {
     transition: background-color var(--transition-fast) var(--ease-standard);
 }
 
+/* やることの文章が長いとき、min-width:0が無いと.todo-label（延いてはリスト全体）が
+   文章の幅ぶん広がり、モーダルやページごと横にはみ出すことがあった */
 .todo-label {
     display: flex;
     align-items: center;
     gap: 8px;
     flex: 1;
+    min-width: 0;
     cursor: pointer;
+}
+
+.todo-label span {
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .todo-list li button {
@@ -2917,7 +2936,7 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .book-cover-progress-ring .mini-progress-ring-label {
-    font-size: 8px;
+    font-size: 9px;
 }
 
 /* 追加した直後の本だけ、ふわっと弾ませて達成感を演出する */
@@ -3475,7 +3494,7 @@ html.dark-mode .dashboard-tile::after {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 700;
     color: var(--color-text);
 }
@@ -3804,6 +3823,7 @@ html.dark-mode .dashboard-tile::after {
     font-size: 14px;
     line-height: 1.6;
     white-space: pre-wrap;
+    overflow-wrap: break-word;
     margin-bottom: 6px;
 }
 
@@ -3904,6 +3924,7 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .review-summary-book-card {
+    min-width: 0;
     padding: 18px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -3996,6 +4017,8 @@ html.dark-mode .dashboard-tile::after {
 
 .review-summary-impression-text {
     flex: 1;
+    min-width: 0;
+    overflow-wrap: break-word;
 }
 
 .review-summary-review-buttons {
@@ -4025,7 +4048,11 @@ html.dark-mode .dashboard-tile::after {
     gap: 12px;
 }
 
+/* グリッドの自動列は、中の.quote-card-bodyが長文（改行のきっかけが無い1行）だと
+   その内容分だけ列幅を広げてしまい、カード・ページごと横にはみ出すことがあったため、
+   列を親の幅までに必ず収め、中身は折り返す */
 .quote-card {
+    min-width: 0;
     padding: 18px 20px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -4053,6 +4080,7 @@ html.dark-mode .dashboard-tile::after {
     font-weight: 500;
     color: var(--color-text);
     margin-bottom: 8px;
+    overflow-wrap: break-word;
 }
 
 .quote-card-meta-row {
@@ -4217,6 +4245,7 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .history-card {
+    min-width: 0;
     padding: 14px 18px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
@@ -4496,11 +4525,15 @@ html.dark-mode .dashboard-tile::after {
     display: none;
 }
 
+/* .ai-analysis-resultはdisplay:gridの自動列のため、min-width:0が無いとAIが返す
+   長い一続きの文章によって列・ページごと横にはみ出すことがある */
 .ai-analysis-card {
+    min-width: 0;
     padding: 20px;
     border: 1px solid var(--color-border);
     border-radius: var(--radius-md);
     background-color: var(--color-surface);
+    overflow-wrap: break-word;
 }
 
 .ai-analysis-card h3 {
@@ -4518,11 +4551,13 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .ai-analysis-list li {
+    min-width: 0;
     padding-left: 16px;
     position: relative;
     font-size: 14px;
     line-height: 1.6;
     color: var(--color-text);
+    overflow-wrap: break-word;
 }
 
 .ai-analysis-list li::before {
@@ -4556,6 +4591,7 @@ html.dark-mode .dashboard-tile::after {
 
 .ai-analysis-recommendation-card {
     display: flex;
+    min-width: 0;
     gap: 14px;
     padding: 14px;
     border: 1px solid var(--color-border);
@@ -4708,11 +4744,13 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .ai-assist-block-list li {
+    min-width: 0;
     padding-left: 14px;
     position: relative;
     font-size: 14px;
     line-height: 1.6;
     color: var(--color-text);
+    overflow-wrap: break-word;
 }
 
 .ai-assist-block-list li::before {
@@ -4784,7 +4822,9 @@ html.dark-mode .dashboard-hero-banner {
     .sidebar {
         width: 100%;
         flex-direction: row;
+        flex-wrap: wrap;
         align-items: center;
+        row-gap: 10px;
         gap: 16px;
         padding: 12px 16px;
         border-right: none;
@@ -4797,7 +4837,7 @@ html.dark-mode .dashboard-hero-banner {
 
     .sidebar-brand {
         /* 縦並びレイアウト用の width:100% を引き継ぐと、横並びバーではロゴがほぼ全幅を占めてしまい、
-           右側のナビ（.sidebar-nav、flex:1）に残り幅がなくなって幅0で表示されなくなるため上書きする */
+           右側のナビ（.sidebar-nav）に残り幅がなくなって幅0で表示されなくなるため上書きする */
         width: auto;
         flex-shrink: 0;
         margin-bottom: 0;
@@ -4808,12 +4848,14 @@ html.dark-mode .dashboard-hero-banner {
         margin-bottom: 0;
     }
 
+    /* ナビ項目が1行に収まりきらない幅では、横スクロールにせず折り返して専用の行に表示する
+       （ロゴ＋カテゴリ切り替え＋ダークモードスイッチだけで1行目の幅を使い切ってしまうため） */
     .sidebar-nav {
-        flex: 1;
+        order: 1;
+        flex: 1 1 100%;
         flex-direction: row;
+        flex-wrap: wrap;
         gap: 4px;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
     }
 
     .nav-item {
@@ -4878,11 +4920,12 @@ html.dark-mode .dashboard-hero-banner {
 
     /* 本の詳細画面のタブ（記録・タイマー／読書履歴／学んだこと／好きな言葉／実践リスト）は
        width:fit-contentのままだと幅に収まりきらず、ページ全体が横スクロールしてしまうため、
-       タブの帯自体を画面幅に収めて横スクロールできるようにする */
+       横スクロールにはせず、帯を画面幅いっぱいに広げて折り返す */
     .pill-tabs {
+        width: 100%;
         max-width: 100%;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
+        flex-wrap: wrap;
+        justify-content: center;
     }
 
     #dashboard {
@@ -4941,19 +4984,6 @@ html.dark-mode .dashboard-hero-banner {
 
     .modal-card {
         padding: 20px;
-    }
-
-    /* スマホ幅では、ロゴ＋カテゴリ切り替え＋ダークモードスイッチだけで横並びバーの幅を
-       使い切ってしまい、ナビ（.sidebar-nav）の残り幅が0になって押せなくなるため、
-       ナビを折り返して専用の2段目（横スクロール）に切り出す */
-    .sidebar {
-        flex-wrap: wrap;
-        row-gap: 10px;
-    }
-
-    .sidebar-nav {
-        order: 1;
-        flex: 1 1 100%;
     }
 }
 
