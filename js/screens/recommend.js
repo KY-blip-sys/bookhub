@@ -124,10 +124,35 @@ function loadRecommendBooks() {
     encodeURIComponent(topic) +
     "&maxResults=40&startIndex=" + startIndex + "&langRestrict=ja" + keyParam;
 
-  fetch(url)
+  // デバッグ用：bookSearch.jsのsearchBooksByTitleと同じ形で、実際に送るリクエストの中身をConsoleに残す
+  // （APIキーの値そのものは出さず、「設定されているか」と「何文字か」だけを出す）
+  console.log(
+    "[おすすめ本] APIキー:",
+    apiKey ? "設定あり（" + apiKey.length + "文字）" : "未設定（共有の無料枠を使用）"
+  );
+  console.log(
+    "[おすすめ本] リクエストURL:",
+    apiKey ? url.replace(encodeURIComponent(apiKey), "***") : url
+  );
+
+  // bookSearch.jsのsearchBooksByTitleと同じ理由でreferrerPolicyを明示する
+  // （指定しないと、クロスオリジンのfetchはReferer（参照元URL）のパス部分を送らず、
+  // HTTPリファラー制限がパス込みで設定されている場合にAPIキーが拒否されてしまうため）
+  fetch(url, { referrerPolicy: "no-referrer-when-downgrade" })
     .then(function (response) {
       if (!response.ok) {
-        throw new Error("Google Books APIの取得に失敗しました");
+        // ステータスコードだけでなく、Googleが返す本文中のエラー理由もConsoleで確認できるようにする
+        return response
+          .json()
+          .catch(function () {
+            return {};
+          })
+          .then(function (body) {
+            const detail = body.error && body.error.message ? body.error.message : "";
+            throw new Error(
+              "Google Books APIの取得に失敗しました（ステータスコード: " + response.status + "）" + (detail ? "：" + detail : "")
+            );
+          });
       }
       return response.json();
     })
@@ -156,7 +181,8 @@ function loadRecommendBooks() {
 
       renderRecommendBooks(pickRandomItems(candidates, pickRecommendCount()));
     })
-    .catch(function () {
+    .catch(function (error) {
+      console.error("おすすめ本の取得に失敗しました:", error); // 原因を調べられるよう、実際のエラー内容をConsoleに残す
       renderRecommendFallback();
     });
 }
