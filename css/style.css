@@ -1,0 +1,4864 @@
+/* ---------- 全体のリセット ---------- */
+/* ブラウザごとに異なる初期の余白などをなくし、見た目の差をなくします */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* hidden属性は「表示しない」を意味するが、要素に直接 display: flex/grid などを指定していると、
+   同じ詳細度・あとに書かれた方が勝つルールにより、そちらが[hidden]より優先されてしまうことがある
+   （実際に.timer-picker・.review-spoiler-label・#history-listで発生した）。
+   このアプリではhidden属性が付いたら必ず消えることを保証したいので、ここで一括して優先させておく。 */
+[hidden] {
+    display: none !important;
+}
+
+/* ---------- デザインの土台（トークン） ---------- */
+/* 色・角丸・影・アニメーションの速さを、ここで一括管理します。
+   個別の部品を作るときは、なるべく色を直接書かず、この変数を使います。
+   こうしておくと、後から配色を変えたいときにここだけ直せばよくなります。 */
+:root {
+    /* 「紙とインク」をイメージした、あたたかみのある配色（本を読むアプリらしい落ち着いた色に）。
+       アクセントは、よくあるSaaS的な青ではなく、装丁の革やインクを思わせるテラコッタに。 */
+    --color-bg: #fbf8f3;
+    --color-bg-secondary: #f3ede3;
+    --color-surface: #ffffff;
+    --color-text: #2a241e;
+    --color-text-secondary: #7c7367;
+    --color-border: rgba(43, 32, 20, 0.09);
+    --color-accent: #c15f3c;
+    --color-accent-hover: #a94e2f;
+    --color-accent-soft: rgba(193, 95, 60, 0.12);
+    --color-glass: rgba(255, 255, 255, 0.72);
+
+    /* 状態を表す色：迷ったらこの4色のどれかを使う（通常の文字色・境界線は上のグレー系を使う） */
+    --color-success: #4c8c5c;
+    --color-success-soft: rgba(76, 140, 92, 0.12);
+    --color-danger: #af3b32;
+    --color-danger-soft: rgba(175, 59, 50, 0.12);
+
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+
+    --shadow-sm: 0 1px 2px rgba(43, 32, 20, 0.05);
+    --shadow-md: 0 1px 2px rgba(43, 32, 20, 0.05), 0 8px 24px rgba(43, 32, 20, 0.08);
+
+    --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+    --transition-fast: 0.2s;
+    --transition-standard: 0.3s;
+
+    /* 文字の大きさの階層：セクション見出し→本文→補足→メタ情報 */
+    --font-size-heading: 17px;
+    --font-size-body: 14px;
+    --font-size-meta: 12px;
+    --font-size-caption: 11px;
+
+    /* ページ背景に敷く、ぼかした写真（main-content・recommend-railの両方で使う）。
+       白オーバーレイは薄めにして、写真の色味がちゃんと見えるようにする */
+    --photo-backdrop-image:
+        linear-gradient(rgba(251, 248, 243, 0.22), rgba(251, 248, 243, 0.22)),
+        url("images/category-select-bg.jpg");
+}
+
+/* ダークモード時は、同じ変数の中身だけを暗い配色に差し替える（黒ではなく、暗いセピア寄りのトーンに） */
+html.dark-mode {
+    --color-bg: #16120e;
+    --color-bg-secondary: #221c16;
+    --color-surface: #221c16;
+    --color-text: #f4ece0;
+    --color-text-secondary: #a89c8c;
+    --color-border: rgba(255, 245, 230, 0.09);
+    --color-accent: #e08355;
+    --color-accent-hover: #eda274;
+    --color-accent-soft: rgba(224, 131, 85, 0.18);
+    --color-glass: rgba(34, 28, 22, 0.72);
+
+    --color-success: #6fb37e;
+    --color-success-soft: rgba(111, 179, 126, 0.18);
+    --color-danger: #e0705f;
+    --color-danger-soft: rgba(224, 112, 95, 0.18);
+
+    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- 基本スタイル ---------- */
+body {
+    font-family: "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    background-color: var(--color-bg);
+    color: var(--color-text);
+    line-height: 1.6;
+    transition: background-color var(--transition-standard) var(--ease-standard),
+        color var(--transition-standard) var(--ease-standard);
+}
+
+/* ---------- 全体の骨組み（サイドバー＋メイン画面） ---------- */
+.app-shell {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-shell[hidden] {
+    display: none;
+}
+
+.main-content {
+    position: relative;
+    flex: 1;
+    padding: 32px 40px;
+    max-width: 960px;
+    background-color: var(--color-bg);
+}
+
+/* 中のページの背景：最初の選択画面と同じ写真を、ぼかして雰囲気だけ伝わるように敷く。
+   疑似要素にして負のz-indexで後ろに置くことで、中身（カード類）の見やすさには影響しない。
+   以前は縁をはみ出させて(inset:-40px)ぼかしの縁を隠していたが、それがページ全体の
+   スクロール範囲に入り込むバグになっていたため、はみ出させずぴったり敷く方式にした。
+   overflow:hiddenで囲って切り取る方法も試したが、それだとヘッダーの固定表示(sticky)が
+   壊れてしまうため使わない。 */
+.main-content::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background-image: var(--photo-backdrop-image);
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: blur(18px);
+}
+
+/* ダークモードでは写真の背景を消し、通常の背景色だけにする（写真の明るい色味と噛み合わないため） */
+html.dark-mode .main-content::before {
+    display: none;
+}
+
+/* ---------- おすすめの本（右側の余白に表示する、幅に余裕があるときだけの補助エリア） ---------- */
+/* サイドバー（.sidebar）と全く同じ仕組みで、左右対称に固定する。
+   vhの引き算やflexでの調整はズレの原因になっていたため、サイドバーの実績あるやり方をそのまま使う。 */
+.recommend-rail {
+    width: 340px;
+    flex-shrink: 0;
+    padding: 24px 22px;
+    background-color: var(--color-surface);
+    border-left: 1px solid var(--color-border);
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+.recommend-rail-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 16px;
+    margin-bottom: 4px;
+    border-bottom: 2px solid var(--color-accent-soft);
+}
+
+.recommend-rail-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background-color: var(--color-accent-soft);
+    font-size: 17px;
+}
+
+.recommend-rail-title {
+    font-size: var(--font-size-heading);
+    font-weight: 700;
+}
+
+/* パネルの中に並ぶ、本1件ぶんの行（カードではなく、境界線で区切ったリスト行） */
+.recommend-book-list {
+    list-style: none;
+}
+
+.recommend-book-card {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 6px;
+    border-bottom: 1px solid var(--color-border);
+    color: inherit;
+    text-decoration: none;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.recommend-book-list .recommend-book-card:last-child {
+    border-bottom: none;
+}
+
+.recommend-book-card:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+/* 何番目のおすすめかを、数字だけの控えめなラベルで示す */
+.recommend-book-rank {
+    flex-shrink: 0;
+    width: 22px;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.recommend-book-cover {
+    position: relative;
+    width: 72px;
+    flex-shrink: 0;
+    aspect-ratio: 2 / 3;
+    border-radius: 6px;
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.recommend-book-arrow {
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    font-size: 18px;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.recommend-book-card:hover .recommend-book-arrow {
+    transform: translateX(2px);
+    color: var(--color-accent);
+}
+
+.recommend-book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recommend-book-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.recommend-book-info {
+    min-width: 0;
+    flex: 1;
+}
+
+.recommend-book-title {
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.recommend-book-author {
+    margin-top: 5px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 幅に余裕が無い画面では、レイアウトを圧迫しないよう非表示にする */
+@media (max-width: 1400px) {
+    .recommend-rail {
+        display: none;
+    }
+}
+
+.page[hidden] {
+    display: none;
+}
+
+/* ページを切り替えるたびに、ふわっと浮かび上がるように表示する
+   （hidden属性が外れて display:none → block に変わるたびに、このアニメーションが最初から再生される） */
+.page {
+    animation: page-fade-in 0.35s var(--ease-standard);
+}
+
+@keyframes page-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 一覧の中の1件ずつを、少しずつ遅らせてふわっと現れさせる（カードが並ぶ画面ならどこでも使う） */
+@keyframes card-fade-in-up {
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.book-card,
+.currently-reading-card,
+.dashboard-tile,
+.quote-card,
+.record-book-card,
+.action-group,
+.achievement-card {
+    /* fill-modeは"backwards"のみにする（"both"だと終了後もアニメーションのtransformが残り、
+       .currently-reading-card:hover等の :hover 時のtransformが効かなくなってしまうため） */
+    animation: card-fade-in-up 0.4s var(--ease-standard) backwards;
+}
+
+.book-card:nth-child(2), .currently-reading-card:nth-child(2), .dashboard-tile:nth-child(2) { animation-delay: 0.04s; }
+.book-card:nth-child(3), .currently-reading-card:nth-child(3), .dashboard-tile:nth-child(3) { animation-delay: 0.08s; }
+.book-card:nth-child(4), .currently-reading-card:nth-child(4), .dashboard-tile:nth-child(4) { animation-delay: 0.12s; }
+.book-card:nth-child(5), .currently-reading-card:nth-child(5), .dashboard-tile:nth-child(5) { animation-delay: 0.16s; }
+.book-card:nth-child(6) { animation-delay: 0.2s; }
+.book-card:nth-child(n+7) { animation-delay: 0.24s; }
+
+/* モチベーションカルーセル：カードが切り替わるたびに、横からふわっとスライドインする */
+@keyframes motivation-card-in {
+    from {
+        opacity: 0;
+        transform: translateX(8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* 画面の動きを最小限にしたい人（前庭障害など）への配慮：OSの「視差効果を減らす」設定時はアニメーションを止める */
+@media (prefers-reduced-motion: reduce) {
+    .page,
+    .book-card,
+    .currently-reading-card,
+    .dashboard-tile,
+    .quote-card,
+    .record-book-card,
+    .action-group,
+    .achievement-card,
+    .motivation-carousel-card {
+        animation: none;
+    }
+}
+
+/* ---------- カテゴリ選択画面（初回起動時のホーム画面） ---------- */
+#screen-category-select {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px;
+    background-color: var(--color-bg);
+    background-image: url("images/category-select-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+/* ダークモードでは写真の背景を消し、通常の背景色だけにする（写真の明るい色味と噛み合わないため） */
+html.dark-mode #screen-category-select {
+    background-image: none;
+}
+
+#screen-category-select[hidden] {
+    display: none;
+}
+
+.category-select-card-outer {
+    width: 100%;
+    max-width: 560px;
+    text-align: center;
+}
+
+.category-select-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.category-select-tagline {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.category-select-lead {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+    margin-bottom: 32px;
+}
+
+.category-select-note {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 20px;
+}
+
+.category-select-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.category-select-card {
+    display: block;
+    width: 100%;
+    padding: 32px 20px;
+    border: none;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-md);
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard);
+}
+
+.category-select-card:hover {
+    transform: translateY(-3px);
+}
+
+.category-select-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+}
+
+.category-select-card h2 {
+    margin-bottom: 6px;
+}
+
+.category-select-description {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+@media (max-width: 560px) {
+    .category-select-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ---------- ヘッダー（常に上に表示される部分） ---------- */
+/* タイトル・カテゴリバッジの二重表示をやめ、「戻る／中央タイトル／使い方・日付」の3カラムに統一する */
+/* 画面幅いっぱいの帯ではなく、少し余白を持たせて浮かせた角丸カードにする */
+.content-header {
+    position: sticky;
+    top: 16px;
+    z-index: 10;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+    margin: -12px 0 28px;
+    padding: 14px 24px;
+    border-radius: var(--radius-lg);
+    /* --color-accent-softは半透明なので使わない（スクロールした中身が透けて見えてしまうため）。
+       不透明な色同士のグラデーションにする */
+    background: linear-gradient(135deg, var(--color-surface), var(--color-bg-secondary));
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+}
+
+/* ヘッダーは top:16px で浮いているため、スクロールすると
+   すぐ上の16px分だけカードなどが鋭く見切れて、ヘッダーと重なって見えてしまう。
+   ヘッダーの少し上からふわっと透明にフェードするレイヤーを重ねて、
+   見切れた文字を目立たなくし、ヘッダーの方が自然に目立つようにする。
+   z-index:-1でヘッダー自身の不透明な背景の下に隠れるので、ヘッダーの見た目には影響しない */
+.content-header::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: -32px;
+    height: 48px;
+    z-index: -1;
+    pointer-events: none;
+    background: linear-gradient(to bottom, var(--color-surface), transparent);
+}
+
+.content-header-side {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+.content-header-side-end {
+    justify-content: flex-end;
+}
+
+.content-header-title {
+    grid-column: 2;
+    font-size: 19px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+    color: var(--color-text);
+    white-space: nowrap;
+    text-align: center;
+}
+
+/* 「本一覧に戻る」：丸いアイコンだけでなく、ラベルつきのピルにして分かりやすくする */
+.header-back-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 34px;
+    flex-shrink: 0;
+    padding: 0 14px 0 10px;
+    border: none;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.header-back-button .nav-icon {
+    width: 15px;
+    height: 15px;
+}
+
+.header-help-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.header-back-button:hover,
+.header-help-button:hover {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+}
+
+.header-back-button[hidden] {
+    display: none;
+}
+
+.today-date {
+    flex-shrink: 0;
+    padding: 5px 12px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+    /* スマホでは今日の日付を省略し、圧迫感を減らす */
+    .today-date {
+        display: none;
+    }
+}
+
+/* ---------- サイドバー全体 ---------- */
+.sidebar {
+    width: 264px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px 16px;
+    background-color: var(--color-bg-secondary);
+    border-right: 1px solid var(--color-border);
+    transition: background-color var(--transition-standard) var(--ease-standard),
+        border-color var(--transition-standard) var(--ease-standard);
+    /* メイン画面をスクロールしても、サイドバーはその場に固定しておく */
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+}
+
+/* ---------- サイドバー：ロゴ部分 ---------- */
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    margin-bottom: 14px;
+    padding: 6px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.sidebar-brand:hover {
+    background-color: var(--color-border);
+}
+
+.sidebar-brand-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    color: #ffffff;
+}
+
+.sidebar-brand-icon svg {
+    width: 17px;
+    height: 17px;
+}
+
+.sidebar-brand-name {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--color-text);
+}
+
+/* ---------- タブ共通部品（実践中/実績、感想まとめ/好きな言葉、本の詳細のタブなどで共通使用） ---------- */
+/* サイドバーの切り替えピル・統計画面の期間タブ・AIコーチのタブと、見た目の考え方を統一する */
+.pill-tabs {
+    display: flex;
+    width: fit-content;
+    gap: 4px;
+    padding: 5px;
+    margin: 0 auto 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.pill-tab {
+    padding: 12px 22px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 15px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.pill-tab:hover {
+    color: var(--color-text);
+}
+
+.pill-tab.active {
+    background-color: var(--color-accent);
+    color: #ffffff;
+}
+
+/* ---------- サイドバー：実用書/小説の切り替えピル ---------- */
+.category-switcher {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    margin-bottom: 14px;
+    border-radius: 10px;
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.category-switcher-button {
+    flex: 1;
+    padding: 6px 8px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.category-switcher-button:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.category-switcher-button.active {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+}
+
+/* ---------- サイドバー：ナビゲーション ---------- */
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    padding: 7px 12px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.nav-icon {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+}
+
+.nav-item:hover {
+    background-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.nav-item.active {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-weight: 600;
+}
+
+/* 実用書：実践リスト・実績／小説：感想まとめ・好きな言葉を出し分ける */
+.sidebar-nav.nav-novel-mode .nav-item-practical {
+    display: none;
+}
+
+.sidebar-nav:not(.nav-novel-mode) .nav-item-novel {
+    display: none;
+}
+
+/* ---------- サイドバー：今日の一言 ---------- */
+.sidebar-quote {
+    margin-top: auto;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    transition: background-color var(--transition-standard) var(--ease-standard);
+}
+
+/* 小説カテゴリのときだけ、押して好きな言葉を選び直せることが分かるようにする */
+.sidebar-quote.sidebar-quote-clickable {
+    cursor: pointer;
+}
+
+.sidebar-quote.sidebar-quote-clickable:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.sidebar-quote-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.sidebar-quote-text {
+    font-size: 13px;
+    line-height: 1.4;
+    color: var(--color-text);
+    margin-bottom: 6px;
+}
+
+.sidebar-quote-author {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    text-align: right;
+}
+
+/* ---------- サイドバー：今日の読書時間リング ---------- */
+.sidebar-reading-ring-card {
+    margin-top: 10px;
+    padding: 12px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+
+.sidebar-reading-ring {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 84px;
+    height: 84px;
+    padding: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+}
+
+.reading-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* 12時の位置から時計回りに進むようにする */
+}
+
+.reading-ring-track {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 8;
+}
+
+.reading-ring-progress {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset var(--transition-standard) var(--ease-standard);
+}
+
+.reading-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.reading-ring-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.reading-ring-goal {
+    font-size: 9px;
+    color: var(--color-text-secondary);
+    margin-top: 1px;
+}
+
+/* ---------- サイドバー：ダークモードのスイッチ ---------- */
+.sidebar-theme-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding: 4px 6px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+}
+
+.theme-toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch-slider {
+    position: absolute;
+    inset: 0;
+    background-color: var(--color-border);
+    border-radius: 20px;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.switch-slider::before {
+    content: "";
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 2px;
+    top: 2px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-fast) var(--ease-standard);
+}
+
+.switch input:checked+.switch-slider {
+    background-color: var(--color-accent);
+}
+
+.switch input:checked+.switch-slider::before {
+    transform: translateX(16px);
+}
+
+/* ---------- ページ共通の見出し ---------- */
+h1 {
+    font-size: 26px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.page-subtitle {
+    color: #777777;
+    margin-bottom: 24px;
+}
+
+.page-placeholder {
+    padding: 20px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    text-align: center;
+}
+
+/* ---------- ダッシュボード：モチベーションカード（横スライドカルーセル） ----------
+   「大きなカードで占領しない」ため、テキストと矢印・ドットを1行に収める横並びレイアウトにする。 */
+.motivation-carousel {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: var(--radius-md);
+    background: linear-gradient(150deg, var(--color-accent-soft), var(--color-surface));
+    box-shadow: var(--shadow-sm);
+}
+
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.motivation-carousel[hidden] {
+    display: none;
+}
+
+.motivation-carousel-viewport {
+    flex: 1;
+    min-width: 0; /* 中の文章を省略記号（…）で切れるようにする */
+}
+
+.motivation-carousel-card {
+    cursor: pointer;
+    animation: motivation-card-in 0.3s var(--ease-standard);
+}
+
+.motivation-carousel-book-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.motivation-carousel-main-text {
+    margin-top: 2px;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.005em;
+    color: var(--color-text);
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.motivation-carousel-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+}
+
+.motivation-carousel-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background-color 0.2s var(--ease-standard), color 0.2s var(--ease-standard);
+}
+
+.motivation-carousel-arrow:hover {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+}
+
+.motivation-carousel-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0 2px;
+}
+
+.motivation-carousel-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--color-border);
+    transition: background-color 0.2s var(--ease-standard), transform 0.2s var(--ease-standard);
+}
+
+.motivation-carousel-dot.active {
+    background-color: var(--color-accent);
+    transform: scale(1.3);
+}
+
+/* ---------- ダッシュボード：初めて開いたときの案内 ---------- */
+.first-book-nudge {
+    margin-top: 20px;
+    padding: 32px 24px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-lg);
+    text-align: center;
+}
+
+.first-book-nudge-icon {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+.first-book-nudge-title {
+    font-size: var(--font-size-heading);
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.first-book-nudge-text {
+    font-size: var(--font-size-body);
+    color: var(--color-text-secondary);
+    margin-bottom: 16px;
+}
+
+.first-book-nudge .add-item-button,
+.first-book-nudge .dashed-add-button {
+    margin-bottom: 0;
+}
+
+/* ---------- ダッシュボード：今読んでいる本（最大5冊を横に並べる） ---------- */
+.currently-reading-section {
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+.currently-reading-section h2 {
+    font-size: var(--font-size-heading);
+    margin-bottom: 12px;
+}
+
+/* 常に4列のグリッドにする（本が4冊未満のときは、余った列を空けたまま詰めない） */
+.currently-reading-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.currently-reading-card {
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.currently-reading-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.currently-reading-cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.currently-reading-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.currently-reading-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.currently-reading-title {
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.currently-reading-author {
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+}
+
+/* 「読書時間」「記録」を2列の小さな数値で並べる（本の表紙カードで一目で分かるように） */
+.currently-reading-stats {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.currently-reading-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.currently-reading-stat-label {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+}
+
+.currently-reading-stat-value {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+/* タイトルと進捗リングを横並びにする行（バーではなく、タイトルの横にリング＋中の％で表示する） */
+.currently-reading-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.currently-reading-title-row .currently-reading-title {
+    flex: 1;
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+/* 複数クラスぶんの詳しさ（specificity）で .mini-progress-ring の土台の指定より確実に勝たせる */
+.mini-progress-ring.currently-reading-progress-ring {
+    width: 26px;
+    height: 26px;
+}
+
+.currently-reading-progress-ring .mini-progress-ring-label {
+    font-size: 8px;
+}
+
+/* ---------- ダッシュボード見出し（スローガン） ---------- */
+/* ページタイトルはヘッダー中央に一本化したため、ここは合言葉のような一言だけ残す */
+.dashboard-slogan {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin-bottom: 6px;
+}
+
+/* ---------- ダッシュボード：見出しをそのまま「本一覧へ」のヒーローバナーにする ---------- */
+/* 背景はアクセントカラーのグラデーションを薄く重ねた上に写真を敷き、白文字の可読性を保つ
+   （main-content::beforeの写真背景と同じ考え方）。ダークモードでは写真の明るい色味と噛み合わないため、
+   下の html.dark-mode 側の指定で元のグラデーションだけに戻す */
+.dashboard-hero-banner {
+    display: block;
+    width: 100%;
+    margin-bottom: 24px;
+    padding: 40px 32px;
+    border: none;
+    border-radius: var(--radius-lg);
+    background:
+        linear-gradient(135deg, rgba(163, 76, 46, 0.22), rgba(163, 76, 46, 0.4)),
+        url("images/dashboard-hero-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    text-align: center;
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.dashboard-hero-banner:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.dashboard-hero-banner .dashboard-slogan {
+    color: #ffffff;
+    text-shadow: 0 1px 12px rgba(74, 34, 18, 0.45);
+}
+
+.dashboard-hero-banner .page-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 22px;
+    text-shadow: 0 1px 10px rgba(74, 34, 18, 0.4);
+}
+
+.dashboard-hero-cta {
+    display: inline-block;
+    padding: 11px 24px;
+    border-radius: 999px;
+    background-color: #ffffff;
+    color: var(--color-accent);
+    font-size: var(--font-size-body);
+    font-weight: 700;
+}
+
+/* ---------- 記録画面 ---------- */
+/* タイル数がカテゴリで変わる（実用書6枚／小説4枚）ため、固定列数ではなく幅に応じて折り返す */
+.records-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+}
+
+/* ---------- 記録画面：本ごとの四角いブロック（押すと詳細モーダルを開く） ---------- */
+.record-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.record-book-card {
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.record-book-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.record-book-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.record-book-card-author {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.record-book-card-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.record-book-card-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.record-book-card-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 記録画面：本ごとの記録の詳細モーダル ---------- */
+.record-book-session-list {
+    list-style: none;
+}
+
+.record-book-group-detail-link {
+    margin-top: 4px;
+    padding: 0;
+}
+
+/* ---------- 記録画面：本1冊の中の、セッションごとの行 ---------- */
+.record-row {
+    padding: 12px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.record-row:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.record-row-top {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.record-row-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
+}
+
+.record-row-learning {
+    margin-top: 6px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.record-row-quote {
+    color: var(--color-accent);
+}
+
+.record-list-empty {
+    grid-column: 1 / -1; /* グリッド内（実績など）に置かれたときは、幅いっぱいに広げる */
+    padding: 20px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    text-align: center;
+}
+
+.record-list-empty-button {
+    margin-top: 12px;
+    margin-bottom: 0;
+}
+
+/* ---------- 設定画面 ---------- */
+.settings-card {
+    padding: 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    max-width: 480px;
+}
+
+.settings-card h3 {
+    margin-bottom: 10px;
+}
+
+.settings-card .field-hint {
+    color: var(--color-text-secondary);
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.settings-row {
+    display: flex;
+    gap: 8px;
+}
+
+.settings-row input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+h2 {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+h3 {
+    font-size: 15px;
+    font-weight: bold;
+    margin-top: 24px;
+    margin-bottom: 8px;
+}
+
+h4 {
+    font-size: 13px;
+    font-weight: bold;
+    color: #777777;
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+/* ---------- 入力欄・ボタンの共通スタイル ---------- */
+input[type="text"],
+input[type="number"],
+textarea {
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    font-family: inherit;
+    transition: border-color var(--transition-fast) var(--ease-standard);
+}
+
+/* 日付入力：タップすると、プルダウンではなくスクロール式のピッカー（年・月・日のホイール）が浮かび上がる。
+   readonlyのテキスト欄なので、見た目はテキスト欄と同じ土台に、タップしやすい高さと
+   「押せる場所だ」と分かるカレンダーアイコンを足す。 */
+.scroll-date-input {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 36px 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    font-family: inherit;
+    cursor: pointer;
+    caret-color: transparent;
+    transition: border-color var(--transition-fast) var(--ease-standard);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 18px;
+}
+
+/* 日付入力＋「今日」ボタンを横並びにする行 */
+.date-field-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.date-field-row .scroll-date-input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.date-today-button {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    color: var(--color-accent);
+    border-color: var(--color-border);
+    background-color: var(--color-surface);
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+.scroll-date-input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+/* ---------- 日付ピッカー：年・月・日をスクロールで選ぶホイール ---------- */
+.scroll-date-card {
+    max-width: 320px;
+}
+
+.scroll-date-wheels {
+    position: relative;
+    display: flex;
+    gap: 4px;
+    height: 200px;
+}
+
+/* 中央の選択位置を示す、上下に線が入った帯（操作はできない飾り） */
+.scroll-date-highlight {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 50%;
+    height: 40px;
+    margin-top: -20px;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    background-color: var(--color-accent-soft);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+}
+
+.scroll-date-col {
+    flex: 1;
+    height: 200px;
+    overflow-y: scroll;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.scroll-date-col::-webkit-scrollbar {
+    display: none;
+}
+
+.scroll-date-col-inner {
+    padding-top: 80px;
+    padding-bottom: 80px;
+}
+
+.scroll-date-item {
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    font-size: 16px;
+    color: var(--color-text-secondary);
+    scroll-snap-align: center;
+    user-select: none;
+    transition: color var(--transition-fast) var(--ease-standard),
+        font-size var(--transition-fast) var(--ease-standard);
+}
+
+.scroll-date-item.selected {
+    color: var(--color-text);
+    font-size: 19px;
+    font-weight: 700;
+}
+
+textarea {
+    resize: none;
+}
+
+/* プルダウン（select）：ブラウザ標準の矢印を消して、独自のシンプルな矢印に差し替える */
+select {
+    width: 100%;
+    padding: 10px 34px 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    font-family: inherit;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23777777' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 16px;
+    transition: border-color var(--transition-fast) var(--ease-standard);
+}
+
+select:hover {
+    border-color: var(--color-text-secondary);
+}
+
+button {
+    padding: 10px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        border-color var(--transition-fast) var(--ease-standard),
+        transform 0.1s var(--ease-standard);
+}
+
+button:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+/* タップ・クリック時に少し縮めて、押した手応えを全ボタン共通で出す */
+button:active {
+    transform: scale(0.97);
+}
+
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+a:focus-visible,
+[tabindex]:focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+}
+
+/* 送信・保存ボタンや主要な操作ボタンは、アクセントカラーで「ここを押せばいい」を明確にする */
+button[type="submit"] {
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+}
+
+button[type="submit"]:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* 「＋ ○○を追加」のように、モーダルを開く起点になるボタン（本一覧の追加カードと揃えた見た目） */
+.add-item-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    margin-bottom: 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.add-item-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* display:inline-flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.add-item-button[hidden] {
+    display: none;
+}
+
+/* 「＋ ○○を追加」のように、新しい項目を作る起点になるボタン
+   （本一覧の「＋ 新しい本を追加」カードと見た目を揃えた、点線で囲んだスタイル） */
+.dashed-add-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    margin-bottom: 20px;
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.dashed-add-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* ---------- 本の検索（Google Books） ---------- */
+.book-search {
+    margin-bottom: 16px;
+}
+
+.book-search-row {
+    display: flex;
+    gap: 8px;
+}
+
+.book-search-row input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.book-search-results {
+    list-style: none;
+    margin-top: 10px;
+    max-height: 320px;
+    overflow-y: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.book-search-result {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    background-color: var(--color-surface);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.book-search-result:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.book-search-results.is-selecting {
+    pointer-events: none;
+}
+
+@keyframes book-search-result-check-in {
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.book-search-result-selected {
+    position: relative;
+    background-color: var(--color-success-soft);
+}
+
+.book-search-result-check {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: var(--color-success);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 700;
+    animation: book-search-result-check-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.book-search-result-cover {
+    width: 36px;
+    height: 52px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    background-color: var(--color-bg-secondary);
+    overflow: hidden;
+}
+
+.book-search-result-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-search-result-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.book-search-result-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+.book-search-empty {
+    padding: 14px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    text-align: center;
+}
+
+/* ---------- ふわっと浮かび上がるモーダル（本・実践・好きな言葉の追加などで共通利用） ---------- */
+@keyframes floating-modal-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes floating-modal-float-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.floating-modal:not([hidden]) {
+    animation: floating-modal-fade-in 0.2s ease-out;
+}
+
+.floating-modal:not([hidden]) .floating-modal-card {
+    animation: floating-modal-float-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-modal-card {
+    max-height: 88vh;
+    overflow-y: auto;
+}
+
+/* 本の追加フォームは項目が多いため、少し幅を広くする */
+.book-form-modal-card {
+    max-width: 480px;
+}
+
+.floating-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+.floating-modal-header h3 {
+    margin: 0;
+    font-size: 17px;
+}
+
+#book-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.book-form-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: -2px;
+}
+
+.page-count-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.field-hint {
+    font-size: 12px;
+    color: var(--color-accent);
+}
+
+/* ---------- 読書ステータスの切り替え（本の追加モーダル） ---------- */
+.reading-status-field {
+    margin-bottom: 18px;
+}
+
+.reading-status-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.reading-status-toggle {
+    display: flex;
+    gap: 4px;
+    padding: 3px;
+    border-radius: 10px;
+    background-color: var(--color-bg-secondary);
+}
+
+.reading-status-option {
+    flex: 1;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.reading-status-option:hover {
+    color: var(--color-text);
+}
+
+.reading-status-option.active {
+    background-color: var(--color-surface);
+    color: var(--color-accent);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---------- 本の追加モーダル：検索／手動入力のセクション見出し ---------- */
+.book-form-section-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.book-form-divider {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 18px 0 14px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+}
+
+.book-form-divider::before,
+.book-form-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background-color: var(--color-border);
+}
+
+.book-form-divider span {
+    white-space: nowrap;
+}
+
+.book-form-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.book-form-fields {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.book-form-fields input {
+    margin-bottom: 0;
+}
+
+/* 表紙画像の選択欄 */
+.cover-upload {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 96px;
+    height: 132px;
+    flex-shrink: 0;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.cover-upload:hover {
+    background-color: var(--color-border);
+}
+
+.cover-upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
+    font-size: 11px;
+    text-align: center;
+}
+
+.cover-upload-icon {
+    width: 22px;
+    height: 22px;
+}
+
+.cover-upload-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* ---------- ダッシュボード：統計タイル ---------- */
+#dashboard {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+/* 小説のときは「実践」系のタイルを隠し、代わりに「好きな言葉の数」だけを見せる */
+#dashboard.dashboard-novel-mode {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+#dashboard.dashboard-novel-mode .dashboard-tile-practical {
+    display: none;
+}
+
+#dashboard:not(.dashboard-novel-mode) .dashboard-tile-novel {
+    display: none;
+}
+
+/* 小説モードでは実用書用タイル（非表示）がDOM上で間に挟まっているため、
+   nth-childによる順番だけでは正しく遅延がつかない（3枠目のタイルが1枠目と同時に動いてしまう）。
+   実際に見える3枠目として、このタイルにも明示的に遅延を指定する。 */
+#dashboard.dashboard-novel-mode .dashboard-tile-novel {
+    animation-delay: 0.08s;
+}
+
+.dashboard-tile {
+    position: relative;
+    z-index: 0;
+    overflow: hidden;
+    padding: 20px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    background-image: linear-gradient(155deg, transparent 55%, var(--color-bg-secondary) 145%);
+    box-shadow: var(--shadow-sm);
+}
+
+/* 各カードの右下に、テーマカラーに合わせた薄い線画イラストを背景として敷く（装飾のみ・値や文字より下のレイヤー） */
+.dashboard-tile::before {
+    content: '';
+    position: absolute;
+    right: -22px;
+    bottom: -22px;
+    width: 140px;
+    height: 140px;
+    background-repeat: no-repeat;
+    background-size: contain;
+    opacity: 0.08;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* カード右上のごく小さなドット装飾(高級感を出すためのアクセント) */
+.dashboard-tile::after {
+    content: '';
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background-color: var(--color-accent);
+    opacity: 0.14;
+    box-shadow: -16px 8px 0 -1px var(--color-accent);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* アイコンの色（icon-blue等）に応じて、テーマに合ったイラストを割り当てる */
+.dashboard-tile:has(.icon-blue)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%237aa8c7' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='50' cy='54' r='38'/%3E%3Cpath d='M50 30v24l16 12'/%3E%3Cpath d='M38 8h24'/%3E%3C/svg%3E");
+}
+
+.dashboard-tile:has(.icon-green)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%237bbf72' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 24c-9-7-21-10-35-10v54c14 0 26 3 35 10 9-7 21-10 35-10V14c-14 0-26 3-35 10Z'/%3E%3Cpath d='M50 24v54'/%3E%3C/svg%3E");
+}
+
+.dashboard-tile:has(.icon-purple)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23b98fc0' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 12a26 26 0 0 0-14 48c3 2 5 6 5 10h18c0-4 2-8 5-10a26 26 0 0 0-14-48Z'/%3E%3Cpath d='M41 82h18'/%3E%3Cpath d='M44 90h12'/%3E%3C/svg%3E");
+}
+
+.dashboard-tile:has(.icon-orange)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23e0a06a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='50' cy='50' r='38'/%3E%3Ccircle cx='50' cy='50' r='22'/%3E%3Ccircle cx='50' cy='50' r='6'/%3E%3C/svg%3E");
+}
+
+.dashboard-tile:has(.icon-teal)::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%236fb8a8' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M50 90V46'/%3E%3Cpath d='M50 46c0-18 14-30 30-30 0 18-12 30-30 30Z'/%3E%3Cpath d='M50 60c0-14-12-24-26-24 0 14 10 24 26 24Z'/%3E%3C/svg%3E");
+}
+
+/* 統計画面の「期間別の読書時間」はアイコン要素を持たないため、4枚ともカレンダーのイラストを背景として敷く */
+.stats-period-grid .dashboard-tile::before {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23cf8f6a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='14' y='20' width='72' height='66' rx='8'/%3E%3Cpath d='M14 40h72'/%3E%3Cpath d='M32 10v18'/%3E%3Cpath d='M68 10v18'/%3E%3C/svg%3E");
+}
+
+/* ダークモードでは背景が濃いため、装飾イラスト・ドットの不透明度を少し上げて見えるようにする */
+html.dark-mode .dashboard-tile::before {
+    opacity: 0.14;
+}
+
+html.dark-mode .dashboard-tile::after {
+    opacity: 0.22;
+}
+
+/* ダッシュボードだけで使う強調：最も重要な2枠（読書時間・読んだ本）を一段目立たせる */
+.dashboard-tile-primary .dashboard-value {
+    font-size: 30px;
+}
+
+.dashboard-tile-primary .dashboard-label {
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.dashboard-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    font-size: 16px;
+    margin-bottom: 14px;
+}
+
+.icon-blue { background-image: linear-gradient(135deg, #eef4f8, #d3e3ee); }
+.icon-green { background-image: linear-gradient(135deg, #eef6e9, #d7ead0); }
+.icon-purple { background-image: linear-gradient(135deg, #f4ecf3, #e6d5e4); }
+.icon-orange { background-image: linear-gradient(135deg, #fcf1e0, #f5dcb8); }
+.icon-teal { background-image: linear-gradient(135deg, #eaf5f2, #cfe6df); }
+
+.dashboard-value {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.dashboard-label {
+    font-size: 12px;
+    color: #777777;
+    margin-top: 4px;
+}
+
+.dashboard-unit {
+    font-size: 13px;
+    font-weight: normal;
+    color: #777777;
+    margin-left: 2px;
+}
+
+/* ---------- 統計画面 ---------- */
+.stats-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+}
+
+.stats-period-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+
+/* ---------- 読書時間の推移（棒グラフの期間タブ） ---------- */
+.chart-period-tabs {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    border-radius: 10px;
+    background-color: var(--color-bg-secondary);
+}
+
+.chart-period-tab {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.chart-period-tab:hover {
+    background-color: var(--color-border);
+}
+
+.chart-period-tab.active {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ---------- 読書時間の推移（棒グラフ本体） ---------- */
+.trend-chart {
+    position: relative;
+    margin-top: 16px;
+}
+
+.trend-chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 160px;
+    padding-top: 24px;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.trend-chart-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.trend-chart-bar-wrapper {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.trend-chart-bar {
+    width: 20px;
+    max-width: 24px;
+    border-radius: 4px 4px 0 0;
+    background-color: var(--color-accent);
+    cursor: pointer;
+    transition: height var(--transition-standard) var(--ease-standard),
+        background-color var(--transition-fast) var(--ease-standard);
+}
+
+.trend-chart-bar:hover,
+.trend-chart-bar:focus-visible {
+    background-color: var(--color-accent-hover);
+    outline: none;
+}
+
+.trend-chart-label {
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.trend-tooltip {
+    position: absolute;
+    transform: translate(-50%, calc(-100% - 10px));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    font-size: 12px;
+    white-space: nowrap;
+    pointer-events: none;
+    box-shadow: var(--shadow-md);
+    z-index: 5;
+}
+
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.trend-tooltip[hidden] {
+    display: none;
+}
+
+.trend-tooltip strong {
+    font-size: 13px;
+}
+
+.link-button {
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-meta);
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.link-button:hover {
+    color: var(--color-text);
+    background: none;
+}
+
+/* ---------- ステータスバッジ ---------- */
+.status-badge {
+    flex-shrink: 0;
+    padding: 4px 10px;
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+}
+
+/* 進行中＝アクセントカラー、完了＝成功カラーで統一する（本の状態バッジと同じ考え方） */
+.status-badge.status-in-progress {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+}
+
+.status-badge.status-done {
+    background-color: var(--color-success-soft);
+    color: var(--color-success);
+}
+
+.status-badge.status-reading {
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+}
+
+.status-badge.status-want {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+}
+
+/* 本の詳細画面：タイトル下に表示する読書ステータス（本棚カードのバッジと同じ色分け） */
+.detail-status-badge {
+    display: inline-block;
+    margin: 6px 0 4px;
+}
+
+/* ---------- 実践を直接追加するフォーム ---------- */
+.action-add-form label {
+    display: block;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+/* ---------- 実践リスト ---------- */
+#action-list {
+    list-style: none;
+}
+
+#action-list li {
+    padding: 14px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    margin-bottom: 8px;
+}
+
+/* 本ごとのブロック（この中に、その本の実践カードをまとめる） */
+#action-list li.action-group {
+    background-color: var(--color-bg-secondary);
+    padding: 16px 14px;
+}
+
+.action-group-title {
+    font-weight: bold;
+    font-size: 15px;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.action-group-items {
+    list-style: none;
+}
+
+.action-group-items li:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- 実践の「ブロック」（押すとTODOなどの詳細がモーダルで浮かび上がる） ---------- */
+.action-block {
+    padding: 12px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.action-block:last-child {
+    margin-bottom: 0;
+}
+
+.action-block:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.action-block-hint {
+    margin-top: 10px;
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
+}
+
+.action-content {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.action-meta {
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.action-status {
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+/* ---------- 実践の進捗バー ---------- */
+.action-progress {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.action-progress-track {
+    flex: 1;
+    background-color: var(--color-border);
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+}
+
+.action-progress-fill {
+    height: 100%;
+    background-color: var(--color-accent);
+    border-radius: 4px;
+    transition: width var(--transition-standard) var(--ease-standard);
+}
+
+.action-progress-value {
+    width: 40px;
+    flex-shrink: 0;
+    text-align: right;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 実践の編集フォーム ---------- */
+.action-edit-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.action-edit-form input {
+    margin-bottom: 0;
+}
+
+.action-edit-form label {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: #777777;
+}
+
+/* ---------- 「実績にする」ボタン ---------- */
+.action-clear-wrapper {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.clear-action-button {
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+}
+
+.clear-action-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* ---------- 実績リスト：押すと詳細（振り返り）が見られるボックス ---------- */
+.achievement-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 14px;
+}
+
+.achievement-card {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.achievement-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.achievement-book-title {
+    font-size: 12px;
+    font-weight: bold;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.achievement-card-rating {
+    margin-top: 8px;
+    font-size: 13px;
+    color: var(--color-accent);
+}
+
+.achievement-card-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- やることリスト（TODO） ---------- */
+.todo-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.todo-list li {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    font-size: 14px;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.todo-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    cursor: pointer;
+}
+
+.todo-list li button {
+    padding: 4px 10px;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.todo-done {
+    text-decoration: line-through;
+    color: var(--color-text-secondary);
+}
+
+.add-todo-form {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.add-todo-form input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* ---------- 実践を作るときに、やることリスト（TODO）を一緒に入力する欄 ---------- */
+.todo-draft-field {
+    margin-bottom: 14px;
+}
+
+.todo-draft-label {
+    display: block;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.todo-draft-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.todo-draft-list:empty {
+    display: none;
+}
+
+.todo-draft-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 10px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    font-size: 14px;
+}
+
+.todo-draft-list li button {
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+}
+
+.todo-draft-list li button:hover {
+    color: var(--color-danger);
+}
+
+.todo-draft-input-row {
+    display: flex;
+    gap: 8px;
+}
+
+.todo-draft-input-row input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* ---------- 振り返り ---------- */
+.reflection-section {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.reflection-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.reflection-form label {
+    font-size: 13px;
+    color: #555555;
+    margin-bottom: 8px;
+}
+
+.reflection-form textarea {
+    display: block;
+    width: 100%;
+    margin-top: 4px;
+    padding: 8px 10px;
+    border: 1px solid #dddddd;
+    border-radius: 6px;
+    font-size: 14px;
+    font-family: inherit;
+}
+
+.star-picker {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.star-button {
+    padding: 0;
+    border: none;
+    background: none;
+    font-size: 24px;
+    line-height: 1;
+    cursor: pointer;
+    color: #dddddd; /* 光っていないときの薄い色 */
+    transition: color 0.35s ease; /* 色の変化をゆっくりにする */
+}
+
+.star-button.star-filled {
+    color: #333333; /* 光っているときの濃い色 */
+}
+
+.star-button:hover {
+    background: none;
+}
+
+/* ---------- 本の一覧（本棚） ---------- */
+.book-shelf {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 40px 28px;
+}
+
+.book-card {
+    cursor: pointer;
+}
+
+.book-cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 14px;
+    transition: transform var(--transition-standard) var(--ease-standard),
+        box-shadow var(--transition-standard) var(--ease-standard);
+}
+
+.book-card:hover .book-cover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-md);
+}
+
+.book-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.book-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.book-card-title-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+}
+
+.book-card-title {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.book-card-author {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    margin-top: 2px;
+}
+
+/* 実践中のときだけ表示する、控えめなチップ */
+.book-card-action-chip {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 9px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-size: 11px;
+    font-weight: 700;
+}
+
+/* 表紙の右上に重ねる、読書ステータスのバッジ */
+.book-status-badge {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 3px 8px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-glass);
+    backdrop-filter: blur(6px);
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+    box-shadow: var(--shadow-sm);
+}
+
+.book-status-badge.book-status-reading {
+    color: var(--color-accent);
+}
+
+.book-status-badge.book-status-done {
+    color: var(--color-success);
+}
+
+.book-status-badge.book-status-want {
+    color: var(--color-text-secondary);
+}
+
+/* 表紙の左下に重ねる、ページ進捗のミニリング（読書中の本だけ表示）。
+   複数クラスぶんの詳しさ（specificity）で、あとに出てくる .mini-progress-ring の土台の指定
+   （position: relative / 36px四方）より確実に勝たせて、位置とサイズがずれないようにする */
+.mini-progress-ring.book-cover-progress-ring {
+    position: absolute;
+    left: 6px;
+    bottom: 6px;
+    width: 30px;
+    height: 30px;
+    background-color: var(--color-glass);
+    backdrop-filter: blur(6px);
+    border-radius: 50%;
+    box-shadow: var(--shadow-sm);
+}
+
+.book-cover-progress-ring .mini-progress-ring-label {
+    font-size: 8px;
+}
+
+/* 追加した直後の本だけ、ふわっと弾ませて達成感を演出する */
+@keyframes book-card-added-pop {
+    0% {
+        transform: scale(0.9);
+    }
+    55% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+@keyframes book-card-added-glow {
+    0%, 100% {
+        box-shadow: var(--shadow-sm);
+    }
+    40% {
+        box-shadow: 0 0 0 6px var(--color-accent-soft), var(--shadow-md);
+    }
+}
+
+.book-card-just-added .book-cover {
+    animation: book-card-added-pop 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+        book-card-added-glow 1.5s ease-out;
+}
+
+/* ---------- 本一覧：「＋ 新しい本を追加」カード ---------- */
+.add-book-trigger-cover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-bg-secondary);
+    border: 2px dashed var(--color-border);
+    font-size: 32px;
+    font-weight: 300;
+    color: var(--color-text-secondary);
+    transition: border-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.add-book-trigger-card:hover .add-book-trigger-cover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+}
+
+/* ---------- 本一覧：タイトル横の三点メニュー ---------- */
+.book-card-menu {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.book-card-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.book-card-menu-button:hover {
+    background-color: var(--color-border);
+    color: var(--color-text);
+}
+
+.book-card-menu-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    z-index: 5;
+    min-width: 100px;
+    list-style: none;
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-md);
+}
+
+.book-card-menu-dropdown button {
+    display: block;
+    width: 100%;
+    padding: 8px 10px;
+    border: none;
+    border-radius: 6px;
+    background: none;
+    color: var(--color-text);
+    font-size: 13px;
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.book-card-menu-dropdown button:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.book-card-menu-dropdown button.danger-button {
+    color: var(--color-danger);
+    border: none;
+}
+
+/* 本の詳細画面「実践リスト」タブの一覧。他の一覧と違って専用のクラスが無く、
+   list-style: none が抜けていたため、ブラウザ標準の「・」が表示されてしまっていた */
+#detail-actions-list {
+    list-style: none;
+}
+
+/* ---------- 本の編集モーダル ---------- */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+.modal-overlay[hidden] {
+    display: none;
+}
+
+/* floating-modalを持たないモーダル（本の編集・レビュー・使い方・タイマーリセット確認）にも、
+   同じ浮かび上がるアニメーション（floating-modal-fade-in/float-in）を再利用して統一感を出す */
+.modal-overlay:not(.floating-modal):not([hidden]) {
+    animation: floating-modal-fade-in 0.2s ease-out;
+}
+
+.modal-overlay:not(.floating-modal):not([hidden]) .modal-card {
+    animation: floating-modal-float-in 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-card {
+    width: 100%;
+    max-width: 360px;
+    padding: 24px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-md);
+}
+
+.modal-card h3 {
+    margin-top: 0;
+}
+
+.modal-card form {
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-card label {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 10px;
+}
+
+.modal-card input {
+    margin-top: 4px;
+}
+
+/* ---------- タイマーの途中リセット確認モーダル ---------- */
+.timer-reset-elapsed {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 14px 0;
+}
+
+.timer-reset-modal-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 20px;
+}
+
+.timer-reset-modal-buttons button {
+    width: 100%;
+}
+
+#timer-reset-save-button {
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+}
+
+#timer-reset-save-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* ---------- 使い方モーダル ---------- */
+.help-modal-card {
+    max-width: 440px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.help-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-shrink: 0;
+}
+
+.help-modal-header h3 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.modal-close-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.modal-close-button:hover {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text);
+}
+
+.help-modal-body {
+    flex: 1;
+    overflow-y: auto;
+    margin: 16px 0;
+}
+
+.help-step {
+    margin-bottom: 18px;
+}
+
+.help-step:last-child {
+    margin-bottom: 0;
+}
+
+.help-step h4 {
+    margin-top: 0;
+    margin-bottom: 6px;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.help-step ul {
+    list-style: disc;
+    padding-left: 20px;
+}
+
+.help-step li {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.help-step li:last-child {
+    margin-bottom: 0;
+}
+
+#help-done-button {
+    flex-shrink: 0;
+    width: 100%;
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+}
+
+#help-done-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* スマホなど画面が狭いときは、モーダルの余白と文字サイズを少し詰める */
+@media (max-width: 480px) {
+    .modal-card {
+        padding: 18px;
+    }
+
+    .help-modal-header h3 {
+        font-size: 15px;
+    }
+}
+
+/* ---------- 本の詳細：基本情報ヘッダー（表紙・タイトル・著者・ステータス。常に表示） ---------- */
+.detail-header {
+    display: flex;
+    align-items: stretch;
+    flex-wrap: wrap;
+    gap: 18px;
+    margin-bottom: 20px;
+}
+
+/* 表紙・タイトルをまとめたカード。進捗カード（#progress-section）と同じ見た目にして、2枚並んだ形式に揃える */
+.detail-header-book {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex: 1 1 320px;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.detail-header-cover {
+    position: relative;
+    width: 84px;
+    aspect-ratio: 2 / 3;
+    flex-shrink: 0;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.detail-header-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.detail-header-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.detail-header-info {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding-top: 2px;
+}
+
+#detail-book-title {
+    margin-bottom: 2px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+#detail-book-author {
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+/* ---------- タブ内コンテンツの共通余白（本の詳細／実践リスト／感想・言葉で共通） ---------- */
+.detail-tab-panel,
+.actions-tab-panel {
+    padding-top: 4px;
+}
+
+.detail-history-summary {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+/* ---------- 読書履歴：押すと開閉する横バー ---------- */
+.history-toggle-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    text-align: left;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.history-toggle-bar:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.history-toggle-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.history-toggle-count {
+    color: var(--color-text-secondary);
+    font-size: 13px;
+}
+
+.history-toggle-arrow {
+    width: 18px;
+    height: 18px;
+    margin-left: auto;
+    flex-shrink: 0;
+    color: var(--color-text-secondary);
+    transition: transform var(--transition-fast) var(--ease-standard);
+}
+
+/* 開いているときは、矢印を上向きに回転させて「畳める」ことを示す */
+.history-toggle-bar[aria-expanded="true"] .history-toggle-arrow {
+    transform: rotate(180deg);
+}
+
+#history-list {
+    margin-top: 12px;
+}
+
+/* 本の削除：タブの外・画面の一番下に置く、頻度の低い操作 */
+.detail-delete-button {
+    margin-top: 32px;
+    font-size: 13px;
+}
+
+/* ---------- 読書の進捗（ページ数ベース。表紙・タイトルの隣に並べて表示する） ---------- */
+#progress-section {
+    flex: 1 1 360px;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+#progress-section label {
+    display: block;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 12px;
+}
+
+#progress-section input {
+    margin-top: 4px;
+}
+
+/* 現在のページ：通常時の表示行（自動計算された値＋編集ボタン） */
+/* 進捗リングと、右側のページ数・編集ボタンを横並びにする */
+.progress-layout {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.progress-ring {
+    position: relative;
+    flex-shrink: 0;
+    width: 96px;
+    height: 96px;
+}
+
+/* 読み終えた瞬間だけ再生する、小さな達成感の演出 */
+@keyframes progress-ring-celebrate-pop {
+    0% { transform: scale(1); }
+    35% { transform: scale(1.12); }
+    100% { transform: scale(1); }
+}
+
+.progress-ring.progress-ring-celebrate {
+    animation: progress-ring-celebrate-pop 0.6s var(--ease-standard);
+}
+
+.progress-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* 12時の位置から時計回りに進むようにする */
+}
+
+.progress-ring-track {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 8;
+}
+
+.progress-ring-fill {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset var(--transition-standard) var(--ease-standard);
+}
+
+.progress-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.progress-ring-percent-sign {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-left: 1px;
+}
+
+/* ---------- 進捗リング（小）：本一覧の表紙・ダッシュボードの「今読んでいる本」で使う共通部品 ---------- */
+/* 考え方は上の .progress-ring と同じで、置き場所に合わせて小さくしただけのもの（js/screens/progressRing.js） */
+.mini-progress-ring {
+    position: relative;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+}
+
+.mini-progress-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* 12時の位置から時計回りに進むようにする */
+}
+
+.mini-progress-ring-track {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 4;
+}
+
+.mini-progress-ring-fill {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 4;
+    stroke-linecap: round;
+    transition: stroke-dashoffset var(--transition-standard) var(--ease-standard);
+}
+
+.mini-progress-ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.progress-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.current-page-display-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.current-page-display-row[hidden] {
+    display: none;
+}
+
+.current-page-display-text {
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+/* 現在のページ：編集モードのフォーム */
+.current-page-edit-form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px;
+}
+
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.current-page-edit-form[hidden] {
+    display: none;
+}
+
+.current-page-edit-form label {
+    margin-bottom: 8px;
+}
+
+.current-page-edit-form input {
+    margin-top: 4px;
+    margin-bottom: 0;
+}
+
+.progress-remaining-text {
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+#page-count-missing-section {
+    flex: 1 1 260px;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+}
+
+.page-count-missing-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.page-count-missing-row input {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* ---------- タイマー ---------- */
+#timer-section {
+    padding: 28px 20px 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.timer-first-time-hint {
+    font-size: 13px;
+    color: var(--color-accent);
+    margin-bottom: 16px;
+}
+
+/* 円形のタイマーリング：残り時間の割合ぶんだけ塗りが残り、時間が経つと少しずつ減っていく。
+   進捗リング（読書の進捗）・サイドバーの1日リングと同じ手法・同じ落ち着いたトランジションで揃える */
+.timer-ring {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 24px;
+    transition: transform var(--transition-standard) var(--ease-standard);
+}
+
+/* 作動中は、リングを少し大きく見せる
+   （画面全体を覆うモーダルにはせず、Apple純正タイマーのようにその場でピッカー→カウントダウンに切り替える） */
+#timer-section.timer-running .timer-ring {
+    transform: scale(1.08);
+}
+
+/* ---------- リングの中で時間・分をスクロールして選ぶピッカー（開始前だけ表示） ---------- */
+/* js/screens/scrollDatePicker.jsのbuildScrollDateColumnをそのまま使い、
+   .scroll-date-col / .scroll-date-item はここで小さいサイズに上書きして、リングの内側に収める */
+.timer-picker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    width: 128px;
+    height: 96px;
+}
+
+.timer-picker-highlight {
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    top: 50%;
+    height: 28px;
+    margin-top: -14px;
+    background-color: var(--color-accent-soft);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+}
+
+.timer-picker .scroll-date-col {
+    flex: none;
+    width: 28px;
+    height: 96px;
+}
+
+.timer-picker .scroll-date-col-inner {
+    padding-top: 34px;
+    padding-bottom: 34px;
+}
+
+.timer-picker .scroll-date-item {
+    height: 28px;
+    line-height: 28px;
+    font-size: 14px;
+}
+
+.timer-picker .scroll-date-item.selected {
+    font-size: 16px;
+}
+
+.timer-picker-separator {
+    flex-shrink: 0;
+    font-size: 10px;
+    color: var(--color-text-secondary);
+}
+
+.timer-ring-svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* 12時の位置から時計回りに減っていくようにする */
+}
+
+.timer-ring-track {
+    fill: none;
+    stroke: var(--color-border);
+    stroke-width: 6;
+}
+
+.timer-ring-fill {
+    fill: none;
+    stroke: var(--color-accent);
+    stroke-width: 6;
+    stroke-linecap: round;
+    /* 1秒ごとの更新をなめらかに繋ぐが、遊びすぎないよう控えめな時間・線形にしておく（読書の邪魔にならないように） */
+    transition: stroke-dashoffset 0.9s linear;
+}
+
+.timer-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#timer-display {
+    font-size: 40px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text);
+}
+
+/* 1時間以上（例：1:05:00）は桁数が増えてリングからはみ出しやすいため、少し小さくする */
+#timer-display.timer-display-long {
+    font-size: 30px;
+}
+
+#timer-control-buttons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+/* スタート/ストップ：1つのボタンをトグルにして、日本語のテキストだけ差し替える主操作ボタン */
+.timer-primary-button {
+    min-width: 140px;
+    padding: 14px 28px;
+    border: none;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+}
+
+.timer-primary-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+/* リセット：もう1つの独立した、控えめな副操作ボタン */
+.timer-secondary-button {
+    padding: 14px 24px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.timer-secondary-button:hover {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text);
+}
+
+/* 円形リング＋ボタンのまとまり。作動中は#timer-sectionに.timer-runningが付き、
+   時間選択ボタンが隠れてリングが少し大きくなる（js/screens/timer.js） */
+#timer-ring-and-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* ---------- 読書記録・実践の入力フォーム ---------- */
+#record-form-section,
+#action-form-section {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    margin-bottom: 24px;
+}
+
+#record-form,
+#action-form {
+    display: flex;
+    flex-direction: column;
+}
+
+#record-form label,
+#action-form label {
+    font-size: 13px;
+    color: #555555;
+    margin-bottom: 4px;
+}
+
+.action-form-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* ---------- 読了レビュー ---------- */
+#review-section {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    margin-bottom: 24px;
+}
+
+#review-section h3 {
+    margin-top: 0;
+}
+
+.review-card {
+    margin-bottom: 12px;
+}
+
+.review-rating {
+    font-size: 18px;
+    color: #333333;
+    margin-bottom: 6px;
+}
+
+.review-body {
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    margin-bottom: 6px;
+}
+
+.review-date {
+    font-size: 12px;
+    color: #777777;
+}
+
+.review-spoiler-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #555555;
+    margin-bottom: 8px;
+}
+
+.review-spoiler-wrapper {
+    margin-bottom: 6px;
+}
+
+.review-spoiler-warning {
+    padding: 12px 14px;
+    border-radius: 8px;
+    background-color: var(--color-bg-secondary);
+}
+
+.review-spoiler-warning p {
+    font-size: 13px;
+    color: #555555;
+    margin-bottom: 8px;
+}
+
+/* ---------- 読了レビューのモーダル：読み終えた直後だけ表示する、控えめな達成感のヘッダー ---------- */
+@keyframes review-celebration-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(6px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.review-celebration-header {
+    text-align: center;
+    margin-bottom: 20px;
+    animation: review-celebration-fade-in 0.4s ease-out;
+}
+
+.review-celebration-cover {
+    position: relative;
+    width: 64px;
+    aspect-ratio: 2 / 3;
+    margin: 0 auto 10px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+}
+
+.review-celebration-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.review-celebration-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.review-celebration-label {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.review-celebration-stat {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 感想まとめ画面（小説専用）：本ごとの四角いブロック（押すと詳細モーダルを開く） ---------- */
+.review-summary-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+}
+
+.review-summary-book-card {
+    padding: 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    cursor: pointer;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.review-summary-book-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.review-summary-book-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.review-summary-book-card-author {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.review-summary-book-card-rating {
+    margin-top: 10px;
+    font-size: 13px;
+    color: var(--color-accent);
+}
+
+.review-summary-book-card-preview {
+    margin-top: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.review-summary-book-card-hint {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 本ごとの感想の詳細モーダル ---------- */
+.review-summary-review {
+    padding: 12px 14px;
+    border-radius: 8px;
+    background-color: var(--color-bg-secondary);
+    margin-bottom: 14px;
+}
+
+.review-summary-heading {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.review-summary-impression-list {
+    list-style: none;
+}
+
+.review-summary-impression-list li {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--color-border);
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.review-summary-impression-list li:last-child {
+    border-bottom: none;
+}
+
+.review-summary-impression-text {
+    flex: 1;
+}
+
+.review-summary-review-buttons {
+    margin-top: 10px;
+    display: flex;
+    gap: 8px;
+}
+
+/* ---------- 好きな言葉画面（小説専用） ---------- */
+.quote-add-form textarea {
+    margin-bottom: 10px;
+    resize: none;
+}
+
+.quote-add-form-row {
+    display: flex;
+    gap: 8px;
+}
+
+.quote-add-form-row select {
+    flex: 1;
+}
+
+.quote-list {
+    list-style: none;
+    display: grid;
+    gap: 12px;
+}
+
+.quote-card {
+    padding: 18px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.quote-card:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+/* 本が紐づいていない好きな言葉は、押しても本の詳細に飛べないため通常のカーソルに戻す */
+.quote-card.quote-card-no-link {
+    cursor: default;
+}
+
+.quote-card.quote-card-no-link:hover {
+    background-color: var(--color-surface);
+}
+
+.quote-card-body {
+    font-size: 16px;
+    line-height: 1.6;
+    font-weight: 500;
+    color: var(--color-text);
+    margin-bottom: 8px;
+}
+
+.quote-card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.quote-card-meta {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.quote-card-button-group {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.quote-card-edit-button,
+.quote-card-button-group button {
+    padding: 4px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.quote-edit-form textarea {
+    margin-bottom: 10px;
+}
+
+/* ---------- 読了カード：Instagram・Threadsで共有したくなる、縦型のポスターのようなデザイン ---------- */
+/* 「この本を読んだ」こと自体がコンテンツになるよう、情報は最小限（表紙・タイトル・著者・評価・
+   一言感想・読了日・ページ数・アプリ名）に絞り、あえて余白を広くとっている。 */
+.share-card-modal-card {
+    max-width: 360px;
+}
+
+.share-card {
+    position: relative;
+    aspect-ratio: 4 / 5;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: radial-gradient(120% 85% at 50% 0%, var(--color-accent-soft), var(--color-bg-secondary) 75%);
+    box-shadow: var(--shadow-md);
+}
+
+.share-card-content {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 22px 26px 18px;
+}
+
+.share-card-brand {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--color-text-secondary);
+}
+
+.share-card-cover {
+    position: relative;
+    width: 40%;
+    aspect-ratio: 2 / 3;
+    margin: 20px 0 18px;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-surface), var(--color-accent-soft));
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.share-card-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.share-card-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.share-card-title {
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.share-card-author {
+    margin-top: 3px;
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.share-card-rating {
+    margin-top: 12px;
+    color: #c8971f;
+    font-size: 17px;
+    letter-spacing: 3px;
+}
+
+.share-card-quote {
+    margin-top: 14px;
+    max-width: 90%;
+    font-size: 13px;
+    font-style: italic;
+    line-height: 1.6;
+    color: var(--color-text-secondary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* display:-webkit-boxを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.share-card-quote[hidden] {
+    display: none;
+}
+
+.share-card-footer-line {
+    margin-top: auto;
+    padding-top: 16px;
+    font-size: 11px;
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 本ごとの記録 ---------- */
+#learning-list {
+    list-style: none;
+}
+
+/* 実用書のときは #learning-list に .quote-list が付き、名言タブと同じカード形式（.quote-card）で
+   表示するため、そちらとぶつからないよう、ここでの行スタイルは小説（プレーンテキスト）のときだけ効かせる */
+#learning-list:not(.quote-list) li {
+    padding: 8px 0;
+    border-bottom: 1px solid #eeeeee;
+    font-size: 14px;
+}
+
+/* 読書履歴：セッション1件ずつを、罫線だけの地味な行ではなく、名言・学んだことと揃えたカードで見せる */
+#history-list {
+    list-style: none;
+    display: grid;
+    gap: 10px;
+}
+
+.history-card {
+    padding: 14px 18px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.history-card-main {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.history-card-minutes {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.history-card-pages {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.history-card-meta-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.history-card-date {
+    font-size: 12px;
+    color: var(--color-text-secondary);
+}
+
+.history-card-button-group {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.history-card-button-group button {
+    padding: 4px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+/* ---------- AI読書コーチ画面 ---------- */
+
+/* 「コーチに相談」「読書を分析」のタブ切り替え */
+.ai-tab-switcher {
+    display: inline-flex;
+    gap: 2px;
+    padding: 3px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+    background-color: var(--color-bg-secondary);
+}
+
+.ai-tab-button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.ai-tab-button:hover {
+    background-color: var(--color-border);
+}
+
+.ai-tab-button.active {
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+}
+
+/* 本の詳細画面に置く「AI読書コーチに相談する」ボタン */
+.ai-coach-book-button {
+    display: block;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+/* display:blockを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.ai-coach-book-button[hidden] {
+    display: none;
+}
+
+/* 本の文脈つきで開いたときのパネル（読み込んだ読書データ＋本専用のクイックアクション） */
+.ai-coach-book-panel {
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    margin-bottom: 16px;
+}
+
+.ai-coach-book-panel-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.ai-coach-book-title {
+    margin-bottom: 4px;
+}
+
+.ai-coach-book-meta {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 14px;
+}
+
+.ai-coach-book-question {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.ai-coach-book-panel .ai-coach-quick-actions {
+    margin-bottom: 12px;
+}
+
+.ai-coach-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.ai-coach-quick-actions[hidden] {
+    display: none;
+}
+
+.ai-coach-quick-action-button {
+    padding: 8px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.ai-coach-quick-action-button:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.ai-coach-form {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    margin-bottom: 16px;
+}
+
+.ai-coach-form textarea {
+    margin-bottom: 10px;
+}
+
+.ai-coach-form button[type="submit"] {
+    width: 100%;
+}
+
+.ai-coach-error {
+    color: #c0392b;
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+}
+
+.ai-coach-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--color-text-secondary);
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.ai-coach-loading[hidden] {
+    display: none;
+}
+
+.ai-coach-spinner {
+    width: 16px;
+    height: 16px;
+    flex-shrink: 0;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: ai-coach-spin 0.7s linear infinite;
+}
+
+@keyframes ai-coach-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-coach-response-card {
+    padding: 18px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.ai-coach-response-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+.ai-coach-response-text {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--color-text);
+    max-height: 420px;
+    overflow-y: auto;
+}
+
+.ai-coach-response-text p {
+    margin-bottom: 12px;
+    white-space: pre-wrap;
+}
+
+.ai-coach-response-text p:last-child {
+    margin-bottom: 0;
+}
+
+.ai-coach-response-text ul,
+.ai-coach-response-text ol {
+    margin: 0 0 12px 20px;
+}
+
+.ai-coach-response-text li {
+    margin-bottom: 4px;
+}
+
+.ai-coach-response-text ul:last-child,
+.ai-coach-response-text ol:last-child {
+    margin-bottom: 0;
+}
+
+/* ---------- AI分析画面 ---------- */
+.ai-analysis-run-button {
+    display: block;
+    margin-bottom: 16px;
+    font-weight: 600;
+}
+
+.ai-analysis-result {
+    display: grid;
+    gap: 16px;
+}
+
+/* display:gridを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.ai-analysis-result[hidden] {
+    display: none;
+}
+
+.ai-analysis-card {
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+}
+
+.ai-analysis-card h3 {
+    margin-bottom: 12px;
+}
+
+.ai-analysis-list {
+    list-style: none;
+    display: grid;
+    gap: 8px;
+}
+
+.ai-analysis-list:empty {
+    display: none;
+}
+
+.ai-analysis-list li {
+    padding-left: 16px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.ai-analysis-list li::before {
+    content: "・";
+    position: absolute;
+    left: 0;
+}
+
+.ai-analysis-next-theme-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-secondary);
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+.ai-analysis-next-theme {
+    font-size: 14px;
+    line-height: 1.6;
+    font-weight: 600;
+    color: var(--color-accent);
+}
+
+.ai-analysis-recommendation-list {
+    list-style: none;
+    display: grid;
+    gap: 14px;
+}
+
+.ai-analysis-recommendation-card {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+}
+
+.ai-analysis-recommendation-cover-wrap {
+    width: 60px;
+    height: 84px;
+    flex-shrink: 0;
+    border-radius: 4px;
+    overflow: hidden;
+    background-color: var(--color-bg-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.ai-analysis-recommendation-cover {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ai-analysis-recommendation-cover-placeholder {
+    font-size: 24px;
+}
+
+.ai-analysis-recommendation-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ai-analysis-recommendation-title {
+    font-weight: 700;
+    font-size: 15px;
+    margin-bottom: 2px;
+}
+
+.ai-analysis-recommendation-author {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 6px;
+}
+
+.ai-analysis-recommendation-reason {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+/* ---------- AIアシストカード（Step5：各画面に差し込む、その場の提案） ---------- */
+/* 「今読んでいるページの続き」ではなく「AIからの一言」だと分かるよう、
+   通常のカードより控えめに・アクセントカラーの左線つきで表示する */
+.ai-assist-card {
+    padding: 16px 18px;
+    margin-bottom: 20px;
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-accent);
+    border-radius: var(--radius-md);
+    background-color: var(--color-accent-soft);
+}
+
+.ai-assist-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.ai-assist-card-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--color-text);
+}
+
+.ai-assist-close-button {
+    flex-shrink: 0;
+    padding: 0;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ai-assist-close-button:hover {
+    color: var(--color-text);
+    background: none;
+}
+
+.ai-assist-purpose-options {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.ai-assist-chip-button {
+    padding: 7px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 20px;
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.ai-assist-chip-button:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.ai-assist-loading-text {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+}
+
+.ai-assist-block {
+    margin-bottom: 12px;
+}
+
+.ai-assist-block:last-child {
+    margin-bottom: 0;
+}
+
+.ai-assist-block-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--color-text-secondary);
+    margin-bottom: 4px;
+}
+
+.ai-assist-block-text {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.ai-assist-block-list {
+    list-style: none;
+    display: grid;
+    gap: 4px;
+}
+
+.ai-assist-block-list li {
+    padding-left: 14px;
+    position: relative;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.ai-assist-block-list li::before {
+    content: "・";
+    position: absolute;
+    left: 0;
+}
+
+.ai-assist-recommendation-list {
+    list-style: none;
+    display: grid;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.detail-book-purpose {
+    font-size: 13px;
+    color: var(--color-text-secondary);
+    margin-bottom: 8px;
+}
+
+/* ---------- 危険な操作のボタン（削除など） ---------- */
+.danger-button {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+}
+
+.danger-button:hover {
+    background-color: var(--color-danger-soft);
+}
+
+#delete-book-button {
+    margin-bottom: 16px;
+}
+
+/* ---------- ダークモード ---------- */
+/* html に .dark-mode が付いているときだけ、色を上書きする。
+   body・ヘッダー・today-date・サイドバー一式や、入力欄・ボタン・カード類の大部分は
+   上の「デザインの土台」の変数だけで自動的に切り替わるので、ここには書きません。
+   ここでは、変数だけでは対応できない装飾（グラデーションやアイコンの背景色）だけを個別に上書きします。 */
+html.dark-mode select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+}
+
+html.dark-mode .scroll-date-input {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cline x1='16' y1='2' x2='16' y2='6'/%3E%3Cline x1='8' y1='2' x2='8' y2='6'/%3E%3Cline x1='3' y1='10' x2='21' y2='10'/%3E%3C/svg%3E");
+}
+
+/* カテゴリを表すアイコンバッジは装飾色のため、暗い背景でも浮きすぎないよう控えめな色に差し替える */
+html.dark-mode .icon-blue { background-image: linear-gradient(135deg, rgba(122, 168, 199, 0.28), rgba(122, 168, 199, 0.1)); }
+html.dark-mode .icon-green { background-image: linear-gradient(135deg, rgba(111, 179, 126, 0.28), rgba(111, 179, 126, 0.1)); }
+html.dark-mode .icon-purple { background-image: linear-gradient(135deg, rgba(191, 148, 199, 0.28), rgba(191, 148, 199, 0.1)); }
+html.dark-mode .icon-orange { background-image: linear-gradient(135deg, rgba(224, 168, 62, 0.28), rgba(224, 168, 62, 0.1)); }
+html.dark-mode .icon-teal { background-image: linear-gradient(135deg, rgba(90, 191, 173, 0.28), rgba(90, 191, 173, 0.1)); }
+
+/* ダッシュボードのヒーローバナーも、他の写真背景と同じく暗い色味と噛み合わないため、写真を消して元のグラデーションに戻す */
+html.dark-mode .dashboard-hero-banner {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
+}
+
+/* ---------- レスポンシブ対応（iPadなど、少し幅が狭い画面） ---------- */
+@media (max-width: 900px) {
+    /* サイドバーを画面上部の横並びバーに切り替える */
+    .app-shell {
+        flex-direction: column;
+    }
+
+    .sidebar {
+        width: 100%;
+        flex-direction: row;
+        align-items: center;
+        gap: 16px;
+        padding: 12px 16px;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        /* 横並びの上部バーになるので、縦方向の固定表示は解除する */
+        position: static;
+        height: auto;
+        overflow-y: visible;
+    }
+
+    .sidebar-brand {
+        margin-bottom: 0;
+    }
+
+    .category-switcher {
+        flex-shrink: 0;
+        margin-bottom: 0;
+    }
+
+    .sidebar-nav {
+        flex: 1;
+        flex-direction: row;
+        gap: 4px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-item {
+        flex-shrink: 0;
+        width: auto;
+        white-space: nowrap;
+    }
+
+    /* 装飾的な「今日の一言」と読書時間リングは、幅が狭い画面では省略する */
+    .sidebar-quote,
+    .sidebar-reading-ring-card {
+        display: none;
+    }
+
+    .sidebar-theme-toggle {
+        flex-shrink: 0;
+        margin-top: 0;
+    }
+
+    .main-content {
+        max-width: 100%;
+        padding: 24px 20px;
+    }
+
+    .content-header {
+        margin: -8px 0 24px;
+        padding: 12px 20px;
+    }
+
+    #dashboard {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .currently-reading-list {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
+    .book-form-row {
+        flex-wrap: wrap;
+    }
+}
+
+/* ---------- レスポンシブ対応（スマホ） ---------- */
+@media (max-width: 600px) {
+    .main-content {
+        padding: 18px 16px;
+    }
+
+    .content-header {
+        margin: -6px 0 20px;
+        padding: 10px 16px;
+    }
+
+    h1 {
+        font-size: 22px;
+    }
+
+    /* ダークモードのラベル文字は省略し、アイコンとスイッチだけにする */
+    .theme-toggle-label span:last-child {
+        display: none;
+    }
+
+    #dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .currently-reading-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .records-summary,
+    .stats-summary {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-period-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chart-period-tabs {
+        flex-wrap: wrap;
+    }
+
+    .book-shelf {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 20px 12px;
+    }
+
+    .book-form-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .cover-upload {
+        width: 100%;
+        height: 160px;
+    }
+
+    #timer-control-buttons {
+        flex-wrap: wrap;
+    }
+
+    #timer-display {
+        font-size: 32px;
+    }
+
+    .record-row-top {
+        flex-wrap: wrap;
+    }
+
+    .settings-row,
+    .book-search-row,
+    .page-count-missing-row {
+        flex-wrap: wrap;
+    }
+
+    .modal-card {
+        padding: 20px;
+    }
+}
+
+/* ---------- 保存完了トースト ---------- */
+.toast {
+    position: fixed;
+    left: 50%;
+    bottom: 28px;
+    z-index: 60;
+    max-width: calc(100% - 40px);
+    padding: 12px 20px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-text);
+    color: var(--color-bg);
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    text-align: center;
+    box-shadow: var(--shadow-md);
+    opacity: 0;
+    pointer-events: none;
+    transform: translate(-50%, 10px);
+    transition: opacity var(--transition-fast) var(--ease-standard),
+        transform var(--transition-fast) var(--ease-standard);
+}
+
+.toast.toast-visible {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}

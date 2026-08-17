@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script>
+var books = [
+  {
+    id: 1,
+    category: "practical",
+    title: "深い仕事",
+    author: "カル・ニューポート",
+    coverImage: null,
+    publisher: "",
+    publishedDate: "",
+    pageCount: 300,
+    pageAdjustment: 0,
+    records: [
+      { date: "2026/8/10", timestamp: 1, minutes: 25, pages: 20, learning: "集中の質が生産性を決める" },
+      { date: "2026/8/15", timestamp: 2, minutes: 45, pages: 30, learning: "" }
+    ]
+  },
+  {
+    id: 2,
+    category: "novel",
+    title: "そして誰もいなくなった",
+    author: "アガサ・クリスティ",
+    coverImage: null,
+    publisher: "",
+    publishedDate: "",
+    pageCount: 280,
+    pageAdjustment: 0,
+    records: [
+      {
+        date: "2026/8/12",
+        timestamp: 3,
+        minutes: 40,
+        pages: 60,
+        impression: "冒頭から緊張感がすごい",
+        memorableQuote: "十人の小さな兵隊さんが……",
+        favoriteCharacter: "ヴェラ・クレイソーン",
+        notes: "童謡の歌詞と展開が対応しているのが気になる"
+      }
+    ]
+  }
+];
+localStorage.setItem("reading-app-books", JSON.stringify(books));
+localStorage.setItem("reading-app-actions", JSON.stringify([]));
+localStorage.setItem("reading-app-active-category", "practical");
+location.href = "index.html";
+</script>
+</body>
+</html>
