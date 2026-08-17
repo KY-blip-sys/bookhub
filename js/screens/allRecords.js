@@ -11,6 +11,7 @@ const recordsInProgressCount = document.getElementById("records-in-progress-coun
 const recordsDoneCount = document.getElementById("records-done-count");
 // 実践中・完了した実践のタイルは実用書のときだけ表示する（小説には実践の概念が無いため）
 const recordsPracticalTiles = document.querySelectorAll(".records-summary .dashboard-tile-practical");
+const recordsSummaryGrid = document.querySelector(".records-summary");
 const allRecordsList = document.getElementById("all-records-list");
 
 // すべての本の記録を、本の情報つきで1つの配列にまとめて新しい順に並べる（stats.jsからも再利用される）
@@ -81,6 +82,9 @@ function renderAllRecordsScreen() {
   recordsPracticalTiles.forEach(function (tile) {
     tile.hidden = isNovel;
   });
+  // 小説は表示タイルが4枚になるため、実用書（6枚・3列）と別の列数（2列）できれいに揃える
+  recordsSummaryGrid.classList.toggle("records-novel-mode", isNovel);
+  replayDashboardTileEntrance(recordsSummaryGrid); // タイルのフェードインを毎回確実に再生させる（app.js）
 
   allRecordsList.innerHTML = "";
 
@@ -89,7 +93,10 @@ function renderAllRecordsScreen() {
     emptyMessage.className = "record-list-empty";
 
     const text = document.createElement("p");
-    text.textContent = "まだ読書記録がありません。本を選んでタイマーを始めると、ここに記録が並びます。";
+    // 本が1冊も無いときは「本を選んで」ではなく、まず本の登録を案内する
+    text.textContent = books.length === 0
+      ? "この本棚にはまだ本が登録されていません。まず本を登録すると、ここに読書記録が並びます。"
+      : "まだ読書記録がありません。本を選んでタイマーを始めると、ここに記録が並びます。";
     emptyMessage.appendChild(text);
 
     const goToBooksButton = document.createElement("button");

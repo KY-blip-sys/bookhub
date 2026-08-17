@@ -185,6 +185,12 @@ function notifyTimerFinished() {
   }
 
   timerElapsedSecondsForRecord = timerTotalSeconds; // 最後まで読み終えたので、選択していた時間まるごとを記録する
+
+  // タイマーが最後まで進んだままだと「経過時間あり」の状態が残り続け、記録を保存したあとに
+  // 他の画面へ移動しようとしても「読書を終了しますか？」の確認が誤って再び出てしまうため、
+  // ここで時間の追跡をリセットしておく（リセットボタンから保存する場合と同じ扱いに揃える）
+  resetTimer();
+
   showRecordForm(); // 終了したら、記録の入力フォームを表示する
 }
 
@@ -281,3 +287,13 @@ timerResetCancelButton.addEventListener("click", function () {
 
 // 最初の表示を整える（ピッカーの項目も、この時点で25分の位置に組み立てておく）
 setTimerDuration(25);
+
+// ▼▼▼ テスト用（あとで削除する）：タイマーを3秒にセットするだけのデバッグボタン ▼▼▼
+document.getElementById("debug-test-timer-button").addEventListener("click", function () {
+  stopTimerInterval();
+  timerTotalSeconds = 3;
+  timerRemainingSeconds = 3;
+  updateTimerDisplay();
+  updateTimerToggleButton();
+});
+// ▲▲▲ テスト用ここまで ▲▲▲

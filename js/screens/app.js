@@ -133,10 +133,10 @@ function showDetailScreenNow(bookId) {
   renderBookActionsTab(bookId); // この本の「実践リスト」タブを最新の状態にする（actions.js）
 
   // 本の詳細は「本一覧」の中のサブ画面という位置づけなので、
-  // 他のどのページから開いても、必ず正しく画面が切り替わるようにする
-  pages.forEach(function (page) {
-    page.hidden = page.id !== "screen-detail";
-  });
+  // 他のどのページから開いても、必ず正しく画面が切り替わる（showPage()でフェードインも揃える）
+  showPage("screen-detail");
+  // 詳細画面自体はサイドバーの項目を持たないため、showPage()の判定では
+  // どの項目もactiveにならない。代わりに「本一覧」をactiveのままにしておく
   navItems.forEach(function (navItem) {
     navItem.classList.toggle("active", navItem.dataset.nav === "books");
   });
@@ -177,12 +177,50 @@ const pages = document.querySelectorAll(".page");
 
 // 指定したidのページだけを表示し、それ以外は隠す
 function showPage(pageId) {
+  let shownPage = null;
   pages.forEach(function (page) {
     page.hidden = page.id !== pageId;
+    if (!page.hidden) {
+      shownPage = page;
+    }
   });
+
+  // ページのフェードインは、display:none→blockへの変化だけに頼ると再生されないことがあった。
+  // クラスの付け外し＋リフローの強制（void要素.offsetHeight）でも、短時間に連続で
+  // 呼び出された場合はブラウザ側で「一度外れた」ことが認識されず、再生されないことがあったため、
+  // 次の描画フレームを待ってから付け直す方式にする。連続で呼ばれたときは前回分の予約を取り消し、
+  // 常に最後の呼び出しだけが「外れた状態」を経由してから確実に再生されるようにしている
+  if (shownPage) {
+    cancelAnimationFrame(shownPage._pageEnterRafId);
+    shownPage.classList.remove("page-enter");
+    shownPage._pageEnterRafId = requestAnimationFrame(function () {
+      shownPage.classList.add("page-enter");
+    });
+  }
 
   navItems.forEach(function (navItem) {
     navItem.classList.toggle("active", "screen-" + navItem.dataset.nav === pageId);
+  });
+}
+
+// .dashboard-tile（#dashboardや.records-summaryのタイル）は本一覧のカードと違い、
+// 画面を描画し直すたびに作り直されず中身のテキストだけ更新される静的な要素のため、
+// フェードインがdisplay:none→blockへの復帰だけに頼ることになり、連続で画面を切り替えると
+// 再生されないことがあった。一時的にアニメーションを止めるクラスを付け、リフローを強制してから
+// 同じ処理内で外すことで、次の描画フレームを待たずに確実に最初から再生されるようにする
+// （display:none/blockの復帰待ちに頼るshowPage()の.page-enterとは違い、こちらは単に
+// animation:noneを一瞬当てて外すだけなので、同期的なリフローの強制でも確実に効く）
+function replayDashboardTileEntrance(container) {
+  if (!container) {
+    return;
+  }
+  const tiles = container.querySelectorAll(".dashboard-tile");
+  tiles.forEach(function (tile) {
+    tile.classList.add("card-entrance-reset");
+  });
+  void container.offsetHeight;
+  tiles.forEach(function (tile) {
+    tile.classList.remove("card-entrance-reset");
   });
 }
 

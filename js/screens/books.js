@@ -41,10 +41,12 @@ function resetReadingStatusToggle() {
 const dashboardGrid = document.getElementById("dashboard");
 const dashboardTotalMinutes = document.getElementById("dashboard-total-minutes");
 const dashboardBookCount = document.getElementById("dashboard-book-count");
+const dashboardSessionCount = document.getElementById("dashboard-session-count");
+const dashboardLearningIcon = document.getElementById("dashboard-learning-icon");
 const dashboardLearningCount = document.getElementById("dashboard-learning-count");
+const dashboardLearningLabel = document.getElementById("dashboard-learning-label");
 const dashboardInProgressCount = document.getElementById("dashboard-in-progress-count");
 const dashboardDoneCount = document.getElementById("dashboard-done-count");
-const dashboardQuoteCount = document.getElementById("dashboard-quote-count");
 const dashboardSubtitle = document.getElementById("dashboard-subtitle");
 
 // 初めて開いたときの案内（本が1冊も無いときだけ表示する）に使う要素
@@ -98,6 +100,7 @@ function renderBookList() {
 
   // 一覧を一度空にしてから、最新の内容で作り直す
   bookList.innerHTML = "";
+  void bookList.offsetHeight; // 直後にカードを追加してもフェードインが確実に再生されるよう、一度リフローを挟む
 
   // 「＋ 新しい本を追加」カードは常に先頭に表示する
   bookList.appendChild(buildAddBookTriggerCard());
@@ -499,22 +502,27 @@ bookEditForm.addEventListener("submit", function (event) {
 function renderDashboard(books) {
   const actions = getActionsByActiveCategory();
   const activeCategory = loadActiveCategory();
+  const isNovel = activeCategory === "novel";
 
-  // このカテゴリに本が1冊も無ければ、初めての案内を表示し、「今読んでいる本」欄は隠しておく
+  // このカテゴリに本が1冊も無ければ、初めての案内を表示し、「今読んでいる本」欄は隠しておく。
+  // 小説は実用書と表示を合わせるため、1冊も無くても「1冊目を登録する」の案内は出さず、
+  // 実用書と同じ「まだ読書中の本がありません」の空メッセージ（currently-reading-empty）を出す
   const hasNoBooks = books.length === 0;
-  firstBookNudge.hidden = !hasNoBooks;
-  currentlyReadingSection.hidden = hasNoBooks;
+  firstBookNudge.hidden = isNovel || !hasNoBooks;
+  currentlyReadingSection.hidden = !isNovel && hasNoBooks;
 
-  // 小説のときは「実践」の代わりに「好きな言葉の数」を表示する
-  dashboardGrid.classList.toggle("dashboard-novel-mode", activeCategory === "novel");
+  // 小説のときは「実践」中・完了の2枠を隠し、タイルが4枚（2列）になる
+  dashboardGrid.classList.toggle("dashboard-novel-mode", isNovel);
 
   // カテゴリに合わせて、ダッシュボードの副題も差し替える
   dashboardSubtitle.textContent = DASHBOARD_SUBTITLES[activeCategory] || DASHBOARD_SUBTITLES.practical;
 
   const totalMinutes = getTotalMinutes(books);
 
+  let sessionCount = 0;
   let learningCount = 0;
   books.forEach(function (book) {
+    sessionCount += book.records.length; // 記録回数（「記録」ページの集計と同じ数え方）
     book.records.forEach(function (record) {
       if (record.learning || record.impression) {
         learningCount += 1; // 学んだこと・感想が書かれている記録の数を数える
@@ -522,8 +530,10 @@ function renderDashboard(books) {
     });
   });
 
-  // 好きな言葉の数（読書記録の「印象に残ったセリフ」＋この画面から直接追加した分の合計。quotes.jsの関数）
-  const quoteCount = activeCategory === "novel" ? getCombinedQuotes("novel").length : 0;
+  // 実用書は「学んだこと」が書かれた記録の数、小説は「好きな言葉」の数を表示する（記録画面と同じタイル構成）
+  dashboardLearningIcon.textContent = isNovel ? "💬" : "💡";
+  dashboardLearningLabel.textContent = isNovel ? "好きな言葉" : "学んだこと";
+  const learningTileCount = isNovel ? getCombinedQuotes("novel").length : learningCount;
 
   const inProgressCount = actions.filter(function (action) {
     return action.status === "in-progress";
@@ -540,10 +550,12 @@ function renderDashboard(books) {
 
   dashboardTotalMinutes.textContent = totalMinutes;
   dashboardBookCount.textContent = finishedBookCount;
-  dashboardLearningCount.textContent = learningCount;
+  dashboardSessionCount.textContent = sessionCount;
+  dashboardLearningCount.textContent = learningTileCount;
   dashboardInProgressCount.textContent = inProgressCount;
   dashboardDoneCount.textContent = doneCount;
-  dashboardQuoteCount.textContent = quoteCount;
+
+  replayDashboardTileEntrance(dashboardGrid); // タイルのフェードインを毎回確実に再生させる（app.js）
 }
 
 // ---------- 表紙画像の選択 ----------
@@ -682,5 +694,6 @@ function resetBookForm() {
   pageCountManualNote.hidden = true;
   bookSearchInput.value = "";
   bookSearchResults.hidden = true;
+  resetBookSearchModeToggle();
   closeBookFormPanel(); // 追加が終わったら、モーダルを閉じてカード表示に戻す
 }

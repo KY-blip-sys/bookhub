@@ -1,5 +1,14 @@
 // ---------- 設定画面 ----------
 
+// 「保存しました」の案内を表示し、数秒後に自動で消す（連続で保存したときは前のタイマーをリセットする）
+function flashSavedNote(noteEl) {
+  clearTimeout(noteEl._hideTimer);
+  noteEl.hidden = false;
+  noteEl._hideTimer = setTimeout(function () {
+    noteEl.hidden = true;
+  }, 2200);
+}
+
 const googleBooksApiKeyInput = document.getElementById("google-books-api-key-input");
 const saveApiKeyButton = document.getElementById("save-api-key-button");
 const apiKeySavedNote = document.getElementById("api-key-saved-note");
@@ -11,7 +20,7 @@ googleBooksApiKeyInput.value = loadGoogleBooksApiKey();
 saveApiKeyButton.addEventListener("click", function () {
   saveGoogleBooksApiKey(googleBooksApiKeyInput.value.trim());
 
-  apiKeySavedNote.hidden = false;
+  flashSavedNote(apiKeySavedNote);
 });
 
 // ---------- OpenAI APIキー（AI読書コーチ用） ----------
@@ -27,7 +36,7 @@ openaiApiKeyInput.value = loadOpenAiApiKey();
 saveOpenaiApiKeyButton.addEventListener("click", function () {
   saveOpenAiApiKey(openaiApiKeyInput.value.trim());
 
-  openaiApiKeySavedNote.hidden = false;
+  flashSavedNote(openaiApiKeySavedNote);
 });
 
 // ---------- 今月の読書目標（AI読書アシスタント用） ----------
@@ -45,7 +54,7 @@ monthlyGoalInput.value = savedMonthlyGoal ? String(savedMonthlyGoal) : "";
 saveMonthlyGoalButton.addEventListener("click", function () {
   saveMonthlyReadingGoal(Number(monthlyGoalInput.value) || 0);
 
-  monthlyGoalSavedNote.hidden = false;
+  flashSavedNote(monthlyGoalSavedNote);
 });
 
 // ---------- 1日の読書目標時間（サイドバーのリング表示用） ----------
@@ -62,6 +71,6 @@ dailyGoalMinutesInput.value = String(loadDailyReadingGoalMinutes());
 saveDailyGoalMinutesButton.addEventListener("click", function () {
   saveDailyReadingGoalMinutes(Number(dailyGoalMinutesInput.value) || DEFAULT_DAILY_READING_GOAL_MINUTES);
 
-  dailyGoalMinutesSavedNote.hidden = false;
+  flashSavedNote(dailyGoalMinutesSavedNote);
   renderReadingRing(); // サイドバーのリングにも、変更をすぐ反映する
 });

@@ -6,6 +6,38 @@ const bookSearchInput = document.getElementById("book-search-input");
 const bookSearchButton = document.getElementById("book-search-button");
 const bookSearchResults = document.getElementById("book-search-results");
 
+// ---------- 検索方法の切り替え（「タイトルで検索」／「著者で検索」） ----------
+// 見た目はreading-status-toggleと同じピル型のボタン2つ。選ばれている方をbookSearchModeで覚えておく
+const bookSearchModeToggle = document.getElementById("book-search-mode-toggle");
+const bookSearchModeOptions = bookSearchModeToggle.querySelectorAll(".reading-status-option");
+let bookSearchMode = "title";
+
+const BOOK_SEARCH_PLACEHOLDERS = {
+  title: "タイトルで検索",
+  author: "著者名で検索"
+};
+
+bookSearchModeOptions.forEach(function (button) {
+  button.addEventListener("click", function () {
+    bookSearchModeOptions.forEach(function (b) {
+      b.classList.remove("active");
+    });
+    button.classList.add("active");
+    bookSearchMode = button.dataset.searchMode;
+    bookSearchInput.placeholder = BOOK_SEARCH_PLACEHOLDERS[bookSearchMode];
+    bookSearchResults.hidden = true;
+  });
+});
+
+// 見た目・状態を両方とも「タイトルで検索」に戻す（本の追加フォームを閉じたときに使う）
+function resetBookSearchModeToggle() {
+  bookSearchModeOptions.forEach(function (button) {
+    button.classList.toggle("active", button.dataset.searchMode === "title");
+  });
+  bookSearchMode = "title";
+  bookSearchInput.placeholder = BOOK_SEARCH_PLACEHOLDERS.title;
+}
+
 // 検索結果から自動入力する、補足情報の要素を取得しておく
 const bookFormMeta = document.getElementById("book-form-meta");
 const pageCountInput = document.getElementById("book-page-count");
@@ -16,18 +48,20 @@ enableFlexibleDigitInput(pageCountInput); // 全角数字で入力しても半�
 let bookPublisher = "";
 let bookPublishedDate = "";
 
-// タイトルでGoogle Books APIを検索し、結果を「本アプリ内で共通の形」に変換して返す。
+// タイトルまたは著者名でGoogle Books APIを検索し、結果を「本アプリ内で共通の形」に変換して返す。
+// mode: "title"ならタイトルで（intitle:）、"author"なら著者名で（inauthor:）検索する
 // ここではGoogle Books APIを直接呼んでいるが、将来「自前のサーバー経由で検索する」
 // ように変える場合も、この関数の中身（fetchする先とデータの変換部分）を
 // 書き換えるだけでよく、呼び出す側（画面の表示処理）は変更しなくて済む。
-function searchBooksByTitle(query, onSuccess, onError) {
+function searchBooksByTitle(query, mode, onSuccess, onError) {
   // APIキーが設定されていれば付ける（キーなしの場合、利用者全体で共有の少ない無料枠になる）
   const apiKey = loadGoogleBooksApiKey();
   const keyParam = apiKey ? "&key=" + encodeURIComponent(apiKey) : "";
+  const searchField = mode === "author" ? "inauthor:" : "intitle:";
 
   const url =
     "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=" +
-    encodeURIComponent("intitle:" + query) +
+    encodeURIComponent(searchField + query) +
     keyParam;
 
   // デバッグ用：実際に送るリクエストの中身をConsoleに残す
@@ -216,6 +250,7 @@ bookSearchButton.addEventListener("click", function () {
 
   searchBooksByTitle(
     query,
+    bookSearchMode,
     function (results) {
       renderSearchResults(results);
       bookSearchButton.disabled = false;

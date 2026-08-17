@@ -46,6 +46,9 @@ function renderReadingProgress() {
     return b.id === currentBookId;
   });
   if (!book) {
+    // 表示する本が無いときは、「0 / 0ページ」のような値が本があるかのように残らないよう、進捗表示ごと隠しておく
+    progressSection.hidden = true;
+    pageCountMissingSection.hidden = true;
     return;
   }
 
@@ -116,6 +119,8 @@ currentPageEditForm.addEventListener("submit", function (event) {
     return;
   }
 
+  const wasFinishedBefore = getComputedCurrentPage(book) >= book.pageCount;
+
   // 総ページ数：正しい数値が入力されていれば更新し、そうでなければ今の値のままにする
   const newPageCount = Number(totalPageCountInput.value);
   if (newPageCount > 0) {
@@ -133,6 +138,25 @@ currentPageEditForm.addEventListener("submit", function (event) {
   saveBooks(books);
 
   renderReadingProgress(); // 最新の値を反映しつつ、表示モードに戻す
+
+  // ページ数の手動修正で読了状態が変わることがあるため、記録保存時と同じくヘッダー表示も最新化する
+  const statusInfo = getBookStatusInfo(book);
+  detailStatusBadge.textContent = statusInfo.label;
+  detailStatusBadge.className = "status-badge detail-status-badge status-" + statusInfo.key;
+  updateShareSectionVisibility(book);
+
+  // ページ数の手動修正で今回はじめて読了扱いになったときも、
+  // 読書記録の保存時と同じお祝い演出・レビューへの導線を出す（records.jsと同じ処理を利用するだけ）
+  const isFinishedNow = getComputedCurrentPage(book) >= book.pageCount;
+  if (isFinishedNow && !wasFinishedBefore) {
+    showToast("🎉 読了しました！お疲れさまでした");
+    celebrateBookFinished();
+    if (!getReviewForBook(book.id)) {
+      setTimeout(function () {
+        openReviewModal(book.id, { celebratory: true });
+      }, 700);
+    }
+  }
 });
 
 // 総ページ数の手動登録（保存）ボタンの処理
@@ -155,4 +179,10 @@ savePageCountButton.addEventListener("click", function () {
 
   manualPageCountInput.value = "";
   renderReadingProgress(); // 総ページ数が登録されたので、通常の進捗表示に切り替える
+
+  // 総ページ数の登録によって読了状態が変わることがあるため、ヘッダー表示も最新化する
+  const statusInfo = getBookStatusInfo(book);
+  detailStatusBadge.textContent = statusInfo.label;
+  detailStatusBadge.className = "status-badge detail-status-badge status-" + statusInfo.key;
+  updateShareSectionVisibility(book);
 });

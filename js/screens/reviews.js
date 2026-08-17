@@ -14,6 +14,7 @@ const reviewCancelButton = document.getElementById("review-cancel-button");
 const reviewCelebrationHeader = document.getElementById("review-celebration-header");
 const reviewCelebrationCover = document.getElementById("review-celebration-cover");
 const reviewCelebrationStat = document.getElementById("review-celebration-stat");
+const reviewCelebrationStatSecondary = document.getElementById("review-celebration-stat-secondary");
 
 // 本の詳細画面に表示する、レビュー欄の要素を取得しておく
 const reviewDisplay = document.getElementById("review-display");
@@ -63,6 +64,24 @@ function openReviewModal(bookId, options) {
     }, 0);
     reviewCelebrationStat.textContent =
       (book.pageCount ? book.pageCount + "ページ・" : "") + totalMinutes + "分の読書でした";
+
+    // 「何を得たか」を振り返れるよう、すでに保存されている記録・学び・実践の件数もあわせて見せる
+    // （新しい集計の仕組みは作らず、既存のrecords／actionsのデータをそのまま数えるだけ）
+    const isNovel = book.category === "novel";
+    const learningCount = book.records.filter(function (record) {
+      return isNovel ? record.impression : record.learning;
+    }).length;
+    const secondaryParts = ["記録" + book.records.length + "回"];
+    secondaryParts.push((isNovel ? "感想" : "学んだこと") + learningCount + "件");
+    if (!isNovel) {
+      const doneActionCount = loadActions().filter(function (action) {
+        return action.bookId === book.id && action.status === "done";
+      }).length;
+      if (doneActionCount > 0) {
+        secondaryParts.push("実践" + doneActionCount + "件");
+      }
+    }
+    reviewCelebrationStatSecondary.textContent = secondaryParts.join("・");
 
     reviewCelebrationHeader.hidden = false;
   } else {

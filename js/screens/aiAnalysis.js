@@ -71,6 +71,7 @@ function buildRecommendationCard(recommendation) {
 
   searchBooksByTitle(
     recommendation.title,
+    "title",
     function (results) {
       if (results.length > 0 && results[0].coverImage) {
         coverImg.src = results[0].coverImage;

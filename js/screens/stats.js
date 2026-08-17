@@ -48,6 +48,10 @@ function renderStatsScreen() {
   const allRecords = collectAllRecords(books); // js/screens/allRecords.js の関数を再利用する
 
   if (allRecords.length === 0) {
+    // 本が1冊も無いときは「読書タイマーで記録すると」ではなく、まず本の登録を案内する
+    statsEmptyMessage.textContent = books.length === 0
+      ? "まだ本が登録されていません。まず本を登録すると、ここに統計が表示されます。"
+      : "まだ読書記録がありません。読書タイマーで記録すると、ここに統計が表示されます。";
     statsEmptyMessage.hidden = false;
     statsContent.hidden = true;
     return;
