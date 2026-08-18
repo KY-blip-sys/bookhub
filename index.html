@@ -329,7 +329,8 @@
           <button type="button" id="first-book-nudge-button" class="dashed-add-button">＋ 1冊目を登録する</button>
         </div>
 
-        <!-- 今読んでいる本：進捗つきで、押すとそのまま続きから読める（最大5冊を横に並べる） -->
+        <!-- 今読んでいる本：進捗つきで、押すとそのまま続きから読める。
+             PCは最大6冊・タブレット横向きは最大5冊をグリッドで並べ、スマホは横スクロールで6〜8冊たどれる（style.css参照） -->
         <section id="currently-reading-section" class="currently-reading-section" hidden>
           <h2>今読んでいる本</h2>
           <ul id="currently-reading-list" class="currently-reading-list">
@@ -338,6 +339,20 @@
           <p id="currently-reading-empty" class="page-placeholder" hidden>
             まだ読書中の本がありません。本棚から本を選んで、読書を始めましょう。
           </p>
+        </section>
+
+        <!-- おすすめの本（定番本の紹介）：PC幅では右のサイドバー（.recommend-rail）に表示されるが、
+             タブレット横向き・スマホ幅では右側に表示する余白が無いため、代わりにここへ同じおすすめを表示する。
+             タブレット横向きは「今読んでいる本」の直下に、スマホはダッシュボードの一番下に置きたいため、
+             表示位置が違う2つの入れ物を用意し、幅に応じてCSSでどちらか一方だけを表示する（js/screens/recommend.js参照） -->
+        <section id="dashboard-recommend-rail-section" class="dashboard-recommend-rail-section">
+          <div class="recommend-rail-heading">
+            <span class="recommend-rail-icon">📚</span>
+            <h2 class="recommend-rail-title">おすすめの本</h2>
+          </div>
+          <ul id="recommend-book-list-inline" class="recommend-carousel-list">
+            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
+          </ul>
         </section>
 
         <!-- あなたへのおすすめ：登録している本の読書傾向（カテゴリ・著者）をもとに、Google Books APIから
@@ -359,6 +374,18 @@
           </div>
           <div id="ai-assist-goal-body" class="ai-assist-card-body"></div>
         </div>
+
+        <!-- おすすめの本（スマホ幅用）：#dashboard-recommend-rail-sectionと中身は同じだが、
+             スマホでは画面の一番下に置きたいため、別の入れ物として一番最後に置く。表示の出し分けはCSSで行う -->
+        <section id="dashboard-recommend-rail-section-mobile" class="dashboard-recommend-rail-section-mobile">
+          <div class="recommend-rail-heading">
+            <span class="recommend-rail-icon">📚</span>
+            <h2 class="recommend-rail-title">おすすめの本</h2>
+          </div>
+          <ul id="recommend-book-list-inline-mobile" class="recommend-carousel-list">
+            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
+          </ul>
+        </section>
       </div>
 
       <!-- 本一覧画面（本棚） -->

@@ -6,6 +6,11 @@
 // 個別の検索に失敗した本は、表紙なしの簡易カードにフォールバックする。
 
 const recommendBookList = document.getElementById("recommend-book-list");
+// PC幅では右のサイドバー（recommendBookList）が使われるが、タブレット横向き・スマホ幅では
+// 右側に表示する余白が無いため、代わりにダッシュボードの中の2箇所（どちらか一方だけがCSSで表示される）に
+// 同じおすすめを描画する（詳しくはindex.html・style.cssのdashboard-recommend-rail-section参照）
+const recommendBookListInline = document.getElementById("recommend-book-list-inline");
+const recommendBookListInlineMobile = document.getElementById("recommend-book-list-inline-mobile");
 
 // おすすめとして紹介する候補。ここから毎回ランダムに数冊選ぶことで、開くたびに違う本が並ぶようにする
 const RECOMMEND_FAMOUS_BOOKS = [
@@ -29,11 +34,14 @@ const RECOMMEND_FAMOUS_BOOKS = [
   { title: "夜と霧", author: "ヴィクトール・E・フランクル" }
 ];
 
-// 表示する冊数
-const RECOMMEND_BOOK_COUNT = 5;
+// 表示する冊数：右のサイドバー（PC幅）は縦に並ぶぶん高さが長くなりすぎないよう少なめに、
+// 横スクロールのカルーセル（タブレット横向き・スマホ幅）はスワイプして見られるぶん多めにする
+const RECOMMEND_RAIL_COUNT = 5;
+const RECOMMEND_CAROUSEL_COUNT = 8;
 
 function pickRecommendCount() {
-  return RECOMMEND_BOOK_COUNT;
+  // どちらの表示先でも使えるよう、多い方の件数だけ取得しておく
+  return Math.max(RECOMMEND_RAIL_COUNT, RECOMMEND_CAROUSEL_COUNT);
 }
 
 // 配列からランダムにn件を重複無く取り出す
@@ -99,12 +107,68 @@ function buildRecommendBookCard(book, rank) {
   return a;
 }
 
-// おすすめの本一覧を画面に描画する
+// 本1冊ぶんの縦型カード（表紙・タイトル・著者。押すとGoogle Booksの詳細ページを新しいタブで開く）を組み立てる。
+// 横スクロールのカルーセル（タブレット横向き・スマホ幅の入れ物）で使う。行型のbuildRecommendBookCardと違い、
+// 横に並べて見比べやすいよう表紙を大きく見せることを優先し、順位バッジは付けない
+function buildRecommendCarouselCard(book) {
+  const a = document.createElement("a");
+  a.className = "recommend-carousel-card";
+  a.href = book.infoLink;
+  a.target = "_blank";
+  a.rel = "noopener noreferrer";
+
+  const cover = document.createElement("div");
+  cover.className = "recommend-carousel-cover";
+  if (book.thumbnail) {
+    const img = document.createElement("img");
+    img.src = book.thumbnail;
+    img.alt = book.title;
+    img.loading = "lazy";
+    cover.appendChild(img);
+  } else {
+    const initial = document.createElement("span");
+    initial.className = "recommend-carousel-cover-initial";
+    initial.textContent = book.title.charAt(0);
+    cover.appendChild(initial);
+  }
+  a.appendChild(cover);
+
+  const titleEl = document.createElement("p");
+  titleEl.className = "recommend-carousel-title";
+  titleEl.textContent = book.title;
+  a.appendChild(titleEl);
+
+  if (book.author) {
+    const authorEl = document.createElement("p");
+    authorEl.className = "recommend-carousel-author";
+    authorEl.textContent = book.author;
+    a.appendChild(authorEl);
+  }
+
+  return a;
+}
+
+// 横スクロールのカルーセル用の入れ物に、おすすめの本一覧を描画する（listElが無い＝この幅では使わない場合は何もしない）
+function renderRecommendCarouselList(listEl, books) {
+  if (!listEl) {
+    return;
+  }
+  listEl.innerHTML = "";
+  books.forEach(function (book) {
+    listEl.appendChild(buildRecommendCarouselCard(book));
+  });
+}
+
+// おすすめの本一覧を画面に描画する（サイドバー・タブレット横向き用・スマホ用の3箇所すべてに反映する）
 function renderRecommendBooks(books) {
   recommendBookList.innerHTML = "";
-  books.forEach(function (book, index) {
+  books.slice(0, RECOMMEND_RAIL_COUNT).forEach(function (book, index) {
     recommendBookList.appendChild(buildRecommendBookCard(book, index + 1));
   });
+
+  const carouselBooks = books.slice(0, RECOMMEND_CAROUSEL_COUNT);
+  renderRecommendCarouselList(recommendBookListInline, carouselBooks);
+  renderRecommendCarouselList(recommendBookListInlineMobile, carouselBooks);
 }
 
 // 表紙なしの簡易カードを作る（リンクは、その本を検索したGoogle Booksの結果ページを開く）
