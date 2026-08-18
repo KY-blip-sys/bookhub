@@ -17,6 +17,10 @@ const recordFavoriteCharacterInput = document.getElementById("record-favorite-ch
 const recordNotesInput = document.getElementById("record-notes");
 const recordDetailsNovel = document.getElementById("record-details-novel");
 
+// 他の欄を書き終える前にEnterキー（変換確定を含む）でフォームが送信され、
+// 書きかけの内容が次の記録の入力欄に紛れ込んでしまわないようにする
+[recordPagesInput, recordQuoteInput, recordMemorableQuoteInput, recordFavoriteCharacterInput].forEach(preventEnterSubmit);
+
 // 本ごとの記録表示に使う要素を取得しておく
 const statsTotalMinutes = document.getElementById("stats-total-minutes");
 const statsSessionCount = document.getElementById("stats-session-count");

@@ -10,6 +10,11 @@ const coverUploadPreview = document.getElementById("cover-upload-preview");
 const bookList = document.getElementById("book-list");
 const booksCountSubtitle = document.getElementById("books-count-subtitle");
 
+// タイトル・著者を書いている途中でEnterキー（変換確定を含む）を押しても、
+// 総ページ数など他の欄を書き終える前にフォームが送信されないようにする
+preventEnterSubmit(bookTitleInput);
+preventEnterSubmit(bookAuthorInput);
+
 // 今フォームで選択されている表紙画像（base64のURL文字列。未選択ならnull）
 let selectedCoverDataUrl = null;
 
@@ -64,8 +69,8 @@ firstBookNudgeButton.addEventListener("click", function () {
 
 // カテゴリごとのダッシュボード副題
 const DASHBOARD_SUBTITLES = {
-  practical: "今日も一冊、未来の自分のために。",
-  novel: "今日も一冊、心を動かす旅へ。"
+  practical: "今日も一冊未来のために",
+  novel: "今日も一冊心を動かす旅へ"
 };
 
 // 本の表紙（画像があればそれを、なければタイトルの頭文字を表示する）を組み立てる。
@@ -517,13 +522,17 @@ function renderDashboard(books) {
   // カテゴリに合わせて、ダッシュボードの副題も差し替える
   dashboardSubtitle.textContent = DASHBOARD_SUBTITLES[activeCategory] || DASHBOARD_SUBTITLES.practical;
 
-  const totalMinutes = getTotalMinutes(books);
-
+  // ダッシュボードは「今週の記録」だけを集計する（「記録」ページの、これまでの累計と区別するため）
+  let totalMinutes = 0;
   let sessionCount = 0;
   let learningCount = 0;
   books.forEach(function (book) {
-    sessionCount += book.records.length; // 記録回数（「記録」ページの集計と同じ数え方）
     book.records.forEach(function (record) {
+      if (!isInCurrentWeek(record.timestamp)) {
+        return;
+      }
+      totalMinutes += record.minutes;
+      sessionCount += 1; // 記録回数（今週分のみ）
       if (record.learning || record.impression) {
         learningCount += 1; // 学んだこと・感想が書かれている記録の数を数える
       }
@@ -533,8 +542,13 @@ function renderDashboard(books) {
   // 実用書は「学んだこと」が書かれた記録の数、小説は「好きな言葉」の数を表示する（記録画面と同じタイル構成）
   dashboardLearningIcon.textContent = isNovel ? "💬" : "💡";
   dashboardLearningLabel.textContent = isNovel ? "好きな言葉" : "学んだこと";
-  const learningTileCount = isNovel ? getCombinedQuotes("novel").length : learningCount;
+  const learningTileCount = isNovel
+    ? getCombinedQuotes("novel").filter(function (quote) {
+      return isInCurrentWeek(quote.timestamp);
+    }).length
+    : learningCount;
 
+  // 「実践中」「完了した実践」は完了日を記録していないため今週分だけに絞れず、これまでの累計を表示する
   const inProgressCount = actions.filter(function (action) {
     return action.status === "in-progress";
   }).length;
@@ -543,7 +557,7 @@ function renderDashboard(books) {
     return action.status === "done";
   }).length;
 
-  // 「読んだ本」は登録した本の数ではなく、読了した本の数を数える
+  // 「読んだ本」は登録した本の数ではなく、読了した本の数を数える（読了日を記録していないため、これも累計のまま）
   const finishedBookCount = books.filter(function (book) {
     return getBookStatusInfo(book).key === "done";
   }).length;

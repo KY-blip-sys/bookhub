@@ -43,6 +43,7 @@ const bookFormMeta = document.getElementById("book-form-meta");
 const pageCountInput = document.getElementById("book-page-count");
 const pageCountManualNote = document.getElementById("page-count-manual-note");
 enableFlexibleDigitInput(pageCountInput); // 全角数字で入力しても半角として扱う
+preventEnterSubmit(pageCountInput); // Enterキーでタイトル・著者を書き終える前に送信されないようにする
 
 // 検索で選んだ本の「出版社」「出版日」（フォームには専用の入力欄がないので、変数として覚えておく）
 let bookPublisher = "";
@@ -232,7 +233,7 @@ function selectSearchResult(li, result) {
 // 検索欄でEnterキーを押しても、検索ボタンを押したときと同じ動きにする
 // （検索欄はform要素の外にあるため、Enterでの送信が自動では効かない）
 bookSearchInput.addEventListener("keydown", function (event) {
-  if (event.key === "Enter") {
+  if (event.key === "Enter" && !event.isComposing) {
     event.preventDefault();
     bookSearchButton.click();
   }
