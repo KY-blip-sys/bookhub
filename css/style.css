@@ -5328,7 +5328,7 @@ html.dark-mode .dashboard-hero-banner {
        丸ではなく、縁に接する左側だけ角を立てた四角（左右で異なるborder-radius）にして、
        サイドバーからせり出したタブのような見た目にする */
     .sidebar-close-button {
-        display: none;
+        display: flex;
         align-items: center;
         justify-content: center;
         position: fixed;
@@ -5344,6 +5344,12 @@ html.dark-mode .dashboard-hero-banner {
         box-shadow: var(--shadow-sm);
         color: var(--color-text);
         cursor: pointer;
+        /* display:none/flexの切り替えだけだと一瞬で見た目が変わってしまい、サイドバー本体が
+           まだ画面外からスライド中（.sidebarのtransition-standard=0.3s）でも三角だけ先に
+           所定の位置（縁）に見えてしまい不自然だった。display固定にしてopacity/visibilityで
+           出し分け、閉状態のtransitionはdelay無し＝閉じ始めたら即座に消す */
+        opacity: 0;
+        visibility: hidden;
         transition: background-color var(--transition-fast) var(--ease-standard);
     }
 
@@ -5357,9 +5363,14 @@ html.dark-mode .dashboard-hero-banner {
         flex-shrink: 0;
     }
 
-    /* 開いているときだけ表示する（「≡」がsidebar-openクラスで非表示になるのと対称の仕組み） */
+    /* 開くときだけ、サイドバーのスライドインが終わる時間（--transition-standard）ぶん
+       遅らせてから現れるようにする。サイドバー本体の到着と三角の出現を同時にするため */
     .sidebar-close-button.sidebar-open {
-        display: flex;
+        opacity: 1;
+        visibility: visible;
+        transition: background-color var(--transition-fast) var(--ease-standard),
+            opacity var(--transition-fast) var(--ease-standard) var(--transition-standard),
+            visibility 0s linear var(--transition-standard);
     }
 
     /* 「最初の画面に戻る」ロゴは、ヘッダー中央の「BookHub」ボタン（#mobile-topbar-title-button）が
