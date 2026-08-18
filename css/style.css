@@ -284,6 +284,137 @@ html.dark-mode .main-content::before {
     }
 }
 
+/* ---------- ②③おすすめの本（ダッシュボードに埋め込む版） ----------
+   PC幅では上の.recommend-railが右サイドバーとして表示されるが、幅に余裕が無いと隠れてしまう。
+   その代わりに、ダッシュボードの中に同じおすすめを表示するための入れ物を2つ用意している：
+   ・.dashboard-recommend-rail-section　　　　　→ タブレット横向き幅で「今読んでいる本」の直下に表示
+   ・.dashboard-recommend-rail-section-mobile　→ スマホ幅でダッシュボードの一番下に表示
+   どちらもPC幅では隠しておき（.recommend-railが見えているため）、下のメディアクエリで
+   幅に応じてどちらか一方だけを表示に切り替える。中身の描画はjs/screens/recommend.jsが行う。 */
+.dashboard-recommend-rail-section,
+.dashboard-recommend-rail-section-mobile {
+    display: none;
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+/* 見出し（📚 おすすめの本）は、右サイドバー版と全く同じ.recommend-rail-heading等のクラスを再利用する */
+.dashboard-recommend-rail-section .recommend-rail-heading,
+.dashboard-recommend-rail-section-mobile .recommend-rail-heading {
+    margin-bottom: 14px;
+}
+
+/* ⑤⑥横スクロールのカルーセル本体。マウスのドラッグは不要で、トラックパッドの横スワイプ・
+   タッチのスワイプ・マウスホイールの横スクロールはすべてブラウザ標準のoverflow-x:autoだけで
+   自然に動作する。スクロールバーは.scroll-date-colと同じやり方で隠し、カルーセルらしい見た目にする */
+.recommend-carousel-list {
+    list-style: none;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.recommend-carousel-list::-webkit-scrollbar {
+    display: none;
+}
+
+/* カードどうしが窮屈に詰まって見えないよう、.dashboard-recommend-cardと同じ余白の取り方にする */
+.recommend-carousel-card {
+    flex: 0 0 150px;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    color: inherit;
+    text-decoration: none;
+    transition: transform var(--transition-fast) var(--ease-standard),
+        box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+.recommend-carousel-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.recommend-carousel-cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.recommend-carousel-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recommend-carousel-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.recommend-carousel-title {
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.recommend-carousel-author {
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* ②タブレット横向き幅：右サイドバーが隠れる幅と同じ1400pxを境に、代わりにこちらを表示する */
+@media (max-width: 1400px) {
+    .dashboard-recommend-rail-section {
+        display: block;
+    }
+}
+
+/* ③スマホ幅：タブレット向けの入れ物は隠し、ダッシュボードの一番下に置いたスマホ向けの入れ物に切り替える。
+   カードもスワイプで1冊ずつ見やすいよう、画面幅に応じた大きめのサイズにする */
+@media (max-width: 600px) {
+    .dashboard-recommend-rail-section {
+        display: none;
+    }
+
+    .dashboard-recommend-rail-section-mobile {
+        display: block;
+    }
+
+    .recommend-carousel-card {
+        flex-basis: 58vw;
+    }
+}
+
 .page[hidden] {
     display: none;
 }
@@ -349,6 +480,11 @@ html.dark-mode .main-content::before {
 .book-card:nth-child(4), .currently-reading-card:nth-child(4), .dashboard-tile:nth-child(4) { animation-delay: 0.015s; }
 .book-card:nth-child(5), .currently-reading-card:nth-child(5), .dashboard-tile:nth-child(5) { animation-delay: 0.02s; }
 .book-card:nth-child(6), .dashboard-tile:nth-child(6) { animation-delay: 0.025s; }
+/* 読書中の本一覧は最大8冊まで表示できるようになったため（PC:6冊・タブレット:5冊・スマホ:横スクロールで6〜8冊）、
+   6・7・8冊目ぶんの遅延も足しておく */
+.currently-reading-card:nth-child(6) { animation-delay: 0.025s; }
+.currently-reading-card:nth-child(7) { animation-delay: 0.03s; }
+.currently-reading-card:nth-child(8) { animation-delay: 0.035s; }
 
 /* 本一覧は「＋ 新しい本を追加」カードが常に先頭（1番目）に入るぶん本が1つずつ後ろにずれるうえ、
    これまでは6冊目以降が.book-card:nth-child(n+7)で一括りにされ、そこから先が同時に出現していたため、
@@ -1159,12 +1295,32 @@ h1 {
     margin-bottom: 12px;
 }
 
-/* 常に4列のグリッドにする（本が4冊未満のときは、余った列を空けたまま詰めない） */
+/* PC幅では常に6列のグリッドにする（本が6冊未満のときは、余った列を空けたまま詰めない）。
+   読書中の本が7冊以上あっても、2段目がちらっと見える中途半端な状態にはせず、
+   直後のnth-childルールで7冊目以降を非表示にして「6冊まで」できれいに揃える */
 .currently-reading-list {
     list-style: none;
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(6, 1fr);
     gap: 14px;
+}
+
+.currently-reading-list > .currently-reading-card:nth-child(n+7) {
+    display: none;
+}
+
+/* ②タブレット横向き幅：右のおすすめ本サイドバーが無いぶん、5冊までに絞って余裕を持たせる
+   （タブレット横向きでは右サイドバーの代わりにおすすめ本をこの直下へ表示する。style.cssの
+   .dashboard-recommend-rail-section参照）。この2つのルールは、より狭い@media(max-width:900px)・
+   @media(max-width:600px)ブロックがファイルの後ろにあるため、そちらで正しく上書きされる */
+@media (max-width: 1400px) {
+    .currently-reading-list {
+        grid-template-columns: repeat(5, 1fr);
+    }
+
+    .currently-reading-list > .currently-reading-card:nth-child(n+6) {
+        display: none;
+    }
 }
 
 /* .currently-reading-authorがwhite-space:nowrapのため、min-width:0が無いとグリッドの
@@ -1811,6 +1967,23 @@ select {
 
 select:hover {
     border-color: var(--color-text-secondary);
+}
+
+/* ①入力欄タップ時の自動ズームを防ぐ：iOSのSafari・Chromeは、フォーカスした入力欄の文字サイズが
+   16px未満だと自動的に画面を拡大してしまう。この挙動は画面幅ではなく「指でタップする端末かどうか」で
+   起きるため（タブレット横向きの広い画面でも指で操作する以上は起きる）、幅の閾値ではなく
+   pointer:coarse（マウスのような精密なポインターを持たない＝主に指で操作する端末）で判定する。
+   デザイン上の文字サイズ（--font-size-body:14px）はマウス操作のPCではそのまま活かしつつ、
+   この対象だけ16pxに引き上げて自動ズームを防ぐ（見た目が縮むわけではなく、むしろ読みやすくなる
+   方向の変化なので視認性・操作性は損なわない） */
+@media (pointer: coarse) {
+    input[type="text"],
+    input[type="number"],
+    .scroll-date-input,
+    textarea,
+    select {
+        font-size: 16px;
+    }
 }
 
 button {
@@ -5300,8 +5473,29 @@ html.dark-mode .dashboard-hero-banner {
         grid-template-columns: repeat(2, 1fr);
     }
 
+    /* ④スマホ幅：グリッドで折り返すのではなく、1段の横スクロールで6〜8冊たどれるようにする
+       （タブレット横向きまでのグリッド＋nth-childでの絞り込みとは考え方を変え、ここでは
+       絞り込みを解除してスワイプで先まで見られるようにする） */
     .currently-reading-list {
-        grid-template-columns: repeat(2, 1fr);
+        display: flex;
+        overflow-x: auto;
+        scroll-snap-type: x proximity;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        padding-bottom: 6px;
+    }
+
+    .currently-reading-list::-webkit-scrollbar {
+        display: none;
+    }
+
+    .currently-reading-list > .currently-reading-card {
+        flex: 0 0 148px;
+        scroll-snap-align: start;
+    }
+
+    .currently-reading-list > .currently-reading-card:nth-child(n+6) {
+        display: block;
     }
 
     .records-summary,
