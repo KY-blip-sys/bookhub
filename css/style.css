@@ -183,6 +183,18 @@ html.dark-mode .main-content::before {
     }
 }
 
+/* タブレット横向き（サイドバーは.sidebarのまま固定表示、.recommend-railは上のルールで隠れる幅）：
+   .main-contentのmax-width:960pxは「右にrecommend-railがある」PC幅を前提にした値のため、
+   railが隠れているこの範囲ではそのまま適用すると右側に不自然な空白ができてしまう。
+   サイドバー幅ぶんを引いた残り全部をmain-contentに使わせ、画面幅いっぱいに広げる。
+   下限の901pxは、900px以下でサイドバーがドロワー化する@media (max-width: 900px)と揃えてあり、
+   スマホ・タブレット縦向き（ドロワー化する幅）の見た目には影響しない */
+@media (min-width: 901px) and (max-width: 1400px) {
+    .main-content {
+        max-width: 100%;
+    }
+}
+
 /* ---------- あなたへのおすすめ（ダッシュボードに埋め込む版） ----------
    PC幅では上の.recommend-railが右サイドバーとして表示されるが、幅に余裕が無いと隠れてしまう。
    その代わりに、ダッシュボードの中に同じおすすめを表示するための入れ物を用意している：
@@ -338,7 +350,14 @@ html.dark-mode .main-content::before {
     top: 16px;
     z-index: 10;
     display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    /* 左右の列は"1fr"ではなく"auto"にする。1frのままだと、中央（タイトル）の
+       auto幅トラックが（overflow-wrap:break-wordを無視した）max-content基準で先に
+       幅を確保してしまい、長いタイトルのときに左右のfrトラックへ配る余白が0になって、
+       戻るボタンが横幅0の列からはみ出し中央タイトルの上に重なって表示されるバグがあった。
+       左右をauto（＝戻る・使い方ボタンなど中身がそのまま必要とする幅）に固定し、
+       中央だけをminmax(0, 1fr)にすることで、中央側が余白ぶんだけを使い0まで縮められるようにし、
+       左右の列が必ずその幅を確保できるようにする */
+    grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
     gap: 12px;
     margin: -12px 0 28px;
@@ -461,6 +480,17 @@ html.dark-mode .main-content::before {
     /* スマホでは今日の日付を省略し、圧迫感を減らす */
     .today-date {
         display: none;
+    }
+
+    /* スマホ幅は左右の列がタイトル用に確保できる幅がPCより狭いため、タイトルが長いと
+       何行にもなってヘッダーが縦に伸び続けてしまう。2行までにして、それでも長い場合は
+       「…」で省略する（戻るボタンが押せることが最優先で、タイトル全文はここでは折り返さない） */
+    .content-header-title {
+        display: -webkit-box;
+        -webkit-box-orient: vertical;
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+        overflow: hidden;
     }
 }
 
