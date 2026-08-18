@@ -1,4 +1,4 @@
-// ---------- 本の検索（Google Books API） ----------
+// ---------- 本の検索（Cloudflare Worker経由でGoogle Books APIを検索） ----------
 // この画面（本を追加するフォーム）だけで使う、検索・自動入力に関するコードをまとめています。
 
 // 検索欄・検索結果の要素を取得しておく
@@ -21,42 +21,24 @@ let bookPublishedDate = "";
 let bookGenre = "";
 let bookIsbn = "";
 
-// タイトルまたはISBNでGoogle Books APIを検索し、結果を「本アプリ内で共通の形」に変換して返す。
+// タイトルまたはISBNで本を検索し、結果を「本アプリ内で共通の形」に変換して返す。
 // mode: "title"ならタイトルで（intitle:）、"isbn"ならISBN（バーコード読み取り由来）で（isbn:）検索する
-// ここではGoogle Books APIを直接呼んでいるが、将来「自前のサーバー経由で検索する」
-// ように変える場合も、この関数の中身（fetchする先とデータの変換部分）を
-// 書き換えるだけでよく、呼び出す側（画面の表示処理）は変更しなくて済む。
+// Google Books APIへは直接アクセスせず、中継用のCloudflare Worker（bookhub-api）を経由する。
+// APIキーはWorker側のSecretで管理されるため、ここでは一切扱わない。
 function searchBooksByTitle(query, mode, onSuccess, onError) {
-  // APIキーが設定されていれば付ける（キーなしの場合、利用者全体で共有の少ない無料枠になる）
-  const apiKey = loadGoogleBooksApiKey();
-  const keyParam = apiKey ? "&key=" + encodeURIComponent(apiKey) : "";
   const searchField = mode === "isbn" ? "isbn:" : "intitle:";
 
   const url =
-    "https://www.googleapis.com/books/v1/volumes?maxResults=10&q=" +
-    encodeURIComponent(searchField + query) +
-    keyParam;
+    "https://bookhub-api.lilyjackieparsley.workers.dev/books?maxResults=10&q=" +
+    encodeURIComponent(searchField + query);
 
   // デバッグ用：実際に送るリクエストの中身をConsoleに残す
-  // （APIキーの値そのものは出さず、「設定されているか」と「何文字か」だけを出す。
-  // 　URLも念のためキー部分を***に置き換えてから出す）
-  console.log(
-    "[Google Books検索] APIキー:",
-    apiKey ? "設定あり（" + apiKey.length + "文字）" : "未設定（共有の無料枠を使用）"
-  );
-  console.log(
-    "[Google Books検索] リクエストURL:",
-    apiKey ? url.replace(encodeURIComponent(apiKey), "***") : url
-  );
+  console.log("[Google Books検索] リクエストURL:", url);
 
-  // 注：referrerPolicyを明示しないと、クロスオリジン向けのfetchはブラウザの既定挙動で
-  // Referer（参照元URL）のパス部分を送らずオリジンのみを送ってしまう。
-  // Google Cloud側のAPIキー制限はパス込みのURL（例：.../bookhub/*）で設定されることが多く、
-  // パスが送られないと「リファラー制限違反」としてAPIキーが拒否されてしまうため、明示的に指定する。
-  fetch(url, { referrerPolicy: "no-referrer-when-downgrade" })
+  fetch(url)
     .then(function (response) {
       if (!response.ok) {
-        // ステータスコードだけでなく、Googleが返す本文中のエラー理由（キー無効・リファラー制限など）も
+        // ステータスコードだけでなく、Workerが返す本文中のエラー理由も
         // Consoleで確認できるようにする（本文が読めない場合はステータスコードのみになる）
         return response
           .json()
@@ -64,7 +46,7 @@ function searchBooksByTitle(query, mode, onSuccess, onError) {
             return {};
           })
           .then(function (body) {
-            const detail = body.error && body.error.message ? body.error.message : "";
+            const detail = typeof body.error === "string" ? body.error : "";
             throw new Error(
               "検索に失敗しました（ステータスコード: " + response.status + "）" + (detail ? "：" + detail : "")
             );

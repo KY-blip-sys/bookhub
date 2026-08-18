@@ -9,52 +9,20 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=40">
+  <link rel="stylesheet" href="css/style.css?v=42">
 </head>
 
 <body>
 
-  <!-- カテゴリ選択画面（初回起動時のホーム画面。カテゴリが未選択のときだけ表示する） -->
-  <div id="screen-category-select">
-    <div class="category-select-card-outer">
-      <div class="category-select-brand">
-        <span class="sidebar-brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
-            <path d="M12 6v14" />
-          </svg>
-        </span>
-        <span class="sidebar-brand-name">BookHub</span>
-      </div>
-
-      <p class="category-select-lead">本のジャンルを選んでください</p>
-
-      <div class="category-select-cards">
-        <button type="button" class="category-select-card" data-category="practical">
-          <p class="category-select-icon">📖</p>
-          <h2>実用書</h2>
-          <p class="category-select-description">知識・ビジネス・自己啓発</p>
-        </button>
-
-        <button type="button" class="category-select-card" data-category="novel">
-          <p class="category-select-icon">📕</p>
-          <h2>小説</h2>
-          <p class="category-select-description">ミステリー・恋愛・SFなど</p>
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div class="app-shell" hidden>
+  <div class="app-shell">
 
     <!-- スマホ・タブレット幅だけに表示するトップバー（PC幅では常時表示のサイドバーがあるため、
          このバー自体をCSSで非表示にする）。開閉は右のedge-tab（#sidebar-toggle-tab）が担うため、
          ここにはボタン用の横幅を確保せず、タイトルがそのまま全幅を使う -->
     <header class="mobile-topbar">
-      <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すと最初のカテゴリ選択画面に戻る。
+      <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すとホームに戻る。
            ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
-      <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button" aria-label="最初の画面に戻る">BookHub</button>
+      <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button" aria-label="ホームに戻る">BookHub</button>
     </header>
 
     <!-- スマホ・タブレット幅でサイドバーをドロワー表示にしたとき、裏のメイン画面を暗くして
@@ -63,8 +31,8 @@
 
     <!-- 左側に常時表示するサイドバー（スマホ・タブレット幅では、普段は画面外に隠れたドロワーになる） -->
     <aside class="sidebar">
-      <!-- 押すと最初のカテゴリ選択画面に戻る -->
-      <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="最初の画面に戻る">
+      <!-- 押すとホームに戻る -->
+      <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="ホームに戻る">
         <span class="sidebar-brand-icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
             stroke-linejoin="round">
@@ -88,7 +56,7 @@
             <path d="M4 11.5 12 4l8 7.5" />
             <path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9" />
           </svg>
-          <span>ダッシュボード</span>
+          <span>ホーム</span>
         </button>
         <button class="nav-item" type="button" data-nav="books">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -260,6 +228,13 @@
 
       <!-- ダッシュボード画面 -->
       <div id="screen-dashboard" class="page">
+        <!-- 実用書・小説の切り替え：サイドバーの切り替えピル（.category-switcher-button）と同じ仕組みで、
+             ホーム画面上からもいつでもカテゴリを切り替えられるようにする（js/screens/categorySelect.js参照） -->
+        <div class="category-switcher dashboard-category-switcher" role="group" aria-label="カテゴリの切り替え">
+          <button type="button" class="category-switcher-button" data-category="practical">📖 実用書</button>
+          <button type="button" class="category-switcher-button" data-category="novel">📕 小説</button>
+        </div>
+
         <!-- 押すと本一覧に移動する、中央寄せのヒーローバナー（data-nav-targetの仕組みはapp.jsが処理する） -->
         <button type="button" class="dashboard-header dashboard-hero-banner" data-nav-target="books">
           <p class="dashboard-slogan">読書が人生を変える</p>
@@ -326,7 +301,8 @@
         </div>
 
         <!-- 今読んでいる本：進捗つきで、押すとそのまま続きから読める。
-             PCは最大6冊・タブレット横向きは最大5冊をグリッドで並べ、スマホは横スクロールで6〜8冊たどれる（style.css参照） -->
+             カードサイズは固定のまま、PCは最大8冊・タブレット横向きは最大7冊・スマホは最大10冊を
+             横スクロールでたどれる（style.css参照） -->
         <section id="currently-reading-section" class="currently-reading-section" hidden>
           <h2>今読んでいる本</h2>
           <ul id="currently-reading-list" class="currently-reading-list">
@@ -1265,7 +1241,7 @@
         <div class="settings-card">
           <h3>今月の読書目標</h3>
           <p class="field-hint">
-            今月読み終えたい本の冊数を設定すると、ダッシュボードにAIからの応援メッセージが表示されます。
+            今月読み終えたい本の冊数を設定すると、ホームにAIからの応援メッセージが表示されます。
             0冊のまま（未設定）にすると表示されません。
           </p>
           <div class="settings-row">
@@ -1552,10 +1528,10 @@
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=24"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=30"></script>
-  <script src="js/screens/bookSearch.js?v=29"></script>
+  <script src="js/screens/books.js?v=31"></script>
+  <script src="js/screens/bookSearch.js?v=30"></script>
   <script src="js/screens/bookBarcode.js?v=1"></script>
-  <script src="js/screens/dashboardRecommend.js?v=2"></script>
+  <script src="js/screens/dashboardRecommend.js?v=3"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/timer.js?v=25"></script>
   <script src="js/screens/records.js?v=25"></script>
@@ -1572,11 +1548,11 @@
   <!-- assist.jsは、aiAnalysis.jsのbuildRecommendationCardとAssistViewModelを両方使うため、それらの後に読み込む -->
   <script src="js/screens/assist.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
-  <script src="js/screens/recommend.js?v=25"></script>
-  <script src="js/screens/app.js?v=26"></script>
-  <!-- categorySelect.jsは、appの起動判定（カテゴリ選択画面 or ダッシュボード）を担うため、
+  <script src="js/screens/recommend.js?v=26"></script>
+  <script src="js/screens/app.js?v=27"></script>
+  <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
-  <script src="js/screens/categorySelect.js?v=27"></script>
+  <script src="js/screens/categorySelect.js?v=28"></script>
 </body>
 
 </html>

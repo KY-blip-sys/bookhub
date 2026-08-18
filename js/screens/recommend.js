@@ -35,9 +35,10 @@ const RECOMMEND_FAMOUS_BOOKS = [
 ];
 
 // 表示する冊数：右のサイドバー（PC幅）は縦に並ぶぶん高さが長くなりすぎないよう少なめに、
-// 横スクロールのカルーセル（タブレット横向き・スマホ幅）はスワイプして見られるぶん多めにする
+// 横スクロールのカルーセル（タブレット横向き・スマホ幅）はカードサイズを変えずに横スクロールで
+// たどれるぶん多めにする
 const RECOMMEND_RAIL_COUNT = 5;
-const RECOMMEND_CAROUSEL_COUNT = 8;
+const RECOMMEND_CAROUSEL_COUNT = 10;
 
 function pickRecommendCount() {
   // どちらの表示先でも使えるよう、多い方の件数だけ取得しておく

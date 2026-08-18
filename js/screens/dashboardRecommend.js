@@ -12,6 +12,11 @@ const dashboardRecommendListCarousel = document.getElementById("dashboard-recomm
 const dashboardRecommendMessage = document.getElementById("dashboard-recommend-message");
 const dashboardRecommendMessageCarousel = document.getElementById("dashboard-recommend-message-carousel");
 
+// 表示する冊数：右のサイドバー（PC幅）は縦に並ぶぶん高さが長くなりすぎないよう少なめに、
+// 横スクロールのカルーセル（タブレット横向き・スマホ幅）はカードサイズを変えずに横スクロールで
+// たどれるぶん、取得できた分（最大はrecommendationService.jsのRECOMMEND_TARGET_COUNT）だけ表示する
+const DASHBOARD_RECOMMEND_RAIL_COUNT = 5;
+
 // 今おすすめを取得中かどうか（本の追加・編集・削除が連続したときに、同時に何度もAPIを呼ばないようにする）
 let isLoadingDashboardRecommendations = false;
 // 取得中にもう一度更新の必要が起きたかどうか（取得が終わり次第、もう一度だけ取得し直す）
@@ -106,7 +111,7 @@ function renderDashboardRecommendations(books) {
 
   dashboardRecommendMessage.hidden = true;
   dashboardRecommendList.innerHTML = "";
-  books.forEach(function (book) {
+  books.slice(0, DASHBOARD_RECOMMEND_RAIL_COUNT).forEach(function (book) {
     dashboardRecommendList.appendChild(buildDashboardRecommendCard(book));
   });
 

@@ -262,7 +262,7 @@ function replayDashboardTileEntrance(container) {
 
 // サイドバーの項目名（nav属性の値）と、ヘッダーに表示する日本語ラベルの対応表
 const NAV_LABELS = {
-  dashboard: "ダッシュボード",
+  dashboard: "ホーム",
   books: "本一覧",
   actions: "実践リスト",
   practicalQuotes: "名言集",
@@ -407,5 +407,6 @@ function renderReadingRing() {
 
 renderReadingRing(); // 起動時にも一度描画しておく
 
-// アプリの起動時にどの画面を開くか（カテゴリ選択画面 or ダッシュボード）は
-// js/screens/categorySelect.js が判断する（この時点ではまだ何も表示しない）。
+// アプリは起動したら常にホーム（ダッシュボード）から始まる。
+// 実際にgoToNavPage("dashboard")を呼んで描画するのはjs/screens/categorySelect.js
+// （カテゴリの読み込み・記憶とあわせて、起動時の初期化をまとめて担当する）。
