@@ -39,6 +39,26 @@ function enableFlexibleDigitInput(inputEl) {
   });
 }
 
+// ---------- Google Books APIの共通の変換処理 ----------
+// bookSearch.js（本の検索）・recommendationService.js（おすすめ機能）の両方で使う
+
+// industryIdentifiersから、重複判定などに使うISBNを1つ選ぶ（ISBN_13を優先し、無ければISBN_10）
+function pickPreferredIsbn(identifiers) {
+  if (!identifiers) {
+    return "";
+  }
+  const isbn13 = identifiers.find(function (identifier) {
+    return identifier.type === "ISBN_13";
+  });
+  if (isbn13) {
+    return isbn13.identifier;
+  }
+  const isbn10 = identifiers.find(function (identifier) {
+    return identifier.type === "ISBN_10";
+  });
+  return isbn10 ? isbn10.identifier : "";
+}
+
 // ---------- Enterキーでの誤送信を防ぐ ----------
 // 1つのフォームに入力欄が複数あると、他の欄を書き終える前にEnterキー（変換確定のEnterも含む）で
 // フォーム全体が送信されてしまい、書きかけの内容が消えたり次の入力欄に紛れ込んだりすることがある。

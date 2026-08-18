@@ -1,45 +1,8 @@
-// 「統計」画面（読書スピード・平均時間・期間別の読書時間）関連の要素を取得しておく
+// 「統計」画面（読書スピード・平均時間・読書時間の推移）関連の要素を取得しておく
 const statsEmptyMessage = document.getElementById("stats-empty-message");
 const statsContent = document.getElementById("stats-content");
 const statsSpeedEl = document.getElementById("stats-speed");
 const statsAvgSessionEl = document.getElementById("stats-avg-session");
-const statsDayMinutesEl = document.getElementById("stats-day-minutes");
-const statsWeekMinutesEl = document.getElementById("stats-week-minutes");
-const statsMonthMinutesEl = document.getElementById("stats-month-minutes");
-const statsYearMinutesEl = document.getElementById("stats-year-minutes");
-
-// 2つの日付が同じ日かどうかを判定する
-function isSameDay(date, reference) {
-  return (
-    date.getFullYear() === reference.getFullYear() &&
-    date.getMonth() === reference.getMonth() &&
-    date.getDate() === reference.getDate()
-  );
-}
-
-// 2つの日付が同じ週（月曜始まり）かどうかを判定する
-function isSameWeek(date, reference) {
-  const startOfWeek = new Date(reference);
-  const day = startOfWeek.getDay(); // 0(日)〜6(土)
-  const diffToMonday = day === 0 ? 6 : day - 1;
-  startOfWeek.setDate(startOfWeek.getDate() - diffToMonday);
-  startOfWeek.setHours(0, 0, 0, 0);
-
-  const endOfWeek = new Date(startOfWeek);
-  endOfWeek.setDate(endOfWeek.getDate() + 7);
-
-  return date >= startOfWeek && date < endOfWeek;
-}
-
-// 2つの日付が同じ月かどうかを判定する
-function isSameMonth(date, reference) {
-  return date.getFullYear() === reference.getFullYear() && date.getMonth() === reference.getMonth();
-}
-
-// 2つの日付が同じ年かどうかを判定する
-function isSameYear(date, reference) {
-  return date.getFullYear() === reference.getFullYear();
-}
 
 // 「統計」画面を最新の状態で表示する（アクティブなカテゴリの本だけを対象にする）
 function renderStatsScreen() {
@@ -76,38 +39,6 @@ function renderStatsScreen() {
   const avgSessionMinutes = sessionCount > 0 ? totalMinutes / sessionCount : 0;
   statsAvgSessionEl.textContent = sessionCount > 0 ? Math.round(avgSessionMinutes) : "―";
 
-  // 期間（今日・今週・今月・今年）ごとの読書時間を合計する
-  const now = new Date();
-  let dayMinutes = 0;
-  let weekMinutes = 0;
-  let monthMinutes = 0;
-  let yearMinutes = 0;
-
-  allRecords.forEach(function (record) {
-    if (!record.timestamp) {
-      return; // timestampがない古い記録は、期間の判定ができないので集計から外す
-    }
-    const recordDate = new Date(record.timestamp);
-
-    if (isSameDay(recordDate, now)) {
-      dayMinutes += record.minutes;
-    }
-    if (isSameWeek(recordDate, now)) {
-      weekMinutes += record.minutes;
-    }
-    if (isSameMonth(recordDate, now)) {
-      monthMinutes += record.minutes;
-    }
-    if (isSameYear(recordDate, now)) {
-      yearMinutes += record.minutes;
-    }
-  });
-
-  statsDayMinutesEl.textContent = dayMinutes;
-  statsWeekMinutesEl.textContent = weekMinutes;
-  statsMonthMinutesEl.textContent = monthMinutes;
-  statsYearMinutesEl.textContent = yearMinutes;
-
   trendAllRecords = allRecords;
   renderTrendChart(currentTrendPeriod);
 }
@@ -115,8 +46,17 @@ function renderStatsScreen() {
 // ---------- 読書時間の推移（棒グラフ・日/週/月/年の切り替え） ----------
 
 const chartPeriodTabs = document.querySelectorAll(".chart-period-tab");
+const trendChart = document.querySelector(".trend-chart");
 const trendChartBars = document.getElementById("trend-chart-bars");
+const trendChartAxis = document.getElementById("trend-chart-axis");
+const trendChartGrid = document.getElementById("trend-chart-grid");
 const trendTooltip = document.getElementById("trend-tooltip");
+
+// 縦軸の目盛りの数（0を含む。例：5なら0・25%・50%・75%・100%の5本）
+const TREND_AXIS_TICK_COUNT = 5;
+
+// タップでツールチップを開いたままにしているバー（スマホなど、マウスが無い環境用）
+let tooltipPinnedBar = null;
 
 // 数字の頭を0埋めする（例：8 → "08"）
 function padTwoDigits(n) {
@@ -255,6 +195,51 @@ function buildTrendBuckets(period, allRecords) {
   return buckets;
 }
 
+// 棒グラフの一番高い値をもとに、縦軸のきりのいい上限（分）を決める
+// （例：最大37分なら50分、最大95分なら100分、というように、TREND_AXIS_TICK_COUNT等分しやすい数に丸める）
+function computeTrendAxisMax(maxMinutes) {
+  if (maxMinutes <= 0) {
+    return 60; // 記録が無いときの目盛りの既定値
+  }
+
+  const roughStep = maxMinutes / (TREND_AXIS_TICK_COUNT - 1);
+  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+  const normalized = roughStep / magnitude;
+
+  let niceStep;
+  if (normalized <= 1) {
+    niceStep = 1;
+  } else if (normalized <= 2) {
+    niceStep = 2;
+  } else if (normalized <= 5) {
+    niceStep = 5;
+  } else {
+    niceStep = 10;
+  }
+  niceStep *= magnitude;
+
+  return niceStep * (TREND_AXIS_TICK_COUNT - 1);
+}
+
+// 縦軸の目盛り（分の数字）と、横のグリッド線を描画する
+function renderTrendAxis(axisMax) {
+  trendChartAxis.innerHTML = "";
+  trendChartGrid.innerHTML = "";
+
+  for (let i = TREND_AXIS_TICK_COUNT - 1; i >= 0; i--) {
+    const tickValue = Math.round((axisMax * i) / (TREND_AXIS_TICK_COUNT - 1));
+
+    const labelEl = document.createElement("span");
+    labelEl.className = "trend-chart-axis-label";
+    labelEl.textContent = tickValue + "分";
+    trendChartAxis.appendChild(labelEl);
+
+    const lineEl = document.createElement("div");
+    lineEl.className = "trend-chart-grid-line";
+    trendChartGrid.appendChild(lineEl);
+  }
+}
+
 // 選択中の期間で、読書時間の推移を棒グラフとして描画する
 function renderTrendChart(period) {
   currentTrendPeriod = period;
@@ -272,6 +257,8 @@ function renderTrendChart(period) {
   const maxMinutes = buckets.reduce(function (max, bucket) {
     return Math.max(max, bucket.minutes);
   }, 0);
+  const axisMax = computeTrendAxisMax(maxMinutes);
+  renderTrendAxis(axisMax);
 
   buckets.forEach(function (bucket) {
     const col = document.createElement("div");
@@ -282,8 +269,8 @@ function renderTrendChart(period) {
 
     const bar = document.createElement("div");
     bar.className = "trend-chart-bar";
-    // 一番高いバーを100%とした割合で高さを決める（0分はバーが見えないよう高さ0のままにする）
-    const heightPercent = maxMinutes > 0 && bucket.minutes > 0 ? (bucket.minutes / maxMinutes) * 100 : 0;
+    // 縦軸の上限を100%とした割合で高さを決める（0分はバーが見えないよう高さ0のままにする）
+    const heightPercent = axisMax > 0 && bucket.minutes > 0 ? (bucket.minutes / axisMax) * 100 : 0;
     bar.style.height = (bucket.minutes > 0 ? Math.max(heightPercent, 3) : 0) + "%";
 
     bar.tabIndex = 0;
@@ -299,6 +286,17 @@ function renderTrendChart(period) {
     bar.addEventListener("mouseleave", hideTrendTooltip);
     bar.addEventListener("blur", hideTrendTooltip);
 
+    // スマホなどタッチ操作の環境ではmouseenterが発生しないため、タップでも同じように読書時間を確認できるようにする
+    bar.addEventListener("click", function (event) {
+      event.stopPropagation(); // documentのクリックで閉じる処理に伝わらないようにする
+      if (tooltipPinnedBar === bar) {
+        hideTrendTooltip();
+      } else {
+        showTrendTooltip(bar, bucket);
+        tooltipPinnedBar = bar;
+      }
+    });
+
     barWrapper.appendChild(bar);
     col.appendChild(barWrapper);
 
@@ -310,6 +308,13 @@ function renderTrendChart(period) {
     trendChartBars.appendChild(col);
   });
 }
+
+// バー以外の場所をタップ／クリックしたら、タップで開いたままのツールチップを閉じる
+document.addEventListener("click", function () {
+  if (tooltipPinnedBar) {
+    hideTrendTooltip();
+  }
+});
 
 // バーの上に、詳しいラベルと分数を表示するツールチップを出す
 function showTrendTooltip(barEl, bucket) {
@@ -323,8 +328,9 @@ function showTrendTooltip(barEl, bucket) {
   labelEl.textContent = bucket.fullLabel;
   trendTooltip.appendChild(labelEl);
 
+  // trendTooltipの位置の基準（position:relative）は.trend-chartなので、そこからのオフセットで計算する
   const barRect = barEl.getBoundingClientRect();
-  const containerRect = trendChartBars.getBoundingClientRect();
+  const containerRect = trendChart.getBoundingClientRect();
   trendTooltip.style.left = (barRect.left - containerRect.left + barRect.width / 2) + "px";
   trendTooltip.style.top = (barRect.top - containerRect.top) + "px";
   trendTooltip.hidden = false;
@@ -333,6 +339,7 @@ function showTrendTooltip(barEl, bucket) {
 // ツールチップを隠す
 function hideTrendTooltip() {
   trendTooltip.hidden = true;
+  tooltipPinnedBar = null;
 }
 
 // タブ（日/週/月/年）が押されたら、その期間の棒グラフに切り替える

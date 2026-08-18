@@ -1282,6 +1282,117 @@ h1 {
     font-size: 9px;
 }
 
+/* ---------- ダッシュボード：あなたへのおすすめ ---------- */
+.dashboard-recommend-section {
+    margin-top: 20px;
+    margin-bottom: 8px;
+}
+
+.dashboard-recommend-section h2 {
+    font-size: var(--font-size-heading);
+    margin-bottom: 12px;
+}
+
+.dashboard-recommend-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 14px;
+}
+
+.dashboard-recommend-card {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.dashboard-recommend-cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+
+.dashboard-recommend-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.dashboard-recommend-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.dashboard-recommend-title {
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+.dashboard-recommend-author {
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 8px;
+}
+
+.dashboard-recommend-genre {
+    align-self: flex-start;
+    padding: 3px 9px;
+    margin-bottom: 10px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-accent-soft);
+    color: var(--color-accent);
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+}
+
+.dashboard-recommend-register-button {
+    margin-top: auto;
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.dashboard-recommend-register-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.dashboard-recommend-register-button:disabled {
+    background-color: var(--color-text-secondary);
+    cursor: default;
+}
+
 /* ---------- ダッシュボード見出し（スローガン） ---------- */
 /* ページタイトルはヘッダー中央に一本化したため、ここは合言葉のような一言だけ残す */
 .dashboard-slogan {
@@ -1803,11 +1914,6 @@ button[type="submit"]:hover {
     margin-bottom: 16px;
 }
 
-/* タイトル／著者の検索方法トグル（.reading-status-toggleと見た目を揃える） */
-#book-search-mode-toggle {
-    margin-bottom: 10px;
-}
-
 .book-search-row {
     display: flex;
     gap: 8px;
@@ -1901,6 +2007,32 @@ button[type="submit"]:hover {
     font-size: 12px;
     color: var(--color-text-secondary);
     margin-top: 2px;
+}
+
+/* バーコード読み取りで追加するボタン（検索欄のすぐ下、手動入力より上に置く） */
+.book-barcode-scan-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    margin-top: 10px;
+    padding: 10px;
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard);
+}
+
+.book-barcode-scan-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
 }
 
 .book-search-empty {
@@ -2055,6 +2187,41 @@ button[type="submit"]:hover {
 
 .book-form-divider span {
     white-space: nowrap;
+}
+
+/* 検索・バーコードで見つからないときだけ使う手動入力欄。普段はたたんで小さくしておく */
+.book-form-manual-details {
+    margin-top: 4px;
+}
+
+.book-form-manual-details summary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 18px 0 14px;
+    color: var(--color-text-secondary);
+    font-size: 12px;
+    cursor: pointer;
+    list-style: none;
+}
+
+.book-form-manual-details summary::-webkit-details-marker {
+    display: none;
+}
+
+.book-form-manual-details summary::before {
+    content: "▸";
+    font-size: 10px;
+    transition: transform var(--transition-fast) var(--ease-standard);
+}
+
+.book-form-manual-details[open] summary::before {
+    transform: rotate(90deg);
+}
+
+.book-form-manual-details summary:hover {
+    color: var(--color-text);
 }
 
 .book-form-row {
@@ -2212,11 +2379,6 @@ button[type="submit"]:hover {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23cf7a94' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='22' y='12' width='56' height='76' rx='8'/%3E%3Cpath d='M34 34h32'/%3E%3Cpath d='M34 50h32'/%3E%3Cpath d='M34 66h20'/%3E%3C/svg%3E");
 }
 
-/* 統計画面の「期間別の読書時間」はアイコン要素を持たないため、4枚ともカレンダーのイラストを背景として敷く */
-.stats-period-grid .dashboard-tile::before {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='none' stroke='%23cf8f6a' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='14' y='20' width='72' height='66' rx='8'/%3E%3Cpath d='M14 40h72'/%3E%3Cpath d='M32 10v18'/%3E%3Cpath d='M68 10v18'/%3E%3C/svg%3E");
-}
-
 /* ダークモードでは背景が濃いため、装飾イラスト・ドットの不透明度を少し上げて見えるようにする */
 html.dark-mode .dashboard-tile::before {
     opacity: 0.14;
@@ -2280,12 +2442,6 @@ html.dark-mode .dashboard-tile::after {
     margin-bottom: 8px;
 }
 
-.stats-period-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 16px;
-}
-
 /* ---------- 読書時間の推移（棒グラフの期間タブ） ---------- */
 .chart-period-tabs {
     display: inline-flex;
@@ -2323,6 +2479,57 @@ html.dark-mode .dashboard-tile::after {
 .trend-chart {
     position: relative;
     margin-top: 16px;
+}
+
+.trend-chart-body {
+    display: flex;
+    align-items: stretch;
+}
+
+/* 縦軸の目盛り（分）。.trend-chart-barsと同じ高さ・上パディングにそろえて、
+   横のグリッド線（.trend-chart-grid）と同じ位置に数字が来るようにする */
+.trend-chart-axis {
+    flex-shrink: 0;
+    width: 30px;
+    margin-right: 6px;
+    height: 160px;
+    padding-top: 24px;
+    padding-bottom: 1px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.trend-chart-axis-label {
+    font-size: 10px;
+    color: var(--color-text-secondary);
+    line-height: 1;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.trend-chart-plot {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+}
+
+/* 横のグリッド線。棒グラフ（.trend-chart-bars）とぴったり重なるよう、同じ高さ・パディングにする */
+.trend-chart-grid {
+    position: absolute;
+    inset: 0;
+    padding-top: 24px;
+    padding-bottom: 1px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.trend-chart-grid-line {
+    border-top: 1px dashed var(--color-border);
 }
 
 .trend-chart-bars {
@@ -3118,6 +3325,57 @@ html.dark-mode .dashboard-tile::after {
 
 .modal-card input {
     margin-top: 4px;
+}
+
+/* ---------- バーコード読み取りモーダル ---------- */
+/* 本を追加するモーダル（z-index: 20）の、さらに上に重ねて表示する */
+.book-barcode-modal {
+    z-index: 30;
+}
+
+.book-barcode-modal-card {
+    max-width: 420px;
+}
+
+.book-barcode-hint {
+    margin-bottom: 12px;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+}
+
+.book-barcode-video-frame {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    overflow: hidden;
+    border-radius: var(--radius-md);
+    background-color: #000;
+}
+
+.book-barcode-video-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* バーコードを収める目安の枠（実際の読み取り範囲を制限するものではなく、あくまで目印） */
+.book-barcode-video-guide {
+    position: absolute;
+    top: 38%;
+    left: 8%;
+    width: 84%;
+    height: 24%;
+    border: 3px solid rgba(255, 255, 255, 0.85);
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 999px rgba(0, 0, 0, 0.35);
+    pointer-events: none;
+}
+
+.book-barcode-status {
+    margin-top: 12px;
+    text-align: center;
+    color: var(--color-text-secondary);
+    font-size: 13px;
 }
 
 /* ---------- タイマーの途中リセット確認モーダル ---------- */
@@ -5049,10 +5307,6 @@ html.dark-mode .dashboard-hero-banner {
     .records-summary,
     .stats-summary {
         grid-template-columns: 1fr;
-    }
-
-    .stats-period-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 
     .chart-period-tabs {
