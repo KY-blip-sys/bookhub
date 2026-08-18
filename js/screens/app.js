@@ -184,6 +184,9 @@ function openSidebarDrawer() {
   sidebarToggleTab.classList.add("sidebar-open");
   sidebarToggleTab.setAttribute("aria-expanded", "true");
   sidebarToggleTab.setAttribute("aria-label", "メニューを閉じる");
+  // 「◀」は.sidebarの外（兄弟要素）に置いているため、.sidebarにsidebar-openを
+  // 付けるだけでは表示されない。自分自身にも同じクラスを付けて表示を切り替える
+  sidebarCloseButton.classList.add("sidebar-open");
   sidebarBackdrop.hidden = false;
 }
 
@@ -194,6 +197,7 @@ function closeSidebarDrawer() {
   sidebarToggleTab.classList.remove("sidebar-open");
   sidebarToggleTab.setAttribute("aria-expanded", "false");
   sidebarToggleTab.setAttribute("aria-label", "メニューを開く");
+  sidebarCloseButton.classList.remove("sidebar-open");
   sidebarBackdrop.hidden = true;
 }
 
@@ -206,7 +210,7 @@ sidebarToggleTab.addEventListener("click", function () {
     openSidebarDrawer();
   }
 });
-// サイドバー内上部の「◀」は、開いている間だけ表示され、閉じる操作だけを行う
+// サイドバーの縁に貼り付いた「◀」は、開いている間だけ表示され、閉じる操作だけを行う
 sidebarCloseButton.addEventListener("click", closeSidebarDrawer);
 sidebarBackdrop.addEventListener("click", closeSidebarDrawer);
 
