@@ -1,8 +1,9 @@
-// ---------- カテゴリ選択画面／カテゴリの切り替え ----------
+// ---------- カテゴリの切り替え（実用書 / 小説） ----------
+// 以前はアプリ起動時に「実用書 / 小説」を選ぶ専用画面を挟んでいたが、
+// 起動したら常にホーム（ダッシュボード）から始まるように変更したため、
+// このファイルはカテゴリの読み込み・記憶と、切り替えUIの初期化だけを担当する。
 
-const categorySelectScreen = document.getElementById("screen-category-select");
-const appShell = document.querySelector(".app-shell");
-const categorySelectCards = document.querySelectorAll(".category-select-card");
+// サイドバーの切り替えピルと、ホーム画面上の切り替えタブの両方を、同じクラス名で一括して扱う
 const categorySwitcherButtons = document.querySelectorAll(".category-switcher-button");
 const sidebarNav = document.querySelector(".sidebar-nav");
 const sidebarBrandButton = document.getElementById("sidebar-brand-button");
@@ -15,16 +16,7 @@ const NAV_KEYS_BY_CATEGORY = {
   novel: ["dashboard", "books", "reviewSummary", "novelQuotes", "records", "stats", "aiCoach", "settings"]
 };
 
-// カテゴリ選択画面を隠し、アプリ本体（サイドバー＋メイン画面）を表示してダッシュボードを開く
-function enterApp() {
-  categorySelectScreen.hidden = true;
-  appShell.hidden = false;
-  updateCategorySwitcherUI();
-  updateNavVisibility();
-  goToNavPage("dashboard");
-}
-
-// サイドバーの切り替えピルの見た目を、今のアクティブカテゴリに合わせる
+// 切り替えピル（サイドバー・ホーム画面のどちらも）の見た目を、今のアクティブカテゴリに合わせる
 function updateCategorySwitcherUI() {
   const activeCategory = loadActiveCategory();
   categorySwitcherButtons.forEach(function (button) {
@@ -39,30 +31,18 @@ function updateNavVisibility() {
   sidebarNav.classList.toggle("nav-novel-mode", activeCategory === "novel");
 }
 
-// カテゴリ選択画面のカード（区画全体）が押されたときの処理
-categorySelectCards.forEach(function (card) {
-  card.addEventListener("click", function () {
-    saveActiveCategory(card.dataset.category);
-    enterApp();
+// サイドバー左上・スマホ/タブレット幅のヘッダー中央「BookHub」ロゴが押されたら、ホームに戻る
+function goHome() {
+  confirmLeaveWhileTimerRunning(function () {
+    goToNavPage("dashboard");
+    closeSidebarDrawer(); // ドロワーを開いたまま押した場合に備えて閉じておく
   });
-});
-
-// アプリ本体を隠し、最初のカテゴリ選択画面に戻す
-function showCategorySelectScreen() {
-  pauseTimer(); // 開いていた本のタイマーが動いていれば止めておく
-  appShell.hidden = true;
-  categorySelectScreen.hidden = false;
-  closeSidebarDrawer(); // スマホ・タブレット幅でドロワーを開いたまま戻っていた場合に備えて閉じておく
 }
 
-// サイドバー左上の「BookHub」ロゴが押されたら、最初のカテゴリ選択画面に戻る
-sidebarBrandButton.addEventListener("click", showCategorySelectScreen);
+sidebarBrandButton.addEventListener("click", goHome);
+mobileTopbarTitleButton.addEventListener("click", goHome);
 
-// スマホ・タブレット幅では、同じ役割のボタンをヘッダー中央の「BookHub」に持たせている
-// （ドロワーの中にロゴを重複させない分、ナビ項目を大きくする余白にしている）
-mobileTopbarTitleButton.addEventListener("click", showCategorySelectScreen);
-
-// サイドバーの切り替えピルが押されたときの処理（アプリを開いたまま、いつでも切り替えられる）
+// 切り替えピルが押されたときの処理（サイドバー・ホーム画面のどちらの切り替えタブから押しても同じ処理）
 categorySwitcherButtons.forEach(function (button) {
   button.addEventListener("click", function () {
     const category = button.dataset.category;
@@ -84,9 +64,13 @@ categorySwitcherButtons.forEach(function (button) {
   });
 });
 
-// ---------- 起動時の判定 ----------
-// カテゴリが選ばれていればアプリ本体を、まだ選ばれていなければ
-// カテゴリ選択画面（初期状態のままHTML上で表示されている）をそのまま使う。
-if (loadActiveCategory()) {
-  enterApp();
+// ---------- 起動時の初期化 ----------
+// カテゴリがまだ一度も選ばれていなければ（初回起動）、実用書を初期カテゴリとして保存しておく
+// （起動時にカテゴリ選択を挟まないため、必ずどちらかのカテゴリで開始する）
+if (!loadActiveCategory()) {
+  saveActiveCategory("practical");
 }
+
+updateCategorySwitcherUI();
+updateNavVisibility();
+goToNavPage("dashboard"); // 起動したら常にホームから始める

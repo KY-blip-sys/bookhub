@@ -493,11 +493,13 @@ html.dark-mode .main-content::before {
 .book-card:nth-child(4), .currently-reading-card:nth-child(4), .dashboard-tile:nth-child(4) { animation-delay: 0.015s; }
 .book-card:nth-child(5), .currently-reading-card:nth-child(5), .dashboard-tile:nth-child(5) { animation-delay: 0.02s; }
 .book-card:nth-child(6), .dashboard-tile:nth-child(6) { animation-delay: 0.025s; }
-/* 読書中の本一覧は最大8冊まで表示できるようになったため（PC:6冊・タブレット:5冊・スマホ:横スクロールで6〜8冊）、
-   6・7・8冊目ぶんの遅延も足しておく */
+/* 読書中の本一覧は最大10冊まで表示できるようになったため（PC:8冊・タブレット:7冊・スマホ:横スクロールで最大10冊）、
+   6〜10冊目ぶんの遅延も足しておく */
 .currently-reading-card:nth-child(6) { animation-delay: 0.025s; }
 .currently-reading-card:nth-child(7) { animation-delay: 0.03s; }
 .currently-reading-card:nth-child(8) { animation-delay: 0.035s; }
+.currently-reading-card:nth-child(9) { animation-delay: 0.04s; }
+.currently-reading-card:nth-child(10) { animation-delay: 0.045s; }
 
 /* 本一覧は「＋ 新しい本を追加」カードが常に先頭（1番目）に入るぶん本が1つずつ後ろにずれるうえ、
    これまでは6冊目以降が.book-card:nth-child(n+7)で一括りにされ、そこから先が同時に出現していたため、
@@ -544,112 +546,6 @@ html.dark-mode .main-content::before {
     .achievement-card,
     .motivation-carousel-card {
         animation: none;
-    }
-}
-
-/* ---------- カテゴリ選択画面（初回起動時のホーム画面） ---------- */
-#screen-category-select {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    padding: 24px;
-    background-color: var(--color-bg);
-    background-image: url("images/category-select-bg.jpg");
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-}
-
-/* ダークモードでは写真の背景を消し、通常の背景色だけにする（写真の明るい色味と噛み合わないため） */
-html.dark-mode #screen-category-select {
-    background-image: none;
-}
-
-#screen-category-select[hidden] {
-    display: none;
-}
-
-.category-select-card-outer {
-    width: 100%;
-    max-width: 560px;
-    text-align: center;
-}
-
-.category-select-brand {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 16px;
-}
-
-.category-select-lead {
-    font-size: 22px;
-    font-weight: 700;
-    color: var(--color-text);
-    margin-bottom: 32px;
-}
-
-.category-select-cards {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-}
-
-.category-select-card {
-    display: block;
-    width: 100%;
-    padding: 32px 20px;
-    border: none;
-    border-radius: var(--radius-lg);
-    background-color: var(--color-surface);
-    box-shadow: var(--shadow-md);
-    font-family: inherit;
-    text-align: center;
-    cursor: pointer;
-    transition: transform var(--transition-fast) var(--ease-standard);
-}
-
-.category-select-card:hover {
-    transform: translateY(-3px);
-}
-
-/* ジャンルごとに背景色を変え、カード自体の見た目からもイメージが伝わるようにする。
-   単色ではなく、アプリ全体のアクセント（革・インクを思わせるテラコッタ）と調和する
-   暖色系でまとめる（実用書＝落ち着いた琥珀、小説＝深みのあるワイン） */
-.category-select-card[data-category="practical"] {
-    background-image: linear-gradient(135deg, #f7ead9, #ecd2ac);
-}
-
-.category-select-card[data-category="novel"] {
-    background-image: linear-gradient(135deg, #f5e1e3, #ddb3bd);
-}
-
-html.dark-mode .category-select-card[data-category="practical"] {
-    background-image: linear-gradient(135deg, rgba(224, 168, 62, 0.22), rgba(224, 168, 62, 0.08));
-}
-
-html.dark-mode .category-select-card[data-category="novel"] {
-    background-image: linear-gradient(135deg, rgba(196, 108, 130, 0.24), rgba(196, 108, 130, 0.09));
-}
-
-.category-select-icon {
-    font-size: 36px;
-    margin-bottom: 12px;
-}
-
-.category-select-card h2 {
-    margin-bottom: 6px;
-}
-
-.category-select-description {
-    font-size: 13px;
-    color: var(--color-text-secondary);
-}
-
-@media (max-width: 560px) {
-    .category-select-cards {
-        grid-template-columns: 1fr;
     }
 }
 
@@ -921,6 +817,20 @@ html.dark-mode .category-select-card[data-category="novel"] {
 .category-switcher-button.active {
     background-color: var(--color-accent-soft);
     color: var(--color-accent);
+}
+
+/* ---------- ホーム画面：実用書/小説の切り替えタブ ---------- */
+/* ボタンの見た目・切り替え処理（js/screens/categorySelect.js）はサイドバーの.category-switcherと共通。
+   サイドバー幅（264px）いっぱいに広がる.category-switcher-button（flex:1）ではなく、
+   ページ中央に収まる大きさで、他のページ内タブ（.pill-tabs）と近い置かれ方にする */
+.dashboard-category-switcher {
+    width: fit-content;
+    margin: 0 auto 20px;
+}
+
+.dashboard-category-switcher .category-switcher-button {
+    flex: none;
+    padding: 10px 24px;
 }
 
 /* ---------- サイドバー：ナビゲーション ---------- */
@@ -1308,30 +1218,45 @@ h1 {
     margin-bottom: 12px;
 }
 
-/* PC幅では常に6列のグリッドにする（本が6冊未満のときは、余った列を空けたまま詰めない）。
-   読書中の本が7冊以上あっても、2段目がちらっと見える中途半端な状態にはせず、
-   直後のnth-childルールで7冊目以降を非表示にして「6冊まで」できれいに揃える */
+/* PC幅：カードサイズは「4冊が横に並んだときの大きさ」を基準に固定する（calc()で、以前の
+   1fr×4列のグリッドと同じ幅になる式を組み、横に並べるだけ）。合計8冊まで並べ、画面に収まらない
+   分（5〜8冊目）は横スクロールで見られるようにする（直後のnth-childルールで9冊目以降を非表示にする） */
 .currently-reading-list {
     list-style: none;
-    display: grid;
-    grid-template-columns: repeat(6, 1fr);
+    display: flex;
     gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
 }
 
-.currently-reading-list > .currently-reading-card:nth-child(n+7) {
+.currently-reading-list::-webkit-scrollbar {
     display: none;
 }
 
-/* ②タブレット横向き幅：右のおすすめ本サイドバーが無いぶん、5冊までに絞って余裕を持たせる
-   （タブレット横向きでは右サイドバーの代わりにおすすめ本をこの直下へ表示する。style.cssの
-   .dashboard-recommend-rail-section参照）。この2つのルールは、より狭い@media(max-width:900px)・
-   @media(max-width:600px)ブロックがファイルの後ろにあるため、そちらで正しく上書きされる */
+.currently-reading-list > .currently-reading-card {
+    flex: 0 0 calc((100% - 3 * 14px) / 4);
+    scroll-snap-align: start;
+}
+
+.currently-reading-list > .currently-reading-card:nth-child(n+9) {
+    display: none;
+}
+
+/* ②タブレット横向き幅：カードサイズは以前と同じ「5冊が横に並んだときの大きさ」のまま、
+   表示冊数だけ5冊→7冊に増やし、収まらない分（6・7冊目）は横スクロールで見られるようにする
+   （右のおすすめ本サイドバーが無いぶん、以前は5冊に絞って余裕を持たせていた場所。
+   タブレット横向きでは右サイドバーの代わりにおすすめ本をこの直下へ表示する。style.cssの
+   .dashboard-recommend-rail-section参照）。この2つのルールは、より狭い@media(max-width:600px)
+   ブロックがファイルの後ろにあるため、そちらで正しく上書きされる */
 @media (max-width: 1400px) {
-    .currently-reading-list {
-        grid-template-columns: repeat(5, 1fr);
+    .currently-reading-list > .currently-reading-card {
+        flex-basis: calc((100% - 4 * 14px) / 5);
     }
 
-    .currently-reading-list > .currently-reading-card:nth-child(n+6) {
+    .currently-reading-list > .currently-reading-card:nth-child(n+8) {
         display: none;
     }
 }
@@ -5479,10 +5404,6 @@ html.dark-mode .dashboard-hero-banner {
         grid-template-columns: repeat(3, 1fr);
     }
 
-    .currently-reading-list {
-        grid-template-columns: repeat(3, 1fr);
-    }
-
     .book-form-row {
         flex-wrap: wrap;
     }
@@ -5517,9 +5438,9 @@ html.dark-mode .dashboard-hero-banner {
         grid-template-columns: repeat(2, 1fr);
     }
 
-    /* ④スマホ幅：グリッドで折り返すのではなく、1段の横スクロールで6〜8冊たどれるようにする
-       （タブレット横向きまでのグリッド＋nth-childでの絞り込みとは考え方を変え、ここでは
-       絞り込みを解除してスワイプで先まで見られるようにする） */
+    /* ④スマホ幅：カードサイズはここだけ元から固定px（148px）のため変更せず、1段の横スクロールで
+       8〜10冊たどれるようにする（直後のnth-child(n+6)の絞り込み解除ルールで、PC・タブレット向けの
+       非表示カットオフをまとめて上書きし、js/screens/books.jsのCURRENTLY_READING_MAX_CARDS件まで見せる） */
     .currently-reading-list {
         display: flex;
         overflow-x: auto;
@@ -5542,7 +5463,12 @@ html.dark-mode .dashboard-hero-banner {
         display: block;
     }
 
-    .records-summary,
+    /* 記録画面のサマリータイル（実用書6枚／小説4枚）は、スマホでは1列に積むと縦に長くなりすぎるため、
+       #dashboardの「今週の記録」タイルと同じ2列にする（実用書は2列×3行、小説は2列×2行になる） */
+    .records-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
     .stats-summary {
         grid-template-columns: 1fr;
     }
@@ -5551,9 +5477,57 @@ html.dark-mode .dashboard-hero-banner {
         flex-wrap: wrap;
     }
 
+    /* スマホでは1画面に見える冊数を増やすため、本一覧のカードを縮小する
+       （表紙・タイトル・ステータスなどの情報は削らず、余白と文字サイズだけを詰める。
+       PC・タブレット幅の.book-shelfはこの@media (max-width: 600px)の外にあるため変更されない） */
     .book-shelf {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-        gap: 20px 12px;
+        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        gap: 16px 10px;
+    }
+
+    .book-shelf .book-cover {
+        margin-bottom: 8px;
+    }
+
+    .book-shelf .book-cover-initial {
+        font-size: 24px;
+    }
+
+    .book-shelf .book-card-title {
+        font-size: 12px;
+    }
+
+    .book-shelf .book-card-author {
+        font-size: 10px;
+        margin-top: 1px;
+    }
+
+    .book-shelf .book-card-action-chip {
+        margin-top: 4px;
+        padding: 2px 7px;
+        font-size: 10px;
+    }
+
+    .book-shelf .book-status-badge {
+        top: 5px;
+        right: 5px;
+        padding: 2px 6px;
+        font-size: 9px;
+    }
+
+    .book-shelf .mini-progress-ring.book-cover-progress-ring {
+        left: 4px;
+        bottom: 4px;
+        width: 22px;
+        height: 22px;
+    }
+
+    .book-shelf .book-cover-progress-ring .mini-progress-ring-label {
+        font-size: 8px;
+    }
+
+    .book-shelf .add-book-trigger-cover {
+        font-size: 24px;
     }
 
     .book-form-row {

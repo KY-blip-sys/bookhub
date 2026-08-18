@@ -202,11 +202,11 @@ const currentlyReadingList = document.getElementById("currently-reading-list");
 const currentlyReadingEmpty = document.getElementById("currently-reading-empty");
 
 // 「読書中」の本を、直近に読んだ順に並べて表示する。
-// 実際に何冊分のカードを見せるか（PC:6冊・タブレット:5冊・スマホ：横スクロールで6〜8冊）はstyle.css側の
-// レスポンシブなグリッド・nth-childの絞り込みで決めるため、ここでは幅を問わず必要な最大数（8冊）を描画しておく。
+// 実際に何冊分のカードを見せるか（PC:8冊・タブレット:7冊・スマホ：横スクロールで最大10冊）はstyle.css側の
+// 横スクロールリスト・nth-childの絞り込みで決めるため、ここでは幅を問わず必要な最大数（10冊）を描画しておく。
 // まだ記録が無い本（追加しただけ、まだ開いていない本）も、追加した順の目安として
 // idを使って並べ、一覧に表示する（本一覧で「読書中」にしたのにダッシュボードに出ない、を防ぐ）
-const CURRENTLY_READING_MAX_CARDS = 8;
+const CURRENTLY_READING_MAX_CARDS = 10;
 
 function getLatestActivityTimestamp(book) {
   if (book.records.length > 0) {
