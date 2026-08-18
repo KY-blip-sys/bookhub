@@ -133,6 +133,55 @@ function setTimerDuration(minutes) {
   updateTimerToggleButton();
 }
 
+// ---------- タイマー終了時の通知音 ----------
+// ブラウザは、ユーザー操作を伴わない自動再生された音声をブロックすることがある。
+// タイマー終了はsetIntervalの中（＝ユーザー操作ではないタイミング）で起きるため、
+// AudioContextは「スタート」ボタンを押した瞬間（＝確実なユーザー操作）にあらかじめ用意・再開しておき、
+// 終了時はすでに動いているcontextで鳴らすだけにすることで、確実に再生されるようにする
+let timerAudioContext = null;
+
+function ensureTimerAudioContext() {
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!AudioContextClass) {
+    return null;
+  }
+  if (!timerAudioContext) {
+    timerAudioContext = new AudioContextClass();
+  }
+  if (timerAudioContext.state === "suspended") {
+    timerAudioContext.resume();
+  }
+  return timerAudioContext;
+}
+
+// 「ピッ、ピッ、ピッ」と短い電子音を3回鳴らす（音量は控えめにしてある）
+function playTimerFinishedSound() {
+  const context = ensureTimerAudioContext();
+  if (!context) {
+    return;
+  }
+
+  [0, 0.35, 0.7].forEach(function (startOffset) {
+    const oscillator = context.createOscillator();
+    const gainNode = context.createGain();
+    oscillator.type = "sine";
+    oscillator.frequency.value = 880;
+
+    const startTime = context.currentTime + startOffset;
+    const endTime = startTime + 0.25;
+
+    // 音量をなめらかに上げ下げし、耳障りな「プツッ」というノイズを防ぐ
+    gainNode.gain.setValueAtTime(0, startTime);
+    gainNode.gain.linearRampToValueAtTime(0.2, startTime + 0.02);
+    gainNode.gain.linearRampToValueAtTime(0, endTime);
+
+    oscillator.connect(gainNode);
+    gainNode.connect(context.destination);
+    oscillator.start(startTime);
+    oscillator.stop(endTime);
+  });
+}
+
 // タイマーをスタートする
 function startTimer() {
   if (timerIntervalId !== null || timerTotalSeconds <= 0) {
@@ -140,6 +189,8 @@ function startTimer() {
   }
 
   timerFirstTimeHint.hidden = true; // 読み始めたら「まずはスタートを押しましょう」のヒントは不要になる
+
+  ensureTimerAudioContext(); // 終了時に確実に音が鳴るよう、今のユーザー操作のタイミングで準備しておく
 
   // 通知の許可をまだ聞いていなければ、ここで確認する
   if (typeof Notification !== "undefined" && Notification.permission === "default") {
@@ -178,6 +229,8 @@ function resetTimer() {
 
 // タイマー終了を知らせる
 function notifyTimerFinished() {
+  playTimerFinishedSound();
+
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     new Notification("読書タイマー終了", { body: "お疲れさまでした！" });
   } else {

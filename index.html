@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=39">
+  <link rel="stylesheet" href="css/style.css?v=40">
 </head>
 
 <body>
@@ -48,22 +48,13 @@
 
   <div class="app-shell" hidden>
 
-    <!-- スマホ・タブレット幅だけに表示するトップバー：☰ボタンでサイドバーをドロワーとして開閉する
-         （PC幅では常時表示のサイドバーがあるため、このバー自体をCSSで非表示にする） -->
+    <!-- スマホ・タブレット幅だけに表示するトップバー（PC幅では常時表示のサイドバーがあるため、
+         このバー自体をCSSで非表示にする）。開閉は右のedge-tab（#sidebar-toggle-tab）が担うため、
+         ここにはボタン用の横幅を確保せず、タイトルがそのまま全幅を使う -->
     <header class="mobile-topbar">
-      <button type="button" class="mobile-topbar-menu-button" id="sidebar-open-button" aria-label="メニューを開く">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <line x1="4" y1="7" x2="20" y2="7" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="17" x2="20" y2="17" />
-        </svg>
-      </button>
       <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すと最初のカテゴリ選択画面に戻る。
            ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
       <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button" aria-label="最初の画面に戻る">BookHub</button>
-      <!-- ☰ボタンと同じ幅の余白。無いとタイトルの中央揃えが左に寄って見える -->
-      <span class="mobile-topbar-spacer" aria-hidden="true"></span>
     </header>
 
     <!-- スマホ・タブレット幅でサイドバーをドロワー表示にしたとき、裏のメイン画面を暗くして
@@ -72,14 +63,6 @@
 
     <!-- 左側に常時表示するサイドバー（スマホ・タブレット幅では、普段は画面外に隠れたドロワーになる） -->
     <aside class="sidebar">
-      <!-- スマホ・タブレット幅のドロワー表示のときだけ見える、閉じるボタン（PC幅ではCSSで非表示） -->
-      <button type="button" class="sidebar-close-button" id="sidebar-close-button" aria-label="メニューを閉じる">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
-
       <!-- 押すと最初のカテゴリ選択画面に戻る -->
       <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="最初の画面に戻る">
         <span class="sidebar-brand-icon">
@@ -232,6 +215,19 @@
       </label>
     </aside>
 
+    <!-- サイドバーの開閉ボタン（スマホ・タブレット幅専用。PC幅ではCSSで非表示）。
+         サイドバーの縁から少しだけ飛び出す小さなタブとして、開閉どちらのときも同じ位置に固定表示する
+         （ボタン用に横幅を確保する行を持たないため、トップバー・コンテンツ領域を全幅で使える）。
+         開いているかどうかはjs/screens/app.jsが.sidebar-openクラスの付け外しで示し、CSSで
+         左端（閉時）／サイドバーの右端（開時）へタブごと移動させ、アイコンの向きも反転させる -->
+    <button type="button" class="sidebar-toggle-tab" id="sidebar-toggle-tab" aria-label="メニューを開く"
+      aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M9 6l6 6-6 6" />
+      </svg>
+    </button>
+
     <!-- 右側のメイン画面（サイドバーのボタンで、下の1ページだけを表示する） -->
     <main class="main-content">
 
@@ -341,6 +337,22 @@
           </p>
         </section>
 
+        <!-- あなたへのおすすめ（タブレット・スマホ幅用）：登録している本の読書傾向（カテゴリ・著者）をもとに、
+             Google Books APIから取得したおすすめを表示する（AIは使用しない）。本を追加・編集・削除するたびに自動で更新される。
+             PC幅では右のサイドバー（.recommend-rail内の#sidebar-dashboard-recommend-list）にのみ表示するため、
+             ここは「今読んでいる本」の直下・横スクロールのカルーセル形式で、幅に余裕が無いときだけCSSで表示する
+             （js/screens/dashboardRecommend.js参照） -->
+        <section id="dashboard-recommend-carousel-section" class="dashboard-recommend-carousel-section">
+          <div class="recommend-rail-heading">
+            <span class="recommend-rail-icon">✨</span>
+            <h2 class="recommend-rail-title">あなたへのおすすめ</h2>
+          </div>
+          <ul id="dashboard-recommend-list-carousel" class="dashboard-recommend-list dashboard-recommend-list-carousel">
+            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
+          </ul>
+          <p id="dashboard-recommend-message-carousel" class="page-placeholder" hidden></p>
+        </section>
+
         <!-- おすすめの本（定番本の紹介）：PC幅では右のサイドバー（.recommend-rail）に表示されるが、
              タブレット横向き・スマホ幅では右側に表示する余白が無いため、代わりにここへ同じおすすめを表示する。
              タブレット横向きは「今読んでいる本」の直下に、スマホはダッシュボードの一番下に置きたいため、
@@ -353,16 +365,6 @@
           <ul id="recommend-book-list-inline" class="recommend-carousel-list">
             <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
           </ul>
-        </section>
-
-        <!-- あなたへのおすすめ：登録している本の読書傾向（カテゴリ・著者）をもとに、Google Books APIから
-             おすすめの本を取得して表示する（AIは使用しない）。本を追加・編集・削除するたびに自動で更新される -->
-        <section id="dashboard-recommend-section" class="dashboard-recommend-section">
-          <h2>あなたへのおすすめ</h2>
-          <ul id="dashboard-recommend-list" class="dashboard-recommend-list">
-            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-          </ul>
-          <p id="dashboard-recommend-message" class="page-placeholder" hidden></p>
         </section>
 
         <!-- AIアシスト：今月の読書目標に対する応援メッセージ（目標が設定されているときだけ表示） -->
@@ -1288,16 +1290,32 @@
 
     </main>
 
-    <!-- おすすめの本：画面に余裕があるときだけ、Google Books APIからランダムに取得した本を紹介する。
-         サイドバーと同じく、スクロールしてもその場に固定される -->
+    <!-- 右サイドバー：画面に余裕があるとき（PC幅）だけ表示する。スクロールしてもその場に固定される -->
     <aside class="recommend-rail" id="recommend-rail">
-      <div class="recommend-rail-heading">
-        <span class="recommend-rail-icon">📚</span>
-        <h2 class="recommend-rail-title">おすすめの本</h2>
-      </div>
-      <ul id="recommend-book-list" class="recommend-book-list">
-        <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-      </ul>
+      <!-- あなたへのおすすめ：登録している本の読書傾向（カテゴリ・著者）をもとに、Google Books APIから
+           取得したおすすめを表示する（AIは使用しない）。PC幅ではここだけに表示し、メインコンテンツ側には
+           表示しない（タブレット・スマホ幅での表示は#dashboard-recommend-carousel-section参照） -->
+      <section class="sidebar-dashboard-recommend-section" id="sidebar-dashboard-recommend-section">
+        <div class="recommend-rail-heading">
+          <span class="recommend-rail-icon">✨</span>
+          <h2 class="recommend-rail-title">あなたへのおすすめ</h2>
+        </div>
+        <ul id="dashboard-recommend-list" class="dashboard-recommend-list dashboard-recommend-list-rail">
+          <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
+        </ul>
+        <p id="dashboard-recommend-message" class="page-placeholder" hidden></p>
+      </section>
+
+      <!-- おすすめの本（定番本の紹介）：画面に余裕があるときだけ、Google Books APIからランダムに取得した本を紹介する -->
+      <section class="sidebar-recommend-section">
+        <div class="recommend-rail-heading">
+          <span class="recommend-rail-icon">📚</span>
+          <h2 class="recommend-rail-title">おすすめの本</h2>
+        </div>
+        <ul id="recommend-book-list" class="recommend-book-list">
+          <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
+        </ul>
+      </section>
     </aside>
   </div>
 
@@ -1521,7 +1539,7 @@
   <!-- ---------- サービス層（外部API通信・読書データの取得のみ。DOM操作はしない） ---------- -->
   <script src="js/services/aiService.js?v=24"></script>
   <script src="js/services/readingRepository.js?v=24"></script>
-  <script src="js/services/recommendationService.js?v=1"></script>
+  <script src="js/services/recommendationService.js?v=2"></script>
 
   <!-- ---------- ViewModel層（Viewと通信層の仲介） ---------- -->
   <script src="js/viewmodels/aiCoachViewModel.js?v=24"></script>
@@ -1537,9 +1555,9 @@
   <script src="js/screens/books.js?v=30"></script>
   <script src="js/screens/bookSearch.js?v=29"></script>
   <script src="js/screens/bookBarcode.js?v=1"></script>
-  <script src="js/screens/dashboardRecommend.js?v=1"></script>
+  <script src="js/screens/dashboardRecommend.js?v=2"></script>
   <script src="js/screens/progress.js?v=24"></script>
-  <script src="js/screens/timer.js?v=24"></script>
+  <script src="js/screens/timer.js?v=25"></script>
   <script src="js/screens/records.js?v=25"></script>
   <script src="js/screens/allRecords.js?v=24"></script>
   <script src="js/screens/stats.js?v=26"></script>
@@ -1555,10 +1573,10 @@
   <script src="js/screens/assist.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/recommend.js?v=25"></script>
-  <script src="js/screens/app.js?v=25"></script>
+  <script src="js/screens/app.js?v=26"></script>
   <!-- categorySelect.jsは、appの起動判定（カテゴリ選択画面 or ダッシュボード）を担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
-  <script src="js/screens/categorySelect.js?v=26"></script>
+  <script src="js/screens/categorySelect.js?v=27"></script>
 </body>
 
 </html>

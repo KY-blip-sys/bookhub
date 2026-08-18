@@ -73,6 +73,7 @@ categorySwitcherButtons.forEach(function (button) {
     saveActiveCategory(category);
     updateCategorySwitcherUI();
     updateNavVisibility();
+    refreshDashboardRecommendations(); // あなたへのおすすめは実用書/小説で内容が違うため、切り替えるたびに取得し直す
 
     // 今開いている画面が新しいカテゴリに存在しない場合（実践リスト⇔感想まとめ等）は
     // ダッシュボードに戻し、それ以外は同じ画面を新しいカテゴリの内容で描画し直す
