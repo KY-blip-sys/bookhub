@@ -54,13 +54,34 @@ function getTodayTotalMinutes() {
   }, 0);
 }
 
-// 渡された本の記録をすべて合計した読書時間（分）を返す（ダッシュボードの集計で使う）
+// 渡された本の記録をすべて合計した読書時間（分）を返す（「記録」ページの集計で使う）
 function getTotalMinutes(books) {
   return books.reduce(function (sum, book) {
     return sum + book.records.reduce(function (recordSum, record) {
       return recordSum + record.minutes;
     }, 0);
   }, 0);
+}
+
+// 指定したタイムスタンプが「今週」（月曜始まり〜次の月曜の直前まで）に含まれるかどうかを判定する
+// （ダッシュボードの「今週の記録」集計で使う。timestampが無い古い記録は今週分には含めない）
+function isInCurrentWeek(timestamp) {
+  if (!timestamp) {
+    return false;
+  }
+
+  const now = new Date();
+  const startOfWeek = new Date(now);
+  const day = startOfWeek.getDay(); // 0(日)〜6(土)
+  const diffToMonday = day === 0 ? 6 : day - 1;
+  startOfWeek.setDate(startOfWeek.getDate() - diffToMonday);
+  startOfWeek.setHours(0, 0, 0, 0);
+
+  const endOfWeek = new Date(startOfWeek);
+  endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+  const date = new Date(timestamp);
+  return date >= startOfWeek && date < endOfWeek;
 }
 
 // ---------- 本の記録・進捗にまつわる、純粋な計算 ----------

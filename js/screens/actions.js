@@ -40,7 +40,9 @@ function createTodoDraftController(listEl, inputEl, addButtonEl) {
 
   addButtonEl.addEventListener("click", addFromInput);
   inputEl.addEventListener("keydown", function (event) {
-    if (event.key === "Enter") {
+    // isComposingがtrueのときは変換確定のEnterなので、ここでは無視する
+    // （確定前の文字で追加してしまい、確定後の文字が次の入力に紛れ込むのを防ぐ）
+    if (event.key === "Enter" && !event.isComposing) {
       event.preventDefault(); // フォーム全体の送信ではなく、やることの追加として扱う
       addFromInput();
     }

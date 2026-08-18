@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=34">
+  <link rel="stylesheet" href="css/style.css?v=37">
 </head>
 
 <body>
@@ -28,8 +28,7 @@
         <span class="sidebar-brand-name">BookHub</span>
       </div>
 
-      <p class="category-select-tagline">本を登録して読書時間を計り、学びや感想を記録できるアプリです。</p>
-      <p class="category-select-lead">まずは、読みたい本のジャンルを選んでください</p>
+      <p class="category-select-lead">本のジャンルを選んでください</p>
 
       <div class="category-select-cards">
         <button type="button" class="category-select-card" data-category="practical">
@@ -44,8 +43,6 @@
           <p class="category-select-description">ミステリー・恋愛・SFなど</p>
         </button>
       </div>
-
-      <p class="category-select-note">あとからいつでも切り替えられます</p>
     </div>
   </div>
 
@@ -269,12 +266,13 @@
       <div id="screen-dashboard" class="page">
         <!-- 押すと本一覧に移動する、中央寄せのヒーローバナー（data-nav-targetの仕組みはapp.jsが処理する） -->
         <button type="button" class="dashboard-header dashboard-hero-banner" data-nav-target="books">
-          <p class="dashboard-slogan">読書が、人生を変える。</p>
-          <p class="page-subtitle" id="dashboard-subtitle">今日も一冊、未来の自分のために。</p>
-          <span class="dashboard-hero-cta">さあ、読み始めよう</span>
+          <p class="dashboard-slogan">読書が人生を変える</p>
+          <p class="page-subtitle" id="dashboard-subtitle">今日も一冊未来のために</p>
+          <span class="dashboard-hero-cta">読み始める</span>
         </button>
 
-        <!-- ダッシュボード：アプリ全体の活動をまとめて表示する（「記録」ページのサマリーと同じ6枚構成に揃えている） -->
+        <!-- ダッシュボード：今週の活動をまとめて表示する（「記録」ページのサマリー＝これまでの累計と区別できるようにしている） -->
+        <h2 class="dashboard-summary-label">今週の記録</h2>
         <div id="dashboard">
           <div class="dashboard-tile dashboard-tile-primary">
             <span class="dashboard-icon icon-blue">🕐</span>
@@ -856,7 +854,7 @@
               </div>
             </div>
 
-            <button type="submit">追加</button>
+            <button type="submit">実践を追加</button>
           </form>
         </div>
       </div>
@@ -982,6 +980,7 @@
 
       <!-- 記録画面：すべての本の読書記録を新しい順に一覧表示する -->
       <div id="screen-records" class="page" hidden>
+        <h2 class="dashboard-summary-label">今までの累計</h2>
         <div class="records-summary">
           <div class="dashboard-tile dashboard-tile-primary">
             <span class="dashboard-icon icon-blue">🕐</span>
@@ -1465,8 +1464,8 @@
   <div id="toast" class="toast" hidden></div>
 
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
-  <script src="js/models/storage.js?v=24"></script>
-  <script src="js/models/booksModel.js?v=24"></script>
+  <script src="js/models/storage.js?v=25"></script>
+  <script src="js/models/booksModel.js?v=25"></script>
   <script src="js/models/actionsModel.js?v=24"></script>
   <script src="js/models/reviewsModel.js?v=24"></script>
   <script src="js/models/favoriteQuotesModel.js?v=24"></script>
@@ -1489,14 +1488,14 @@
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=24"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=25"></script>
-  <script src="js/screens/bookSearch.js?v=26"></script>
+  <script src="js/screens/books.js?v=28"></script>
+  <script src="js/screens/bookSearch.js?v=27"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/timer.js?v=24"></script>
-  <script src="js/screens/records.js?v=24"></script>
+  <script src="js/screens/records.js?v=25"></script>
   <script src="js/screens/allRecords.js?v=24"></script>
   <script src="js/screens/stats.js?v=24"></script>
-  <script src="js/screens/actions.js?v=24"></script>
+  <script src="js/screens/actions.js?v=25"></script>
   <script src="js/screens/reviews.js?v=24"></script>
   <script src="js/screens/reviewSummary.js?v=24"></script>
   <script src="js/screens/quotes.js?v=24"></script>

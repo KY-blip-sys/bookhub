@@ -434,23 +434,11 @@ html.dark-mode #screen-category-select {
     margin-bottom: 16px;
 }
 
-.category-select-tagline {
-    font-size: 14px;
-    color: var(--color-text-secondary);
-    margin-bottom: 6px;
-}
-
 .category-select-lead {
     font-size: 22px;
     font-weight: 700;
     color: var(--color-text);
     margin-bottom: 32px;
-}
-
-.category-select-note {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    margin-top: 20px;
 }
 
 .category-select-cards {
@@ -475,6 +463,25 @@ html.dark-mode #screen-category-select {
 
 .category-select-card:hover {
     transform: translateY(-3px);
+}
+
+/* ジャンルごとに背景色を変え、カード自体の見た目からもイメージが伝わるようにする。
+   単色ではなく、アプリ全体のアクセント（革・インクを思わせるテラコッタ）と調和する
+   暖色系でまとめる（実用書＝落ち着いた琥珀、小説＝深みのあるワイン） */
+.category-select-card[data-category="practical"] {
+    background-image: linear-gradient(135deg, #f7ead9, #ecd2ac);
+}
+
+.category-select-card[data-category="novel"] {
+    background-image: linear-gradient(135deg, #f5e1e3, #ddb3bd);
+}
+
+html.dark-mode .category-select-card[data-category="practical"] {
+    background-image: linear-gradient(135deg, rgba(224, 168, 62, 0.22), rgba(224, 168, 62, 0.08));
+}
+
+html.dark-mode .category-select-card[data-category="novel"] {
+    background-image: linear-gradient(135deg, rgba(196, 108, 130, 0.24), rgba(196, 108, 130, 0.09));
 }
 
 .category-select-icon {
@@ -1143,6 +1150,11 @@ h1 {
 }
 
 .currently-reading-section h2 {
+    font-size: var(--font-size-heading);
+    margin-bottom: 12px;
+}
+
+.dashboard-summary-label {
     font-size: var(--font-size-heading);
     margin-bottom: 12px;
 }

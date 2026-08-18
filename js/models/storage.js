@@ -38,3 +38,15 @@ function enableFlexibleDigitInput(inputEl) {
     inputEl.setSelectionRange(newPosition, newPosition);
   });
 }
+
+// ---------- Enterキーでの誤送信を防ぐ ----------
+// 1つのフォームに入力欄が複数あると、他の欄を書き終える前にEnterキー（変換確定のEnterも含む）で
+// フォーム全体が送信されてしまい、書きかけの内容が消えたり次の入力欄に紛れ込んだりすることがある。
+// 指定した入力欄では、Enterキーを押しても送信されないようにする（保存はボタンを押したときだけ行う）
+function preventEnterSubmit(inputEl) {
+  inputEl.addEventListener("keydown", function (event) {
+    if (event.key === "Enter") {
+      event.preventDefault();
+    }
+  });
+}
