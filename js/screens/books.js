@@ -9,6 +9,7 @@ const coverUploadPlaceholder = document.getElementById("cover-upload-placeholder
 const coverUploadPreview = document.getElementById("cover-upload-preview");
 const bookList = document.getElementById("book-list");
 const booksCountSubtitle = document.getElementById("books-count-subtitle");
+const bookFormManualDetails = document.querySelector(".book-form-manual-details");
 
 // タイトル・著者を書いている途中でEnterキー（変換確定を含む）を押しても、
 // 総ページ数など他の欄を書き終える前にフォームが送信されないようにする
@@ -329,6 +330,7 @@ function openBookFormPanel() {
 
 function closeBookFormPanel() {
   bookFormPanel.hidden = true;
+  bookFormManualDetails.open = false; // 次に開いたときも、手動入力欄はたたんだ状態から始める
 }
 
 bookFormCloseButton.addEventListener("click", closeBookFormPanel);
@@ -423,6 +425,7 @@ function deleteBookById(bookId) {
     return b.id !== bookId;
   });
   saveBooks(remainingBooks);
+  refreshDashboardRecommendations(); // dashboardRecommend.js：読書傾向が変わったので、おすすめ一覧も更新する
 
   return true;
 }
@@ -490,6 +493,7 @@ bookEditForm.addEventListener("submit", function (event) {
   book.author = bookEditAuthorInput.value.trim();
   book.pageCount = Number(bookEditPageCountInput.value) || null;
   saveBooks(books);
+  refreshDashboardRecommendations(); // dashboardRecommend.js：読書傾向が変わったので、おすすめ一覧も更新する
 
   closeBookEditModal();
   renderBookList(); // 一覧を最新の状態に更新
@@ -639,6 +643,8 @@ function buildNewBook(title, author, extra) {
       publisher: "",
       publishedDate: "",
       pageCount: null,
+      genre: null, // おすすめ機能（recommendationService.js）の読書傾向の集計に使う。検索から追加した場合のみ入る
+      isbn: null, // おすすめ機能の重複判定に使う。検索から追加した場合のみ入る
       pageAdjustment: 0, // 記録の合計ページ数に対する手動補正（現在のページ = 記録の合計 + この値）
       records: [] // この本の読書記録を後で入れるための空の配列
     },
@@ -657,6 +663,7 @@ function addBook(newBook) {
   const books = loadBooks();
   books.push(newBook);
   saveBooks(books);
+  refreshDashboardRecommendations(); // dashboardRecommend.js：読書傾向が変わったので、おすすめ一覧も更新する
 
   showToast("📚「" + newBook.title + "」を本棚に追加しました");
 
@@ -691,6 +698,8 @@ bookForm.addEventListener("submit", function (event) {
       publisher: bookPublisher, // 出版社（検索から選んだ場合のみ入る。手入力欄はない）
       publishedDate: bookPublishedDate, // 出版日
       pageCount: Number(pageCountInput.value) || null, // 総ページ数（検索結果または手入力）
+      genre: bookGenre || null, // ジャンル（検索から選んだ場合のみ入る）
+      isbn: bookIsbn || null, // ISBN（検索から選んだ場合のみ入る）
       wantToRead: bookWantToReadInput.checked // 「まだ読んでいない」を選んでいれば、読みたい本として追加する
     })
   );
@@ -704,10 +713,11 @@ function resetBookForm() {
   resetReadingStatusToggle();
   bookPublisher = "";
   bookPublishedDate = "";
+  bookGenre = "";
+  bookIsbn = "";
   bookFormMeta.hidden = true;
   pageCountManualNote.hidden = true;
   bookSearchInput.value = "";
   bookSearchResults.hidden = true;
-  resetBookSearchModeToggle();
   closeBookFormPanel(); // 追加が終わったら、モーダルを閉じてカード表示に戻す
 }
