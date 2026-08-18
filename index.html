@@ -32,15 +32,6 @@
 
     <!-- 左側に常時表示するサイドバー（スマホ・タブレット幅では、普段は画面外に隠れたドロワーになる） -->
     <aside class="sidebar">
-      <!-- スマホ・タブレット幅専用：サイドバーを開いているときだけ、メニュー項目より上に表示する閉じるボタン。
-           PC幅ではCSSで常に非表示（PC幅ではサイドバー自体を閉じる操作が無いため） -->
-      <button type="button" class="sidebar-close-button" id="sidebar-close-button" aria-label="メニューを閉じる">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M15 18l-6-6 6-6" />
-        </svg>
-      </button>
-
       <!-- 押すとホームに戻る -->
       <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="ホームに戻る">
         <span class="sidebar-brand-icon">
@@ -195,7 +186,7 @@
 
     <!-- サイドバーを開く「≡」ボタン（スマホ・タブレット幅専用。PC幅ではCSSで非表示）。
          画面左上に固定表示し、閉じているときだけ表示する（開いたらCSSで非表示にし、代わりに
-         サイドバー内の#sidebar-close-button「◀」が表示される。同時に両方は表示しない）。
+         下の#sidebar-close-button「◀」が表示される。同時に両方は表示しない）。
          開いているかどうかはjs/screens/app.jsが.sidebar-openクラスの付け外しで示す -->
     <button type="button" class="sidebar-toggle-tab" id="sidebar-toggle-tab" aria-label="メニューを開く" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -203,6 +194,18 @@
         <line x1="4" y1="7" x2="20" y2="7" />
         <line x1="4" y1="12" x2="20" y2="12" />
         <line x1="4" y1="17" x2="20" y2="17" />
+      </svg>
+    </button>
+
+    <!-- サイドバーを閉じる「◀」ボタン（スマホ・タブレット幅専用。PC幅ではCSSで非表示）。
+         .sidebar自身がoverflow-y:auto＋transformを持ち、その内側に置くと縁からはみ出す見た目が
+         クリップされてしまうため、.sidebarの外（.sidebar-toggle-tabと同じ階層）に置き、
+         サイドバーの右の縁のさらに外側（暗幕側）にposition:fixedで貼り付ける。
+         開いているときだけ表示する（同時に「≡」とは表示しない） -->
+    <button type="button" class="sidebar-close-button" id="sidebar-close-button" aria-label="メニューを閉じる">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M15 18l-6-6 6-6" />
       </svg>
     </button>
 

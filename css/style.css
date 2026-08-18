@@ -5321,20 +5321,26 @@ html.dark-mode .dashboard-hero-banner {
         display: none;
     }
 
-    /* サイドバーを閉じる「◀」ボタン。サイドバーの内側・メニュー項目より上に配置し、
-       開いている間だけ表示する（閉じているときは表示しない）。
-       margin-left:autoで、開く「≡」（画面左端に付く）と対になるように、
-       サイドバーの右の縁に寄せて配置する */
+    /* サイドバーを閉じる「◀」ボタン。開いている間だけ表示する（閉じているときは表示しない）。
+       .sidebar-toggle-tab（≡）と同じく画面に対してposition:fixedで固定し、
+       left: min(84vw, 300px)（.sidebarのwidthと同じ式）でサイドバーの右の縁ぴったりに置くことで、
+       ボタンの中身がまるごと縁の外側（暗幕側）にはみ出して貼り付いているように見せる。
+       丸ではなく、縁に接する左側だけ角を立てた四角（左右で異なるborder-radius）にして、
+       サイドバーからせり出したタブのような見た目にする */
     .sidebar-close-button {
+        display: none;
         align-items: center;
         justify-content: center;
-        width: 36px;
-        height: 36px;
-        margin-left: auto;
-        margin-bottom: 12px;
+        position: fixed;
+        top: 10px;
+        left: min(84vw, 300px);
+        z-index: 18;
+        width: 32px;
+        height: 44px;
+        padding: 0;
         border: none;
-        border-radius: 50%;
-        background-color: var(--color-surface);
+        border-radius: 0 10px 10px 0;
+        background-color: var(--color-bg-secondary);
         box-shadow: var(--shadow-sm);
         color: var(--color-text);
         cursor: pointer;
@@ -5351,7 +5357,8 @@ html.dark-mode .dashboard-hero-banner {
         flex-shrink: 0;
     }
 
-    .sidebar.sidebar-open .sidebar-close-button {
+    /* 開いているときだけ表示する（「≡」がsidebar-openクラスで非表示になるのと対称の仕組み） */
+    .sidebar-close-button.sidebar-open {
         display: flex;
     }
 
