@@ -176,6 +176,7 @@ deleteBookButton.addEventListener("click", function () {
 
 const sidebarEl = document.querySelector(".sidebar");
 const sidebarToggleTab = document.getElementById("sidebar-toggle-tab");
+const sidebarCloseButton = document.getElementById("sidebar-close-button");
 const sidebarBackdrop = document.getElementById("sidebar-backdrop");
 
 function openSidebarDrawer() {
@@ -196,7 +197,8 @@ function closeSidebarDrawer() {
   sidebarBackdrop.hidden = true;
 }
 
-// 開閉どちらも同じタブ1つで行うトグル
+// 「≡」は閉じているときだけ表示され、開く操作のみを行う（開いている間はCSSで非表示になるため、
+// 押されるのは常に「閉じている」ときだけ）
 sidebarToggleTab.addEventListener("click", function () {
   if (sidebarEl.classList.contains("sidebar-open")) {
     closeSidebarDrawer();
@@ -204,6 +206,8 @@ sidebarToggleTab.addEventListener("click", function () {
     openSidebarDrawer();
   }
 });
+// サイドバー内上部の「◀」は、開いている間だけ表示され、閉じる操作だけを行う
+sidebarCloseButton.addEventListener("click", closeSidebarDrawer);
 sidebarBackdrop.addEventListener("click", closeSidebarDrawer);
 
 // ---------- サイドバーのナビゲーション ----------
