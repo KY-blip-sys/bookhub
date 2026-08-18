@@ -238,6 +238,7 @@ html.dark-mode .main-content::before {
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -250,6 +251,7 @@ html.dark-mode .main-content::before {
         opacity: 0;
         transform: translateY(8px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -281,39 +283,124 @@ html.dark-mode .main-content::before {
     animation: none;
 }
 
-.book-card:nth-child(2), .currently-reading-card:nth-child(2), .dashboard-tile:nth-child(2) { animation-delay: 0.005s; }
-.book-card:nth-child(3), .currently-reading-card:nth-child(3), .dashboard-tile:nth-child(3) { animation-delay: 0.01s; }
-.book-card:nth-child(4), .currently-reading-card:nth-child(4), .dashboard-tile:nth-child(4) { animation-delay: 0.015s; }
-.book-card:nth-child(5), .currently-reading-card:nth-child(5), .dashboard-tile:nth-child(5) { animation-delay: 0.02s; }
-.book-card:nth-child(6), .dashboard-tile:nth-child(6) { animation-delay: 0.025s; }
+.book-card:nth-child(2),
+.currently-reading-card:nth-child(2),
+.dashboard-tile:nth-child(2) {
+    animation-delay: 0.005s;
+}
+
+.book-card:nth-child(3),
+.currently-reading-card:nth-child(3),
+.dashboard-tile:nth-child(3) {
+    animation-delay: 0.01s;
+}
+
+.book-card:nth-child(4),
+.currently-reading-card:nth-child(4),
+.dashboard-tile:nth-child(4) {
+    animation-delay: 0.015s;
+}
+
+.book-card:nth-child(5),
+.currently-reading-card:nth-child(5),
+.dashboard-tile:nth-child(5) {
+    animation-delay: 0.02s;
+}
+
+.book-card:nth-child(6),
+.dashboard-tile:nth-child(6) {
+    animation-delay: 0.025s;
+}
+
 /* 読書中の本一覧は最大10冊まで表示できるようになったため（PC:8冊・タブレット:7冊・スマホ:横スクロールで最大10冊）、
    6〜10冊目ぶんの遅延も足しておく */
-.currently-reading-card:nth-child(6) { animation-delay: 0.025s; }
-.currently-reading-card:nth-child(7) { animation-delay: 0.03s; }
-.currently-reading-card:nth-child(8) { animation-delay: 0.035s; }
-.currently-reading-card:nth-child(9) { animation-delay: 0.04s; }
-.currently-reading-card:nth-child(10) { animation-delay: 0.045s; }
+.currently-reading-card:nth-child(6) {
+    animation-delay: 0.025s;
+}
+
+.currently-reading-card:nth-child(7) {
+    animation-delay: 0.03s;
+}
+
+.currently-reading-card:nth-child(8) {
+    animation-delay: 0.035s;
+}
+
+.currently-reading-card:nth-child(9) {
+    animation-delay: 0.04s;
+}
+
+.currently-reading-card:nth-child(10) {
+    animation-delay: 0.045s;
+}
 
 /* 本一覧は「＋ 新しい本を追加」カードが常に先頭（1番目）に入るぶん本が1つずつ後ろにずれるうえ、
    これまでは6冊目以降が.book-card:nth-child(n+7)で一括りにされ、そこから先が同時に出現していたため、
    実用書・小説どちらの本棚でも本が増えるほど「順番に出現」に見えなくなっていた。
    本一覧でよくある冊数までは1冊ずつ遅延をつなげ、それ以上は最後の遅延のまま揃って出現するようにする */
-.book-card:nth-child(7) { animation-delay: 0.03s; }
-.book-card:nth-child(8) { animation-delay: 0.035s; }
-.book-card:nth-child(9) { animation-delay: 0.04s; }
-.book-card:nth-child(10) { animation-delay: 0.045s; }
-.book-card:nth-child(11) { animation-delay: 0.05s; }
-.book-card:nth-child(12) { animation-delay: 0.055s; }
-.book-card:nth-child(13) { animation-delay: 0.06s; }
-.book-card:nth-child(14) { animation-delay: 0.065s; }
-.book-card:nth-child(15) { animation-delay: 0.07s; }
-.book-card:nth-child(16) { animation-delay: 0.075s; }
-.book-card:nth-child(17) { animation-delay: 0.08s; }
-.book-card:nth-child(18) { animation-delay: 0.085s; }
-.book-card:nth-child(19) { animation-delay: 0.09s; }
-.book-card:nth-child(20) { animation-delay: 0.095s; }
-.book-card:nth-child(21) { animation-delay: 0.1s; }
-.book-card:nth-child(n+22) { animation-delay: 0.1s; }
+.book-card:nth-child(7) {
+    animation-delay: 0.03s;
+}
+
+.book-card:nth-child(8) {
+    animation-delay: 0.035s;
+}
+
+.book-card:nth-child(9) {
+    animation-delay: 0.04s;
+}
+
+.book-card:nth-child(10) {
+    animation-delay: 0.045s;
+}
+
+.book-card:nth-child(11) {
+    animation-delay: 0.05s;
+}
+
+.book-card:nth-child(12) {
+    animation-delay: 0.055s;
+}
+
+.book-card:nth-child(13) {
+    animation-delay: 0.06s;
+}
+
+.book-card:nth-child(14) {
+    animation-delay: 0.065s;
+}
+
+.book-card:nth-child(15) {
+    animation-delay: 0.07s;
+}
+
+.book-card:nth-child(16) {
+    animation-delay: 0.075s;
+}
+
+.book-card:nth-child(17) {
+    animation-delay: 0.08s;
+}
+
+.book-card:nth-child(18) {
+    animation-delay: 0.085s;
+}
+
+.book-card:nth-child(19) {
+    animation-delay: 0.09s;
+}
+
+.book-card:nth-child(20) {
+    animation-delay: 0.095s;
+}
+
+.book-card:nth-child(21) {
+    animation-delay: 0.1s;
+}
+
+.book-card:nth-child(n+22) {
+    animation-delay: 0.1s;
+}
 
 /* モチベーションカルーセル：カードが切り替わるたびに、横からふわっとスライドインする */
 @keyframes motivation-card-in {
@@ -321,6 +408,7 @@ html.dark-mode .main-content::before {
         opacity: 0;
         transform: translateX(8px);
     }
+
     to {
         opacity: 1;
         transform: translateX(0);
@@ -329,6 +417,7 @@ html.dark-mode .main-content::before {
 
 /* 画面の動きを最小限にしたい人（前庭障害など）への配慮：OSの「視差効果を減らす」設定時はアニメーションを止める */
 @media (prefers-reduced-motion: reduce) {
+
     .page-enter,
     .book-card,
     .currently-reading-card,
@@ -477,6 +566,7 @@ html.dark-mode .main-content::before {
 }
 
 @media (max-width: 640px) {
+
     /* スマホでは今日の日付を省略し、圧迫感を減らす */
     .today-date {
         display: none;
@@ -763,7 +853,8 @@ html.dark-mode .main-content::before {
 .reading-ring-svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg); /* 12時の位置から時計回りに進むようにする */
+    transform: rotate(-90deg);
+    /* 12時の位置から時計回りに進むようにする */
 }
 
 .reading-ring-track {
@@ -903,7 +994,8 @@ h1 {
 
 .motivation-carousel-viewport {
     flex: 1;
-    min-width: 0; /* 中の文章を省略記号（…）で切れるようにする */
+    min-width: 0;
+    /* 中の文章を省略記号（…）で切れるようにする */
 }
 
 .motivation-carousel-card {
@@ -1047,12 +1139,12 @@ h1 {
     display: none;
 }
 
-.currently-reading-list > .currently-reading-card {
+.currently-reading-list>.currently-reading-card {
     flex: 0 0 calc((100% - 3 * 14px) / 4);
     scroll-snap-align: start;
 }
 
-.currently-reading-list > .currently-reading-card:nth-child(n+9) {
+.currently-reading-list>.currently-reading-card:nth-child(n+9) {
     display: none;
 }
 
@@ -1063,11 +1155,11 @@ h1 {
    style.cssの.dashboard-recommend-carousel-section参照）。この2つのルールは、より狭い
    @media(max-width:600px)ブロックがファイルの後ろにあるため、そちらで正しく上書きされる */
 @media (max-width: 1400px) {
-    .currently-reading-list > .currently-reading-card {
+    .currently-reading-list>.currently-reading-card {
         flex-basis: calc((100% - 4 * 14px) / 5);
     }
 
-    .currently-reading-list > .currently-reading-card:nth-child(n+8) {
+    .currently-reading-list>.currently-reading-card:nth-child(n+8) {
         display: none;
     }
 }
@@ -1523,7 +1615,8 @@ h1 {
 }
 
 .record-list-empty {
-    grid-column: 1 / -1; /* グリッド内（実績など）に置かれたときは、幅いっぱいに広げる */
+    grid-column: 1 / -1;
+    /* グリッド内（実績など）に置かれたときは、幅いっぱいに広げる */
     padding: 20px;
     border: 1px dashed var(--color-border);
     border-radius: var(--radius-md);
@@ -1759,6 +1852,7 @@ select:hover {
    この対象だけ16pxに引き上げて自動ズームを防ぐ（見た目が縮むわけではなく、むしろ読みやすくなる
    方向の変化なので視認性・操作性は損なわない） */
 @media (pointer: coarse) {
+
     input[type="text"],
     input[type="number"],
     .scroll-date-input,
@@ -1911,6 +2005,7 @@ button[type="submit"]:hover {
         opacity: 0;
         transform: scale(0.5);
     }
+
     to {
         opacity: 1;
         transform: scale(1);
@@ -1999,8 +2094,13 @@ button[type="submit"]:hover {
 
 /* ---------- ふわっと浮かび上がるモーダル（本・実践・好きな言葉の追加などで共通利用） ---------- */
 @keyframes floating-modal-fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes floating-modal-float-in {
@@ -2008,6 +2108,7 @@ button[type="submit"]:hover {
         opacity: 0;
         transform: translateY(20px) scale(0.96);
     }
+
     to {
         opacity: 1;
         transform: translateY(0) scale(1);
@@ -2364,12 +2465,29 @@ html.dark-mode .dashboard-tile::after {
     margin-bottom: 14px;
 }
 
-.icon-blue { background-image: linear-gradient(135deg, #eef4f8, #d3e3ee); }
-.icon-green { background-image: linear-gradient(135deg, #eef6e9, #d7ead0); }
-.icon-purple { background-image: linear-gradient(135deg, #f4ecf3, #e6d5e4); }
-.icon-orange { background-image: linear-gradient(135deg, #fcf1e0, #f5dcb8); }
-.icon-teal { background-image: linear-gradient(135deg, #eaf5f2, #cfe6df); }
-.icon-rose { background-image: linear-gradient(135deg, #f9eef1, #f0d5dd); }
+.icon-blue {
+    background-image: linear-gradient(135deg, #eef4f8, #d3e3ee);
+}
+
+.icon-green {
+    background-image: linear-gradient(135deg, #eef6e9, #d7ead0);
+}
+
+.icon-purple {
+    background-image: linear-gradient(135deg, #f4ecf3, #e6d5e4);
+}
+
+.icon-orange {
+    background-image: linear-gradient(135deg, #fcf1e0, #f5dcb8);
+}
+
+.icon-teal {
+    background-image: linear-gradient(135deg, #eaf5f2, #cfe6df);
+}
+
+.icon-rose {
+    background-image: linear-gradient(135deg, #f9eef1, #f0d5dd);
+}
 
 .dashboard-value {
     font-size: 24px;
@@ -2972,12 +3090,15 @@ html.dark-mode .dashboard-tile::after {
     font-size: 24px;
     line-height: 1;
     cursor: pointer;
-    color: #dddddd; /* 光っていないときの薄い色 */
-    transition: color 0.35s ease; /* 色の変化をゆっくりにする */
+    color: #dddddd;
+    /* 光っていないときの薄い色 */
+    transition: color 0.35s ease;
+    /* 色の変化をゆっくりにする */
 }
 
 .star-button.star-filled {
-    color: #333333; /* 光っているときの濃い色 */
+    color: #333333;
+    /* 光っているときの濃い色 */
 }
 
 .star-button:hover {
@@ -3118,18 +3239,23 @@ html.dark-mode .dashboard-tile::after {
     0% {
         transform: scale(0.9);
     }
+
     55% {
         transform: scale(1.05);
     }
+
     100% {
         transform: scale(1);
     }
 }
 
 @keyframes book-card-added-glow {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: var(--shadow-sm);
     }
+
     40% {
         box-shadow: 0 0 0 6px var(--color-accent-soft), var(--shadow-md);
     }
@@ -3637,9 +3763,17 @@ html.dark-mode .dashboard-tile::after {
 
 /* 読み終えた瞬間だけ再生する、小さな達成感の演出 */
 @keyframes progress-ring-celebrate-pop {
-    0% { transform: scale(1); }
-    35% { transform: scale(1.12); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(1);
+    }
+
+    35% {
+        transform: scale(1.12);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 .progress-ring.progress-ring-celebrate {
@@ -3649,7 +3783,8 @@ html.dark-mode .dashboard-tile::after {
 .progress-ring-svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg); /* 12時の位置から時計回りに進むようにする */
+    transform: rotate(-90deg);
+    /* 12時の位置から時計回りに進むようにする */
 }
 
 .progress-ring-track {
@@ -3696,7 +3831,8 @@ html.dark-mode .dashboard-tile::after {
 .mini-progress-ring-svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg); /* 12時の位置から時計回りに進むようにする */
+    transform: rotate(-90deg);
+    /* 12時の位置から時計回りに進むようにする */
 }
 
 .mini-progress-ring-track {
@@ -3877,7 +4013,8 @@ html.dark-mode .dashboard-tile::after {
 .timer-ring-svg {
     width: 100%;
     height: 100%;
-    transform: rotate(-90deg); /* 12時の位置から時計回りに減っていくようにする */
+    transform: rotate(-90deg);
+    /* 12時の位置から時計回りに減っていくようにする */
 }
 
 .timer-ring-track {
@@ -4088,6 +4225,7 @@ html.dark-mode .dashboard-tile::after {
         opacity: 0;
         transform: translateY(6px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -5025,12 +5163,29 @@ html.dark-mode .scroll-date-input {
 }
 
 /* カテゴリを表すアイコンバッジは装飾色のため、暗い背景でも浮きすぎないよう控えめな色に差し替える */
-html.dark-mode .icon-blue { background-image: linear-gradient(135deg, rgba(122, 168, 199, 0.28), rgba(122, 168, 199, 0.1)); }
-html.dark-mode .icon-green { background-image: linear-gradient(135deg, rgba(111, 179, 126, 0.28), rgba(111, 179, 126, 0.1)); }
-html.dark-mode .icon-purple { background-image: linear-gradient(135deg, rgba(191, 148, 199, 0.28), rgba(191, 148, 199, 0.1)); }
-html.dark-mode .icon-orange { background-image: linear-gradient(135deg, rgba(224, 168, 62, 0.28), rgba(224, 168, 62, 0.1)); }
-html.dark-mode .icon-teal { background-image: linear-gradient(135deg, rgba(90, 191, 173, 0.28), rgba(90, 191, 173, 0.1)); }
-html.dark-mode .icon-rose { background-image: linear-gradient(135deg, rgba(207, 122, 148, 0.28), rgba(207, 122, 148, 0.1)); }
+html.dark-mode .icon-blue {
+    background-image: linear-gradient(135deg, rgba(122, 168, 199, 0.28), rgba(122, 168, 199, 0.1));
+}
+
+html.dark-mode .icon-green {
+    background-image: linear-gradient(135deg, rgba(111, 179, 126, 0.28), rgba(111, 179, 126, 0.1));
+}
+
+html.dark-mode .icon-purple {
+    background-image: linear-gradient(135deg, rgba(191, 148, 199, 0.28), rgba(191, 148, 199, 0.1));
+}
+
+html.dark-mode .icon-orange {
+    background-image: linear-gradient(135deg, rgba(224, 168, 62, 0.28), rgba(224, 168, 62, 0.1));
+}
+
+html.dark-mode .icon-teal {
+    background-image: linear-gradient(135deg, rgba(90, 191, 173, 0.28), rgba(90, 191, 173, 0.1));
+}
+
+html.dark-mode .icon-rose {
+    background-image: linear-gradient(135deg, rgba(207, 122, 148, 0.28), rgba(207, 122, 148, 0.1));
+}
 
 /* ダッシュボードのヒーローバナーも、他の写真背景と同じく暗い色味と噛み合わないため、写真を消して元のグラデーションに戻す */
 html.dark-mode .dashboard-hero-banner {
@@ -5289,12 +5444,12 @@ html.dark-mode .dashboard-hero-banner {
         display: none;
     }
 
-    .currently-reading-list > .currently-reading-card {
+    .currently-reading-list>.currently-reading-card {
         flex: 0 0 148px;
         scroll-snap-align: start;
     }
 
-    .currently-reading-list > .currently-reading-card:nth-child(n+6) {
+    .currently-reading-list>.currently-reading-card:nth-child(n+6) {
         display: block;
     }
 

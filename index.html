@@ -22,7 +22,8 @@
     <header class="mobile-topbar">
       <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すとホームに戻る。
            ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
-      <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button" aria-label="ホームに戻る">BookHub</button>
+      <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button"
+        aria-label="ホームに戻る">BookHub</button>
     </header>
 
     <!-- スマホ・タブレット幅でサイドバーをドロワー表示にしたとき、裏のメイン画面を暗くして
@@ -196,8 +197,7 @@
          画面左上に固定表示し、閉じているときだけ表示する（開いたらCSSで非表示にし、代わりに
          サイドバー内の#sidebar-close-button「◀」が表示される。同時に両方は表示しない）。
          開いているかどうかはjs/screens/app.jsが.sidebar-openクラスの付け外しで示す -->
-    <button type="button" class="sidebar-toggle-tab" id="sidebar-toggle-tab" aria-label="メニューを開く"
-      aria-expanded="false">
+    <button type="button" class="sidebar-toggle-tab" id="sidebar-toggle-tab" aria-label="メニューを開く" aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
         stroke-linejoin="round">
         <line x1="4" y1="7" x2="20" y2="7" />
