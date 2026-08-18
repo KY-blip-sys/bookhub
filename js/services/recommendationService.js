@@ -1,4 +1,4 @@
-// ---------- おすすめ機能：読書傾向の集計とGoogle Books APIからの取得 ----------
+// ---------- おすすめ機能：読書傾向の集計とGoogle Books APIからの取得（Cloudflare Worker経由） ----------
 // AIは使わず、「登録している本のカテゴリ・著者の集計」と「Google Books API」だけでおすすめの本を選ぶ。
 // ダッシュボードの「あなたへのおすすめ」カード（screens/dashboardRecommend.js）から呼び出される。
 //
@@ -77,7 +77,9 @@ function normalizeRecommendationItem(item) {
 }
 
 // field: "subject"（カテゴリ）・"inauthor"（著者）・"intitle"（タイトル。シリーズ作品の推測に使う）で
-// Google Books APIを検索する。通信・APIのエラーはここで吸収して空配列を返す（呼び出し側は次の優先順位に進むだけでよい）。
+// Google Books APIを検索する（中継用のCloudflare Worker「bookhub-api」経由。APIキーはWorker側の
+// Secretで管理されるため、ここでは一切扱わない）。通信・APIのエラーはここで吸収して空配列を返す
+// （呼び出し側は次の優先順位に進むだけでよい）。
 // startIndexを指定すると、同じ条件でも1ページ分ずらした続きの結果を取得できる
 // （小説の「同ジャンルの人気作品」で、①で取得済みの上位と重複しない次点の候補を取るために使う）
 function fetchGoogleBooksByField(field, value, maxResults, startIndex) {
@@ -85,15 +87,13 @@ function fetchGoogleBooksByField(field, value, maxResults, startIndex) {
     return Promise.resolve([]);
   }
 
-  const apiKey = loadGoogleBooksApiKey();
-  const keyParam = apiKey ? "&key=" + encodeURIComponent(apiKey) : "";
   const startIndexParam = startIndex ? "&startIndex=" + startIndex : "";
   const url =
-    "https://www.googleapis.com/books/v1/volumes?q=" +
+    "https://bookhub-api.lilyjackieparsley.workers.dev/books?q=" +
     encodeURIComponent(field + ":\"" + value + "\"") +
-    "&maxResults=" + maxResults + "&langRestrict=ja" + keyParam + startIndexParam;
+    "&maxResults=" + maxResults + "&langRestrict=ja" + startIndexParam;
 
-  return fetch(url, { referrerPolicy: "no-referrer-when-downgrade" })
+  return fetch(url)
     .then(function (response) {
       if (!response.ok) {
         throw new Error("Google Books APIの取得に失敗しました（ステータスコード: " + response.status + "）");
