@@ -5322,16 +5322,20 @@ html.dark-mode .dashboard-hero-banner {
     }
 
     /* サイドバーを閉じる「◀」ボタン。サイドバーの内側・メニュー項目より上に配置し、
-       開いている間だけ表示する（閉じているときは表示しない） */
+       開いている間だけ表示する（閉じているときは表示しない）。
+       margin-left:autoで、開く「≡」（画面左端に付く）と対になるように、
+       サイドバーの右の縁に寄せて配置する */
     .sidebar-close-button {
         align-items: center;
         justify-content: center;
         width: 36px;
         height: 36px;
+        margin-left: auto;
         margin-bottom: 12px;
         border: none;
         border-radius: 50%;
         background-color: var(--color-surface);
+        box-shadow: var(--shadow-sm);
         color: var(--color-text);
         cursor: pointer;
         transition: background-color var(--transition-fast) var(--ease-standard);
