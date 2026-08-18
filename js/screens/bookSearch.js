@@ -21,6 +21,29 @@ let bookPublishedDate = "";
 let bookGenre = "";
 let bookIsbn = "";
 
+// Google Books APIのimageLinksから、表示できる範囲でなるべく高画質な表紙画像のURLを選ぶ。
+// ・imageLinksにthumbnailより大きいサイズ（small/medium/large等）があれば優先して使う
+// ・無ければthumbnailのURLのズーム倍率（zoom=）を上げて、より高解像度の画像を取得する
+//   （縮小して表示するだけなので、書影のレイアウト・アスペクト比には影響しない）
+// ・httpのままだと表示できない場合があるので、httpsに変換しておく
+function pickHighQualityCoverUrl(imageLinks) {
+  if (!imageLinks) {
+    return null;
+  }
+
+  const url = imageLinks.extraLarge || imageLinks.large || imageLinks.medium
+    || imageLinks.small || imageLinks.thumbnail || imageLinks.smallThumbnail;
+
+  if (!url) {
+    return null;
+  }
+
+  return url
+    .replace("http://", "https://")
+    .replace(/zoom=\d/, "zoom=3")
+    .replace("&edge=curl", "");
+}
+
 // タイトルまたはISBNで本を検索し、結果を「本アプリ内で共通の形」に変換して返す。
 // mode: "title"ならタイトルで（intitle:）、"isbn"ならISBN（バーコード読み取り由来）で（isbn:）検索する
 // Google Books APIへは直接アクセスせず、中継用のCloudflare Worker（bookhub-api）を経由する。
@@ -60,7 +83,6 @@ function searchBooksByTitle(query, mode, onSuccess, onError) {
       // Google Books APIの生のデータ形式を、このアプリで使う共通の形に変換する
       const results = items.map(function (item) {
         const info = item.volumeInfo || {};
-        const hasThumbnail = info.imageLinks && info.imageLinks.thumbnail;
 
         return {
           title: info.title || "",
@@ -68,8 +90,7 @@ function searchBooksByTitle(query, mode, onSuccess, onError) {
           publisher: info.publisher || "",
           publishedDate: info.publishedDate || "",
           pageCount: info.pageCount || null,
-          // httpのままだと表示できない場合があるので、httpsに変換しておく
-          coverImage: hasThumbnail ? info.imageLinks.thumbnail.replace("http://", "https://") : null,
+          coverImage: pickHighQualityCoverUrl(info.imageLinks),
           // おすすめ機能（recommendationService.js）の読書傾向の集計・重複判定に使う
           genre: (info.categories || [])[0] || "",
           isbn: pickPreferredIsbn(info.industryIdentifiers)

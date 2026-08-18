@@ -60,10 +60,32 @@ function getReadingTendency(books) {
 
 // ---------- Google Books APIからの取得 ----------
 
+// Google Books APIのimageLinksから、表示できる範囲でなるべく高画質な表紙画像のURLを選ぶ。
+// ・imageLinksにthumbnailより大きいサイズ（small/medium/large等）があれば優先して使う
+// ・無ければthumbnailのURLのズーム倍率（zoom=）を上げて、より高解像度の画像を取得する
+//   （縮小して表示するだけなので、書影のレイアウト・アスペクト比には影響しない）
+// ・httpのままだと表示できない場合があるので、httpsに変換しておく
+function pickHighQualityCoverUrl(imageLinks) {
+  if (!imageLinks) {
+    return null;
+  }
+
+  const url = imageLinks.extraLarge || imageLinks.large || imageLinks.medium
+    || imageLinks.small || imageLinks.thumbnail || imageLinks.smallThumbnail;
+
+  if (!url) {
+    return null;
+  }
+
+  return url
+    .replace("http://", "https://")
+    .replace(/zoom=\d/, "zoom=3")
+    .replace("&edge=curl", "");
+}
+
 // Google Books APIの1件を、おすすめカードで使う共通の形に変換する
 function normalizeRecommendationItem(item) {
   const info = item.volumeInfo || {};
-  const hasThumbnail = info.imageLinks && info.imageLinks.thumbnail;
 
   return {
     title: info.title || "",
@@ -71,7 +93,7 @@ function normalizeRecommendationItem(item) {
     genre: (info.categories || [])[0] || "",
     isbn: pickPreferredIsbn(info.industryIdentifiers),
     pageCount: info.pageCount || null,
-    thumbnail: hasThumbnail ? info.imageLinks.thumbnail.replace("http://", "https://") : null,
+    thumbnail: pickHighQualityCoverUrl(info.imageLinks),
     infoLink: info.infoLink || null
   };
 }
