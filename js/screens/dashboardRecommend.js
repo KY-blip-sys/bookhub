@@ -2,9 +2,15 @@
 // 登録している本の読書傾向（カテゴリ・著者）をもとに、Google Books APIから取得したおすすめの本を表示する。
 // 集計・取得（読書傾向のカウント／Google Books APIへの問い合わせ／重複除外）はrecommendationService.jsが行い、
 // このファイルはその結果をカードとして描画すること・「登録する」ボタンの処理だけを受け持つ。
+//
+// 表示先は2箇所（どちらか一方だけがCSSで表示される。詳しくはindex.html・style.cssを参照）：
+// ・#dashboard-recommend-list　　　　　　　→ PC幅：右サイドバー（.recommend-rail）に縦1列で表示
+// ・#dashboard-recommend-list-carousel　　→ タブレット・スマホ幅：「今読んでいる本」の直下に横スクロールで表示
 
 const dashboardRecommendList = document.getElementById("dashboard-recommend-list");
+const dashboardRecommendListCarousel = document.getElementById("dashboard-recommend-list-carousel");
 const dashboardRecommendMessage = document.getElementById("dashboard-recommend-message");
+const dashboardRecommendMessageCarousel = document.getElementById("dashboard-recommend-message-carousel");
 
 // 今おすすめを取得中かどうか（本の追加・編集・削除が連続したときに、同時に何度もAPIを呼ばないようにする）
 let isLoadingDashboardRecommendations = false;
@@ -16,6 +22,10 @@ function showDashboardRecommendMessage(message) {
   dashboardRecommendList.innerHTML = "";
   dashboardRecommendMessage.textContent = message;
   dashboardRecommendMessage.hidden = false;
+
+  dashboardRecommendListCarousel.innerHTML = "";
+  dashboardRecommendMessageCarousel.textContent = message;
+  dashboardRecommendMessageCarousel.hidden = false;
 }
 
 // 本1冊ぶんの「あなたへのおすすめ」カード（表紙・タイトル・著者・カテゴリ・登録するボタン）を組み立てる
@@ -86,7 +96,8 @@ function registerDashboardRecommendedBook(book, registerButton) {
   );
 }
 
-// おすすめの本一覧を画面に描画する
+// おすすめの本一覧を画面に描画する（サイドバー・カルーセルの両方に反映する。
+// 同じ本でも表示先ごとに別々のDOM要素・ボタンが必要なため、カードは2回組み立て直す）
 function renderDashboardRecommendations(books) {
   if (books.length === 0) {
     showDashboardRecommendMessage("おすすめを取得できませんでした");
@@ -97,6 +108,12 @@ function renderDashboardRecommendations(books) {
   dashboardRecommendList.innerHTML = "";
   books.forEach(function (book) {
     dashboardRecommendList.appendChild(buildDashboardRecommendCard(book));
+  });
+
+  dashboardRecommendMessageCarousel.hidden = true;
+  dashboardRecommendListCarousel.innerHTML = "";
+  books.forEach(function (book) {
+    dashboardRecommendListCarousel.appendChild(buildDashboardRecommendCard(book));
   });
 }
 

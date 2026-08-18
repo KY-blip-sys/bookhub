@@ -175,12 +175,14 @@ deleteBookButton.addEventListener("click", function () {
 // 常に存在するため、幅を問わずイベントは登録しておいて問題ない
 
 const sidebarEl = document.querySelector(".sidebar");
-const sidebarOpenButton = document.getElementById("sidebar-open-button");
-const sidebarCloseButton = document.getElementById("sidebar-close-button");
+const sidebarToggleTab = document.getElementById("sidebar-toggle-tab");
 const sidebarBackdrop = document.getElementById("sidebar-backdrop");
 
 function openSidebarDrawer() {
   sidebarEl.classList.add("sidebar-open");
+  sidebarToggleTab.classList.add("sidebar-open");
+  sidebarToggleTab.setAttribute("aria-expanded", "true");
+  sidebarToggleTab.setAttribute("aria-label", "メニューを閉じる");
   sidebarBackdrop.hidden = false;
 }
 
@@ -188,11 +190,20 @@ function openSidebarDrawer() {
 // ドロワーごと閉じたい場面が多いため、単体の関数にしておく
 function closeSidebarDrawer() {
   sidebarEl.classList.remove("sidebar-open");
+  sidebarToggleTab.classList.remove("sidebar-open");
+  sidebarToggleTab.setAttribute("aria-expanded", "false");
+  sidebarToggleTab.setAttribute("aria-label", "メニューを開く");
   sidebarBackdrop.hidden = true;
 }
 
-sidebarOpenButton.addEventListener("click", openSidebarDrawer);
-sidebarCloseButton.addEventListener("click", closeSidebarDrawer);
+// 開閉どちらも同じタブ1つで行うトグル
+sidebarToggleTab.addEventListener("click", function () {
+  if (sidebarEl.classList.contains("sidebar-open")) {
+    closeSidebarDrawer();
+  } else {
+    openSidebarDrawer();
+  }
+});
 sidebarBackdrop.addEventListener("click", closeSidebarDrawer);
 
 // ---------- サイドバーのナビゲーション ----------
