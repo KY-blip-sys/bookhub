@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=42">
+  <link rel="stylesheet" href="css/style.css?v=43">
 </head>
 
 <body>
@@ -17,8 +17,8 @@
   <div class="app-shell">
 
     <!-- スマホ・タブレット幅だけに表示するトップバー（PC幅では常時表示のサイドバーがあるため、
-         このバー自体をCSSで非表示にする）。開閉は右のedge-tab（#sidebar-toggle-tab）が担うため、
-         ここにはボタン用の横幅を確保せず、タイトルがそのまま全幅を使う -->
+         このバー自体をCSSで非表示にする）。開くのは左上固定の「≡」ボタン（#sidebar-toggle-tab）が
+         担うため、ここにはボタン用の横幅を確保せず、タイトルがそのまま全幅を使う -->
     <header class="mobile-topbar">
       <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すとホームに戻る。
            ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
@@ -31,6 +31,15 @@
 
     <!-- 左側に常時表示するサイドバー（スマホ・タブレット幅では、普段は画面外に隠れたドロワーになる） -->
     <aside class="sidebar">
+      <!-- スマホ・タブレット幅専用：サイドバーを開いているときだけ、メニュー項目より上に表示する閉じるボタン。
+           PC幅ではCSSで常に非表示（PC幅ではサイドバー自体を閉じる操作が無いため） -->
+      <button type="button" class="sidebar-close-button" id="sidebar-close-button" aria-label="メニューを閉じる">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+
       <!-- 押すとホームに戻る -->
       <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="ホームに戻る">
         <span class="sidebar-brand-icon">
@@ -183,16 +192,17 @@
       </label>
     </aside>
 
-    <!-- サイドバーの開閉ボタン（スマホ・タブレット幅専用。PC幅ではCSSで非表示）。
-         サイドバーの縁から少しだけ飛び出す小さなタブとして、開閉どちらのときも同じ位置に固定表示する
-         （ボタン用に横幅を確保する行を持たないため、トップバー・コンテンツ領域を全幅で使える）。
-         開いているかどうかはjs/screens/app.jsが.sidebar-openクラスの付け外しで示し、CSSで
-         左端（閉時）／サイドバーの右端（開時）へタブごと移動させ、アイコンの向きも反転させる -->
+    <!-- サイドバーを開く「≡」ボタン（スマホ・タブレット幅専用。PC幅ではCSSで非表示）。
+         画面左上に固定表示し、閉じているときだけ表示する（開いたらCSSで非表示にし、代わりに
+         サイドバー内の#sidebar-close-button「◀」が表示される。同時に両方は表示しない）。
+         開いているかどうかはjs/screens/app.jsが.sidebar-openクラスの付け外しで示す -->
     <button type="button" class="sidebar-toggle-tab" id="sidebar-toggle-tab" aria-label="メニューを開く"
       aria-expanded="false">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
         stroke-linejoin="round">
-        <path d="M9 6l6 6-6 6" />
+        <line x1="4" y1="7" x2="20" y2="7" />
+        <line x1="4" y1="12" x2="20" y2="12" />
+        <line x1="4" y1="17" x2="20" y2="17" />
       </svg>
     </button>
 
@@ -329,20 +339,6 @@
           <p id="dashboard-recommend-message-carousel" class="page-placeholder" hidden></p>
         </section>
 
-        <!-- おすすめの本（定番本の紹介）：PC幅では右のサイドバー（.recommend-rail）に表示されるが、
-             タブレット横向き・スマホ幅では右側に表示する余白が無いため、代わりにここへ同じおすすめを表示する。
-             タブレット横向きは「今読んでいる本」の直下に、スマホはダッシュボードの一番下に置きたいため、
-             表示位置が違う2つの入れ物を用意し、幅に応じてCSSでどちらか一方だけを表示する（js/screens/recommend.js参照） -->
-        <section id="dashboard-recommend-rail-section" class="dashboard-recommend-rail-section">
-          <div class="recommend-rail-heading">
-            <span class="recommend-rail-icon">📚</span>
-            <h2 class="recommend-rail-title">おすすめの本</h2>
-          </div>
-          <ul id="recommend-book-list-inline" class="recommend-carousel-list">
-            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-          </ul>
-        </section>
-
         <!-- AIアシスト：今月の読書目標に対する応援メッセージ（目標が設定されているときだけ表示） -->
         <div id="ai-assist-goal-card" class="ai-assist-card" hidden>
           <div class="ai-assist-card-header">
@@ -353,17 +349,6 @@
           <div id="ai-assist-goal-body" class="ai-assist-card-body"></div>
         </div>
 
-        <!-- おすすめの本（スマホ幅用）：#dashboard-recommend-rail-sectionと中身は同じだが、
-             スマホでは画面の一番下に置きたいため、別の入れ物として一番最後に置く。表示の出し分けはCSSで行う -->
-        <section id="dashboard-recommend-rail-section-mobile" class="dashboard-recommend-rail-section-mobile">
-          <div class="recommend-rail-heading">
-            <span class="recommend-rail-icon">📚</span>
-            <h2 class="recommend-rail-title">おすすめの本</h2>
-          </div>
-          <ul id="recommend-book-list-inline-mobile" class="recommend-carousel-list">
-            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-          </ul>
-        </section>
       </div>
 
       <!-- 本一覧画面（本棚） -->
@@ -1281,17 +1266,6 @@
         </ul>
         <p id="dashboard-recommend-message" class="page-placeholder" hidden></p>
       </section>
-
-      <!-- おすすめの本（定番本の紹介）：画面に余裕があるときだけ、Google Books APIからランダムに取得した本を紹介する -->
-      <section class="sidebar-recommend-section">
-        <div class="recommend-rail-heading">
-          <span class="recommend-rail-icon">📚</span>
-          <h2 class="recommend-rail-title">おすすめの本</h2>
-        </div>
-        <ul id="recommend-book-list" class="recommend-book-list">
-          <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-        </ul>
-      </section>
     </aside>
   </div>
 
@@ -1548,8 +1522,7 @@
   <!-- assist.jsは、aiAnalysis.jsのbuildRecommendationCardとAssistViewModelを両方使うため、それらの後に読み込む -->
   <script src="js/screens/assist.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
-  <script src="js/screens/recommend.js?v=26"></script>
-  <script src="js/screens/app.js?v=27"></script>
+  <script src="js/screens/app.js?v=28"></script>
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
   <script src="js/screens/categorySelect.js?v=28"></script>
