@@ -106,7 +106,9 @@ body {
 
 .main-content {
     position: relative;
-    flex: 1;
+    /* flex-grow:0にして、常に960px（max-widthと同じ値）で確定させる。広告エリア側が
+       flex-grow:1で余った幅を引き受けるため、本文側が余白を奪い合うことはない */
+    flex: 0 1 960px;
     padding: 32px 40px;
     max-width: 960px;
     background-color: var(--color-bg);
@@ -135,6 +137,47 @@ html.dark-mode .main-content::before {
     display: none;
 }
 
+/* ---------- メイン画面＋広告エリア ---------- */
+/* PC幅では横並び（本文の右に広告）。画面幅が足りなくなったら.content-and-adごと
+   縦並びに切り替え、広告は本文の下に回り込む（@media (max-width: 1400px)参照） */
+.content-and-ad {
+    display: flex;
+    flex: 1;
+    min-width: 0;
+}
+
+/* 独立したaside要素。中の.ad-slotはあくまで開発中の仮表示で、
+   広告サービスのコードを貼り付けるときはこの.ad-container自体はそのまま使ってよい。
+   300×250の.ad-slotを縦に3つ並べる。
+   flex-grow:1で本文（.main-content）が使わなかった余白をすべて引き受け、
+   align-items:centerでその余白の中央に.ad-slotを置く（本文に張り付かないようにする） */
+.ad-container {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    padding: 32px 40px;
+}
+
+.ad-slot {
+    width: 300px;
+    max-width: 100%;
+    height: 250px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+}
+
+.ad-slot-label {
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    letter-spacing: 0.5px;
+}
+
 /* ---------- ヘッダー（常に上に表示される部分） ---------- */
 /* タイトル・カテゴリバッジの二重表示をやめ、「戻る／中央タイトル／使い方・日付」の3カラムに統一する */
 /* 画面幅いっぱいの帯ではなく、少し余白を持たせて浮かせた角丸カードにする */
@@ -142,16 +185,12 @@ html.dark-mode .main-content::before {
     position: sticky;
     top: 16px;
     z-index: 10;
-    display: grid;
-    /* 左右の列は"1fr"ではなく"auto"にする。1frのままだと、中央（タイトル）の
-       auto幅トラックが（overflow-wrap:break-wordを無視した）max-content基準で先に
-       幅を確保してしまい、長いタイトルのときに左右のfrトラックへ配る余白が0になって、
-       戻るボタンが横幅0の列からはみ出し中央タイトルの上に重なって表示されるバグがあった。
-       左右をauto（＝戻る・使い方ボタンなど中身がそのまま必要とする幅）に固定し、
-       中央だけをminmax(0, 1fr)にすることで、中央側が余白ぶんだけを使い0まで縮められるようにし、
-       左右の列が必ずその幅を確保できるようにする */
-    grid-template-columns: auto minmax(0, 1fr) auto;
+    /* 左右のボタン量（戻るボタンの有無・日付の文字数）が非対称なため、grid/flexの
+       トラック幅だけに頼ると中央のタイトルが見た目上ずれてしまう。position:absolute +
+       left:50%で、左右の中身に関係なく常にヘッダー自体の真ん中にタイトルを置く */
+    display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     margin: -12px 0 28px;
     padding: 14px 24px;
@@ -185,19 +224,26 @@ html.dark-mode .main-content::before {
     align-items: center;
     gap: 10px;
     min-width: 0;
+    flex: 0 0 auto;
+    /* タイトルは絶対配置で重なる位置に来るため、ボタンが常に押せるよう手前に出す */
+    position: relative;
+    z-index: 1;
 }
 
 .content-header-side-end {
     justify-content: flex-end;
 }
 
-/* white-space:nowrapのままだと、本の詳細画面などタイトルが長い本のときに
-   このgrid-column:2（auto幅）の列がタイトル全体の幅ぶん広がり、
-   左右の.content-header-side列を圧迫してヘッダーごと横にはみ出すことがあったため、
-   長いタイトルは折り返す */
+/* ヘッダー自体の中央に固定する。左右のボタン量に左右されず常に真ん中に来るように、
+   flexの並びからは外し、position:absoluteでヘッダー基準に中央配置する
+   （.content-headerのposition:stickyが配置の基準になる）。
+   長いタイトルは、左右のボタンに重ならない幅までで折り返す */
 .content-header-title {
-    grid-column: 2;
-    min-width: 0;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    max-width: min(60%, calc(100% - 220px));
     font-size: 19px;
     font-weight: 800;
     letter-spacing: 0.2px;
@@ -422,20 +468,6 @@ html.dark-mode .main-content::before {
 .category-switcher-button.active {
     background-color: var(--color-accent-soft);
     color: var(--color-accent);
-}
-
-/* ---------- ホーム画面：実用書/小説の切り替えタブ ---------- */
-/* ボタンの見た目・切り替え処理（js/screens/categorySelect.js）はサイドバーの.category-switcherと共通。
-   サイドバー幅（264px）いっぱいに広がる.category-switcher-button（flex:1）ではなく、
-   ページ中央に収まる大きさで、他のページ内タブ（.pill-tabs）と近い置かれ方にする */
-.dashboard-category-switcher {
-    width: fit-content;
-    margin: 0 auto 20px;
-}
-
-.dashboard-category-switcher .category-switcher-button {
-    flex: none;
-    padding: 10px 24px;
 }
 
 /* ---------- サイドバー：ナビゲーション ---------- */
@@ -863,6 +895,20 @@ h1 {
 
     .currently-reading-list>.currently-reading-card:nth-child(n+8) {
         display: none;
+    }
+
+    /* 本文の右に広告を並べるだけの横幅が無いため、本文の下に回り込ませる */
+    .content-and-ad {
+        flex-direction: column;
+    }
+
+    .ad-container {
+        flex-shrink: 1;
+        width: 100%;
+        padding: 0 40px 32px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 }
 
@@ -4237,6 +4283,10 @@ html.dark-mode .dashboard-hero-banner {
         padding: 24px 20px;
     }
 
+    .ad-container {
+        padding: 0 20px 24px;
+    }
+
     .content-header {
         /* モバイルトップバー（56px）の下に少し余白を空けて留まるようにする */
         top: 72px;
@@ -4257,6 +4307,10 @@ html.dark-mode .dashboard-hero-banner {
 @media (max-width: 600px) {
     .main-content {
         padding: 18px 16px;
+    }
+
+    .ad-container {
+        padding: 0 16px 18px;
     }
 
     .content-header {
