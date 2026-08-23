@@ -232,8 +232,8 @@ function renderBookStats() {
     return sum + record.minutes;
   }, 0);
 
-  statsTotalMinutes.textContent = totalMinutes;
-  statsSessionCount.textContent = book.records.length;
+  animateNumber(statsTotalMinutes, totalMinutes);
+  animateNumber(statsSessionCount, book.records.length);
   notesListHeading.textContent = book.category === "novel" ? "感想・メモ一覧" : "学んだこと一覧";
   // 「学んだこと」を読書記録と切り離して直接追加できるのは、この概念がある実用書だけ
   learningAddTriggerButton.hidden = book.category !== "practical";

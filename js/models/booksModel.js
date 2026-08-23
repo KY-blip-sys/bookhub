@@ -41,6 +41,38 @@ function getTodayTotalMinutes() {
   }, 0);
 }
 
+// 何日連続で読書記録を付けられているか（連続読書日数）を返す。
+// カテゴリを問わず、すべての本の記録日（record.date）を対象にする。
+// 今日はまだ記録していなくても、昨日までの連続記録が続いていれば「継続中」として数える
+// （日付が変わった瞬間に0へ戻ってしまうと、その日読む前に達成感が失われてしまうため）。
+function getReadingStreakDays() {
+  const recordedDateLabels = new Set();
+  loadBooks().forEach(function (book) {
+    book.records.forEach(function (record) {
+      if (record.date) {
+        recordedDateLabels.add(record.date);
+      }
+    });
+  });
+
+  if (recordedDateLabels.size === 0) {
+    return 0;
+  }
+
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+  if (!recordedDateLabels.has(cursor.toLocaleDateString("ja-JP"))) {
+    cursor.setDate(cursor.getDate() - 1); // 今日の分がまだ無ければ、昨日から遡って数える
+  }
+
+  let streakDays = 0;
+  while (recordedDateLabels.has(cursor.toLocaleDateString("ja-JP"))) {
+    streakDays += 1;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streakDays;
+}
+
 // 渡された本の記録をすべて合計した読書時間（分）を返す（「記録」ページの集計で使う）
 function getTotalMinutes(books) {
   return books.reduce(function (sum, book) {

@@ -56,6 +56,8 @@ const dashboardLearningLabel = document.getElementById("dashboard-learning-label
 const dashboardInProgressCount = document.getElementById("dashboard-in-progress-count");
 const dashboardDoneCount = document.getElementById("dashboard-done-count");
 const dashboardSubtitle = document.getElementById("dashboard-subtitle");
+const dashboardStreakBadge = document.getElementById("dashboard-streak-badge");
+const streakBadgeText = document.getElementById("streak-badge-text");
 
 // 初めて開いたときの案内（本が1冊も無いときだけ表示する）に使う要素
 const firstBookNudge = document.getElementById("first-book-nudge");
@@ -116,7 +118,7 @@ function renderBookList() {
   // 直前に追加した本のカード（見つかれば、あとでふわっと目立たせてスクロールする）
   let celebratedCardEl = null;
 
-  books.forEach(function (book) {
+  books.forEach(function (book, index) {
     const statusInfo = getBookStatusInfo(book);
     const hasInProgressAction = actions.some(function (action) {
       return action.bookId === book.id && action.status === "in-progress";
@@ -124,6 +126,8 @@ function renderBookList() {
 
     const li = document.createElement("li");
     li.className = "book-card";
+    // 「＋ 新しい本を追加」カード（常に先頭）の次から、並び順に沿って少しずつ遅れて現れるようにする
+    li.style.setProperty("--stagger-index", index + 1);
     li.addEventListener("click", function () {
       showDetailScreen(book.id);
     });
@@ -229,15 +233,16 @@ function renderCurrentlyReading(books) {
   currentlyReadingList.innerHTML = "";
   currentlyReadingEmpty.hidden = readingBooks.length > 0;
 
-  readingBooks.slice(0, CURRENTLY_READING_MAX_CARDS).forEach(function (book) {
-    currentlyReadingList.appendChild(buildCurrentlyReadingCard(book));
+  readingBooks.slice(0, CURRENTLY_READING_MAX_CARDS).forEach(function (book, index) {
+    currentlyReadingList.appendChild(buildCurrentlyReadingCard(book, index));
   });
 }
 
 // 「今読んでいる本」1冊ぶんのカード（表紙・タイトル・進捗）を組み立てる
-function buildCurrentlyReadingCard(book) {
+function buildCurrentlyReadingCard(book, staggerIndex) {
   const li = document.createElement("li");
   li.className = "currently-reading-card";
+  li.style.setProperty("--stagger-index", staggerIndex || 0);
   li.addEventListener("click", function () {
     showDetailScreen(book.id);
   });
@@ -567,14 +572,21 @@ function renderDashboard(books) {
     return getBookStatusInfo(book).key === "done";
   }).length;
 
-  dashboardTotalMinutes.textContent = totalMinutes;
-  dashboardBookCount.textContent = finishedBookCount;
-  dashboardSessionCount.textContent = sessionCount;
-  dashboardLearningCount.textContent = learningTileCount;
-  dashboardInProgressCount.textContent = inProgressCount;
-  dashboardDoneCount.textContent = doneCount;
+  animateNumber(dashboardTotalMinutes, totalMinutes);
+  animateNumber(dashboardBookCount, finishedBookCount);
+  animateNumber(dashboardSessionCount, sessionCount);
+  animateNumber(dashboardLearningCount, learningTileCount);
+  animateNumber(dashboardInProgressCount, inProgressCount);
+  animateNumber(dashboardDoneCount, doneCount);
 
   replayDashboardTileEntrance(dashboardGrid); // タイルのフェードインを毎回確実に再生させる（app.js）
+
+  // 連続読書日数：ある程度続いていることが伝わる日数からだけ、控えめなバッジで知らせる
+  const streakDays = getReadingStreakDays();
+  dashboardStreakBadge.hidden = streakDays < 2;
+  if (streakDays >= 2) {
+    streakBadgeText.textContent = streakDays + "日連続で読書中";
+  }
 }
 
 // ---------- 表紙画像の選択 ----------

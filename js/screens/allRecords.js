@@ -72,12 +72,12 @@ function renderAllRecordsScreen() {
     return action.status === "done";
   }).length;
 
-  recordsTotalMinutes.textContent = totalMinutes;
-  recordsBookCount.textContent = finishedBookCount;
-  recordsSessionCount.textContent = allRecords.length;
-  recordsLearningCount.textContent = learningCount;
-  recordsInProgressCount.textContent = inProgressCount;
-  recordsDoneCount.textContent = doneCount;
+  animateNumber(recordsTotalMinutes, totalMinutes);
+  animateNumber(recordsBookCount, finishedBookCount);
+  animateNumber(recordsSessionCount, allRecords.length);
+  animateNumber(recordsLearningCount, learningCount);
+  animateNumber(recordsInProgressCount, inProgressCount);
+  animateNumber(recordsDoneCount, doneCount);
 
   recordsPracticalTiles.forEach(function (tile) {
     tile.hidden = isNovel;

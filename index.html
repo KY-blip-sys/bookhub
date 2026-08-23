@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=43">
+  <link rel="stylesheet" href="css/style.css?v=44">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -57,6 +57,8 @@
       </div>
 
       <nav class="sidebar-nav">
+        <!-- 選択中の項目へ滑らかに追従する背景（js/screens/app.jsのupdateNavIndicator()が位置を制御する） -->
+        <div class="nav-active-indicator" id="nav-active-indicator" aria-hidden="true"></div>
         <button class="nav-item" type="button" data-nav="dashboard">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -250,7 +252,13 @@
           </button>
 
           <!-- ダッシュボード：今週の活動をまとめて表示する（「記録」ページのサマリー＝これまでの累計と区別できるようにしている） -->
-          <h2 class="dashboard-summary-label">今週の記録</h2>
+          <div class="dashboard-summary-header">
+            <h2 class="dashboard-summary-label">今週の記録</h2>
+            <p id="dashboard-streak-badge" class="streak-badge" hidden>
+              <span aria-hidden="true">🔥</span>
+              <span id="streak-badge-text"></span>
+            </p>
+          </div>
           <div id="dashboard">
             <div class="dashboard-tile dashboard-tile-primary">
               <span class="dashboard-icon icon-blue">🕐</span>
@@ -274,7 +282,7 @@
             </div>
             <!-- 実用書のときだけ表示（実践の状況） -->
             <div class="dashboard-tile dashboard-tile-practical">
-              <span class="dashboard-icon icon-orange">🎯</span>
+              <span class="dashboard-icon icon-yellow">🎯</span>
               <p class="dashboard-value" id="dashboard-in-progress-count">0</p>
               <p class="dashboard-label">実践中</p>
             </div>
@@ -930,7 +938,7 @@
             </div>
             <!-- 実用書のときだけ表示（実践の状況） -->
             <div class="dashboard-tile dashboard-tile-practical">
-              <span class="dashboard-icon icon-orange">🎯</span>
+              <span class="dashboard-icon icon-yellow">🎯</span>
               <p class="dashboard-value" id="records-in-progress-count">0</p>
               <p class="dashboard-label">実践中</p>
             </div>
@@ -1025,17 +1033,26 @@
            コードをこの中にそのまま貼り付けられる。300×250の枠を縦に3つ並べる。
            今はコード未設置のため、仮の枠だけを表示する -->
       <aside class="ad-container" id="ad-container">
-        <div class="ad-slot">
-          <!-- 広告コードをここに設置（1つ目） -->
-          <span class="ad-slot-label">広告</span>
+        <div class="ad-block">
+          <p class="ad-heading">おすすめ本</p>
+          <div class="ad-slot">
+            <!-- 広告コードをここに設置（1つ目） -->
+            <span class="ad-slot-label">広告</span>
+          </div>
         </div>
-        <div class="ad-slot">
-          <!-- 広告コードをここに設置（2つ目） -->
-          <span class="ad-slot-label">広告</span>
+        <div class="ad-block">
+          <p class="ad-heading">読書ランキング</p>
+          <div class="ad-slot">
+            <!-- 広告コードをここに設置（2つ目） -->
+            <span class="ad-slot-label">広告</span>
+          </div>
         </div>
-        <div class="ad-slot">
-          <!-- 広告コードをここに設置（3つ目） -->
-          <span class="ad-slot-label">広告</span>
+        <div class="ad-block">
+          <p class="ad-heading">新着記事</p>
+          <div class="ad-slot">
+            <!-- 広告コードをここに設置（3つ目） -->
+            <span class="ad-slot-label">広告</span>
+          </div>
         </div>
       </aside>
     </div>

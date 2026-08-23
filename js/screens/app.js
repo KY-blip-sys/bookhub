@@ -24,6 +24,51 @@ function showToast(message) {
   }, 2200);
 }
 
+// ---------- 数値のカウントアップ表示 ----------
+// 読書時間・冊数などのタイル数値を、瞬時に書き換えるのではなく前の値から滑らかに増減させる。
+// 値が変わっていないとき（同じ画面を開き直しただけ等）は何もしないので、無駄なアニメーションは起きない。
+function animateNumber(el, targetValue, options) {
+  options = options || {};
+  const suffix = options.suffix || "";
+  const duration = options.duration || 550;
+
+  const previousValue = Number(el.dataset.animatedValue);
+  const startValue = Number.isFinite(previousValue) ? previousValue : 0;
+
+  if (startValue === targetValue) {
+    el.textContent = targetValue + suffix;
+    el.dataset.animatedValue = targetValue;
+    return;
+  }
+
+  const prefersReducedMotion = window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (prefersReducedMotion) {
+    el.textContent = targetValue + suffix;
+    el.dataset.animatedValue = targetValue;
+    return;
+  }
+
+  cancelAnimationFrame(el._animateNumberRafId);
+  const startTime = performance.now();
+
+  function tick(now) {
+    const progress = Math.min((now - startTime) / duration, 1);
+    const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic：終盤ほどゆっくり収束させる
+    const currentValue = Math.round(startValue + (targetValue - startValue) * eased);
+    el.textContent = currentValue + suffix;
+
+    if (progress < 1) {
+      el._animateNumberRafId = requestAnimationFrame(tick);
+    } else {
+      el.textContent = targetValue + suffix;
+      el.dataset.animatedValue = targetValue;
+    }
+  }
+
+  el._animateNumberRafId = requestAnimationFrame(tick);
+}
+
 // 今どの本の詳細を見ているか（本のid）を覚えておく
 let currentBookId = null;
 
@@ -139,6 +184,7 @@ function showDetailScreenNow(bookId) {
   navItems.forEach(function (navItem) {
     navItem.classList.toggle("active", navItem.dataset.nav === "books");
   });
+  updateNavIndicator();
 
   // 本の詳細画面のときだけ、ヘッダーに「本一覧に戻る」ボタンを出し、タイトルも本のタイトルに差し替える
   headerBackButton.hidden = false;
@@ -244,7 +290,28 @@ function showPage(pageId) {
   navItems.forEach(function (navItem) {
     navItem.classList.toggle("active", "screen-" + navItem.dataset.nav === pageId);
   });
+  updateNavIndicator();
 }
+
+// ---------- サイドバー：選択中の項目へ滑らかに追従する背景 ----------
+const navActiveIndicator = document.getElementById("nav-active-indicator");
+
+// 今.activeが付いている項目の位置・高さに、インジケーターを合わせる。
+// カテゴリの切り替えで項目が表示/非表示になったあとも呼べるよう、独立した関数にしてある
+function updateNavIndicator() {
+  const activeItem = document.querySelector(".nav-item.active");
+  if (!activeItem || activeItem.offsetParent === null) {
+    // 表示中の.activeが無い（サイドバーごと隠れている等）ときは、インジケーターも消しておく
+    navActiveIndicator.style.opacity = "0";
+    return;
+  }
+  navActiveIndicator.style.transform = "translateY(" + activeItem.offsetTop + "px)";
+  navActiveIndicator.style.height = activeItem.offsetHeight + "px";
+  navActiveIndicator.style.opacity = "1";
+}
+
+// サイドバーのドロワー開閉・画面幅の変化で項目の高さが変わることがあるため、位置を再計算する
+window.addEventListener("resize", updateNavIndicator);
 
 // .dashboard-tile（#dashboardや.records-summaryのタイル）は本一覧のカードと違い、
 // 画面を描画し直すたびに作り直されず中身のテキストだけ更新される静的な要素のため、
@@ -389,15 +456,31 @@ const READING_RING_RADIUS = 42;
 const READING_RING_CIRCUMFERENCE = 2 * Math.PI * READING_RING_RADIUS;
 readingRingProgress.style.strokeDasharray = READING_RING_CIRCUMFERENCE;
 
+// 今日、目標時間の達成をすでにお祝いしたかどうか（起動中ずっと保持し、達成した最初の1回だけ演出する）
+let readingGoalCelebratedToday = false;
+
 // 今日の読書時間と、設定されている1日の目標時間から、リングを描き直す
 function renderReadingRing() {
   const todayMinutes = getTodayTotalMinutes();
   const goalMinutes = loadDailyReadingGoalMinutes();
   const progress = goalMinutes > 0 ? Math.min(todayMinutes / goalMinutes, 1) : 0;
+  const goalReachedNow = goalMinutes > 0 && todayMinutes >= goalMinutes;
 
   readingRingProgress.style.strokeDashoffset = READING_RING_CIRCUMFERENCE * (1 - progress);
-  readingRingValue.textContent = todayMinutes + "分";
+  animateNumber(readingRingValue, todayMinutes, { suffix: "分" });
   readingRingGoal.textContent = "目標 " + goalMinutes + "分";
+
+  // 目標を達成した瞬間だけ、控えめに弾ませてお祝いする
+  if (goalReachedNow && !readingGoalCelebratedToday) {
+    readingGoalCelebratedToday = true;
+    const ringCard = document.querySelector(".sidebar-reading-ring-card");
+    ringCard.classList.remove("reading-ring-celebrate");
+    void ringCard.offsetWidth; // 続けて再生できるよう、一度リフローを挟む
+    ringCard.classList.add("reading-ring-celebrate");
+  }
+  if (!goalReachedNow) {
+    readingGoalCelebratedToday = false; // 目標時間を上げ直す等で未達成に戻ったら、次の達成時にまたお祝いできるようにする
+  }
 }
 
 renderReadingRing(); // 起動時にも一度描画しておく
