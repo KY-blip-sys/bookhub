@@ -39,15 +39,6 @@ historyToggleButton.addEventListener("click", function () {
   historyList.hidden = isExpanded;
 });
 
-// この本についてAI読書コーチに相談するボタン（読書記録が1件以上あるときだけ使える）
-const aiCoachBookButton = document.getElementById("ai-coach-book-button");
-aiCoachBookButton.addEventListener("click", function () {
-  confirmLeaveWhileTimerRunning(function () {
-    ReadingCoachViewModel.loadBookContext(currentBookId);
-    goToNavPage("aiCoach");
-  });
-});
-
 // 今、何番目の記録を編集中か（新規保存のときはnull）
 let editingRecordIndex = null;
 
@@ -244,7 +235,6 @@ function renderBookStats() {
   statsTotalMinutes.textContent = totalMinutes;
   statsSessionCount.textContent = book.records.length;
   notesListHeading.textContent = book.category === "novel" ? "感想・メモ一覧" : "学んだこと一覧";
-  aiCoachBookButton.hidden = book.records.length === 0;
   // 「学んだこと」を読書記録と切り離して直接追加できるのは、この概念がある実用書だけ
   learningAddTriggerButton.hidden = book.category !== "practical";
 
@@ -505,9 +495,7 @@ recordForm.addEventListener("submit", function (event) {
   const isNewRecord = editingRecordIndex === null;
   const isNovel = book.category === "novel";
 
-  // AIアシスト（assist.js）で使う。新規記録のときだけ、今回書いたメモ本文と、
-  // 「この記録を追加する前から、すでに読了状態だったか」を覚えておく
-  let savedNoteText = "";
+  // 新規記録のときだけ、「この記録を追加する前から、すでに読了状態だったか」を覚えておく
   let wasFinishedBeforeThisRecord = false;
 
   if (!isNewRecord) {
@@ -539,11 +527,9 @@ recordForm.addEventListener("submit", function (event) {
       newRecord.memorableQuote = recordMemorableQuoteInput.value.trim();
       newRecord.favoriteCharacter = recordFavoriteCharacterInput.value.trim();
       newRecord.notes = recordNotesInput.value.trim();
-      savedNoteText = [newRecord.impression, newRecord.memorableQuote, newRecord.notes].filter(Boolean).join(" / ");
     } else {
       newRecord.learning = recordLearningInput.value.trim();
       newRecord.quote = recordQuoteInput.value.trim();
-      savedNoteText = newRecord.learning;
     }
 
     book.records.push(newRecord);
@@ -587,14 +573,6 @@ recordForm.addEventListener("submit", function (event) {
       }
     } else if (!isNovel) {
       showActionForm();
-    }
-
-    // AIアシスト（assist.js）：今回はじめて読了したなら読了インサイト＋おすすめ本を、
-    // そうでなければ今回の記録の振り返りを提案する（どちらもAPIキー未設定なら何も起きない）
-    if (justFinished) {
-      showFinishedBookCard(book.id);
-    } else if (savedNoteText) {
-      showRecordReflectionCard(book, savedNoteText);
     }
   } else {
     showToast("読書記録を保存しました");

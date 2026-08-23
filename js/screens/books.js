@@ -9,12 +9,14 @@ const coverUploadPlaceholder = document.getElementById("cover-upload-placeholder
 const coverUploadPreview = document.getElementById("cover-upload-preview");
 const bookList = document.getElementById("book-list");
 const booksCountSubtitle = document.getElementById("books-count-subtitle");
-const bookFormManualDetails = document.querySelector(".book-form-manual-details");
+const pageCountInput = document.getElementById("book-page-count");
 
-// タイトル・著者を書いている途中でEnterキー（変換確定を含む）を押しても、
-// 総ページ数など他の欄を書き終える前にフォームが送信されないようにする
+// タイトル・著者・総ページ数を書いている途中でEnterキー（変換確定を含む）を押しても、
+// 他の欄を書き終える前にフォームが送信されないようにする
 preventEnterSubmit(bookTitleInput);
 preventEnterSubmit(bookAuthorInput);
+preventEnterSubmit(pageCountInput);
+enableFlexibleDigitInput(pageCountInput); // 全角数字で入力しても半角として扱う
 
 // 今フォームで選択されている表紙画像（base64のURL文字列。未選択ならnull）
 let selectedCoverDataUrl = null;
@@ -327,14 +329,11 @@ const bookFormCloseButton = document.getElementById("book-form-close-button");
 
 function openBookFormPanel() {
   bookFormPanel.hidden = false;
-  // 検索が推奨の入り方のため、手動入力欄（検索欄より下にある）ではなく検索欄にフォーカスする。
-  // 手動入力欄にフォーカスすると、スクロール式のモーダル内で検索欄が隠れる位置まで自動スクロールしてしまうため。
-  bookSearchInput.focus();
+  bookTitleInput.focus();
 }
 
 function closeBookFormPanel() {
   bookFormPanel.hidden = true;
-  bookFormManualDetails.open = false; // 次に開いたときも、手動入力欄はたたんだ状態から始める
 }
 
 bookFormCloseButton.addEventListener("click", closeBookFormPanel);
@@ -429,7 +428,6 @@ function deleteBookById(bookId) {
     return b.id !== bookId;
   });
   saveBooks(remainingBooks);
-  refreshDashboardRecommendations(); // dashboardRecommend.js：読書傾向が変わったので、おすすめ一覧も更新する
 
   return true;
 }
@@ -497,7 +495,6 @@ bookEditForm.addEventListener("submit", function (event) {
   book.author = bookEditAuthorInput.value.trim();
   book.pageCount = Number(bookEditPageCountInput.value) || null;
   saveBooks(books);
-  refreshDashboardRecommendations(); // dashboardRecommend.js：読書傾向が変わったので、おすすめ一覧も更新する
 
   closeBookEditModal();
   renderBookList(); // 一覧を最新の状態に更新
@@ -644,11 +641,7 @@ function buildNewBook(title, author, extra) {
       title: title,
       author: author,
       coverImage: null,
-      publisher: "",
-      publishedDate: "",
       pageCount: null,
-      genre: null, // おすすめ機能（recommendationService.js）の読書傾向の集計に使う。検索から追加した場合のみ入る
-      isbn: null, // おすすめ機能の重複判定に使う。検索から追加した場合のみ入る
       pageAdjustment: 0, // 記録の合計ページ数に対する手動補正（現在のページ = 記録の合計 + この値）
       records: [] // この本の読書記録を後で入れるための空の配列
     },
@@ -659,7 +652,7 @@ function buildNewBook(title, author, extra) {
 // 追加した本の本棚カードを、次の描画のときだけふわっと目立たせる（達成感の演出）ために覚えておくid
 let bookIdToCelebrate = null;
 
-// 本を保存し、一覧とAIアシストの提案カードを更新する（本一覧・ダッシュボードどちらの追加フォームからも呼び出す）
+// 本を保存し、一覧を更新する（本一覧・ダッシュボードどちらの追加フォームからも呼び出す）
 function addBook(newBook) {
   // このカテゴリで初めての1冊かどうかを、保存する前に確認しておく
   const wasFirstBookInCategory = getBooksByCategory(newBook.category).length === 0;
@@ -667,7 +660,6 @@ function addBook(newBook) {
   const books = loadBooks();
   books.push(newBook);
   saveBooks(books);
-  refreshDashboardRecommendations(); // dashboardRecommend.js：読書傾向が変わったので、おすすめ一覧も更新する
 
   showToast("📚「" + newBook.title + "」を本棚に追加しました");
 
@@ -682,7 +674,6 @@ function addBook(newBook) {
   // それ以外は本棚に留まり、追加した本のカードがひと目でわかるよう、ふわっと目立たせる
   bookIdToCelebrate = newBook.id;
   renderBookList();
-  showPurposeCard(newBook); // AIアシスト：読む目的の候補を提案する（assist.js）
 }
 
 // フォームが送信された（追加ボタンが押された）ときの処理
@@ -699,29 +690,17 @@ bookForm.addEventListener("submit", function (event) {
   addBook(
     buildNewBook(title, author, {
       coverImage: selectedCoverDataUrl, // 表紙画像のURL（未選択ならnull）
-      publisher: bookPublisher, // 出版社（検索から選んだ場合のみ入る。手入力欄はない）
-      publishedDate: bookPublishedDate, // 出版日
-      pageCount: Number(pageCountInput.value) || null, // 総ページ数（検索結果または手入力）
-      genre: bookGenre || null, // ジャンル（検索から選んだ場合のみ入る）
-      isbn: bookIsbn || null, // ISBN（検索から選んだ場合のみ入る）
+      pageCount: Number(pageCountInput.value) || null, // 総ページ数（任意）
       wantToRead: bookWantToReadInput.checked // 「まだ読んでいない」を選んでいれば、読みたい本として追加する
     })
   );
-  resetBookForm(); // フォーム全体（表紙・検索結果の補足情報など）を空に戻す
+  resetBookForm(); // フォーム全体（表紙のプレビューなど）を空に戻す
 });
 
-// フォーム全体を初期状態に戻す（表紙のプレビューや、検索で入った補足情報も含む）
+// フォーム全体を初期状態に戻す（表紙のプレビューも含む）
 function resetBookForm() {
   bookForm.reset();
   clearSelectedCover();
   resetReadingStatusToggle();
-  bookPublisher = "";
-  bookPublishedDate = "";
-  bookGenre = "";
-  bookIsbn = "";
-  bookFormMeta.hidden = true;
-  pageCountManualNote.hidden = true;
-  bookSearchInput.value = "";
-  bookSearchResults.hidden = true;
   closeBookFormPanel(); // 追加が終わったら、モーダルを閉じてカード表示に戻す
 }

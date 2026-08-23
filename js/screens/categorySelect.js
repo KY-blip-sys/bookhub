@@ -12,8 +12,8 @@ const mobileTopbarTitleButton = document.getElementById("mobile-topbar-title-but
 // カテゴリごとに、サイドバーに表示できる画面（nav属性の値）の一覧
 // カテゴリを切り替えたときに、今開いている画面がもう存在しなければダッシュボードに戻すために使う
 const NAV_KEYS_BY_CATEGORY = {
-  practical: ["dashboard", "books", "actions", "practicalQuotes", "records", "stats", "aiCoach", "settings"],
-  novel: ["dashboard", "books", "reviewSummary", "novelQuotes", "records", "stats", "aiCoach", "settings"]
+  practical: ["dashboard", "books", "actions", "practicalQuotes", "records", "stats", "settings"],
+  novel: ["dashboard", "books", "reviewSummary", "novelQuotes", "records", "stats", "settings"]
 };
 
 // 切り替えピル（サイドバー・ホーム画面のどちらも）の見た目を、今のアクティブカテゴリに合わせる
@@ -53,7 +53,6 @@ categorySwitcherButtons.forEach(function (button) {
     saveActiveCategory(category);
     updateCategorySwitcherUI();
     updateNavVisibility();
-    refreshDashboardRecommendations(); // あなたへのおすすめは実用書/小説で内容が違うため、切り替えるたびに取得し直す
 
     // 今開いている画面が新しいカテゴリに存在しない場合（実践リスト⇔感想まとめ等）は
     // ダッシュボードに戻し、それ以外は同じ画面を新しいカテゴリの内容で描画し直す

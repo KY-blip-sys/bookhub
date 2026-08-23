@@ -120,16 +120,6 @@
           </svg>
           <span>統計</span>
         </button>
-        <button class="nav-item" type="button" data-nav="aiCoach">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M8 6h8a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H9l-3 3v-3H8a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2Z" />
-            <path d="M12 3v3" />
-            <circle cx="9.5" cy="11" r="0.9" fill="currentColor" stroke="none" />
-            <circle cx="14.5" cy="11" r="0.9" fill="currentColor" stroke="none" />
-          </svg>
-          <span>AIコーチ</span>
-        </button>
         <button class="nav-item" type="button" data-nav="settings">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -326,32 +316,6 @@
           </p>
         </section>
 
-        <!-- あなたへのおすすめ（タブレット・スマホ幅用）：登録している本の読書傾向（カテゴリ・著者）をもとに、
-             Google Books APIから取得したおすすめを表示する（AIは使用しない）。本を追加・編集・削除するたびに自動で更新される。
-             PC幅では右のサイドバー（.recommend-rail内の#sidebar-dashboard-recommend-list）にのみ表示するため、
-             ここは「今読んでいる本」の直下・横スクロールのカルーセル形式で、幅に余裕が無いときだけCSSで表示する
-             （js/screens/dashboardRecommend.js参照） -->
-        <section id="dashboard-recommend-carousel-section" class="dashboard-recommend-carousel-section">
-          <div class="recommend-rail-heading">
-            <span class="recommend-rail-icon">✨</span>
-            <h2 class="recommend-rail-title">あなたへのおすすめ</h2>
-          </div>
-          <ul id="dashboard-recommend-list-carousel" class="dashboard-recommend-list dashboard-recommend-list-carousel">
-            <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-          </ul>
-          <p id="dashboard-recommend-message-carousel" class="page-placeholder" hidden></p>
-        </section>
-
-        <!-- AIアシスト：今月の読書目標に対する応援メッセージ（目標が設定されているときだけ表示） -->
-        <div id="ai-assist-goal-card" class="ai-assist-card" hidden>
-          <div class="ai-assist-card-header">
-            <p class="ai-assist-card-title">✨ 今月の読書目標</p>
-            <button type="button" id="ai-assist-goal-close-button" class="ai-assist-close-button"
-              aria-label="閉じる">×</button>
-          </div>
-          <div id="ai-assist-goal-body" class="ai-assist-card-body"></div>
-        </div>
-
       </div>
 
       <!-- 本一覧画面（本棚） -->
@@ -366,22 +330,7 @@
               <button type="button" id="book-form-close-button" class="modal-close-button" aria-label="閉じる">×</button>
             </div>
 
-            <!-- タイトルでGoogle Books APIを検索し、候補から自動入力する。候補を選ぶだけでそのまま本棚に追加される -->
-            <p class="book-form-section-label">🔍 検索して追加</p>
-            <div class="book-search">
-              <div class="book-search-row">
-                <input type="text" id="book-search-input" placeholder="タイトルで検索">
-                <button type="button" id="book-search-button">検索</button>
-              </div>
-              <button type="button" id="book-barcode-scan-button" class="book-barcode-scan-button">
-                📷 バーコードを読み取って追加
-              </button>
-              <ul id="book-search-results" class="book-search-results" hidden>
-                <!-- ここに検索結果がJavaScriptで追加されていきます -->
-              </ul>
-            </div>
-
-            <!-- 読書ステータス：検索・手動どちらで追加する場合にも共通で使う。実体は隠したチェックボックスで、既存のロジックをそのまま使う -->
+            <!-- 読書ステータス：実体は隠したチェックボックスで、既存のロジックをそのまま使う -->
             <div class="reading-status-field">
               <p class="reading-status-label">読書ステータス</p>
               <div class="reading-status-toggle" id="reading-status-toggle" role="group" aria-label="読書ステータスを選ぶ">
@@ -391,12 +340,8 @@
               <input type="checkbox" id="book-want-to-read" form="book-form" hidden>
             </div>
 
-            <!-- 検索・バーコードで見つからない本だけのための入力欄。普段は使わないので、たたんでおく -->
-            <details class="book-form-manual-details">
-              <summary>または、手動で入力</summary>
-
-              <!-- 本を追加するフォーム（検索結果を選ぶと自動入力される。手入力も可能） -->
-              <form id="book-form">
+            <!-- 本を追加するフォーム -->
+            <form id="book-form">
                 <div class="book-form-row">
                   <!-- 表紙画像の選択（クリックでファイル選択を開く） -->
                   <label class="cover-upload">
@@ -416,49 +361,17 @@
                   <div class="book-form-fields">
                     <input type="text" id="book-title" placeholder="タイトル" required>
                     <input type="text" id="book-author" placeholder="著者（任意）">
-                    <p id="book-form-meta" class="book-form-meta" hidden></p>
 
                     <label class="page-count-field">
                       総ページ数（任意）
                       <input type="text" inputmode="numeric" id="book-page-count" placeholder="例：320">
                     </label>
-                    <p id="page-count-manual-note" class="field-hint" hidden>
-                      総ページ数を取得できなかったため、わかれば手動で入力してください。
-                    </p>
                   </div>
                 </div>
 
                 <button type="submit">本棚に追加</button>
               </form>
-            </details>
           </div>
-        </div>
-
-        <!-- バーコード読み取りモーダル（本を追加するモーダルの上に、さらに重ねて表示する） -->
-        <div id="book-barcode-modal" class="modal-overlay floating-modal book-barcode-modal" hidden>
-          <div class="modal-card floating-modal-card book-barcode-modal-card">
-            <div class="floating-modal-header">
-              <h3>📷 バーコードを読み取る</h3>
-              <button type="button" id="book-barcode-close-button" class="modal-close-button"
-                aria-label="閉じる">×</button>
-            </div>
-            <p class="book-barcode-hint">本の裏表紙のISBNバーコードを、枠の中に収めてください。</p>
-            <div class="book-barcode-video-frame">
-              <video id="book-barcode-video" playsinline muted></video>
-              <div class="book-barcode-video-guide"></div>
-            </div>
-            <p id="book-barcode-status" class="book-barcode-status">カメラを起動しています…</p>
-          </div>
-        </div>
-
-        <!-- AIアシスト：本を追加した直後に表示する「読む目的」の提案カード -->
-        <div id="ai-assist-purpose-card" class="ai-assist-card" hidden>
-          <div class="ai-assist-card-header">
-            <p class="ai-assist-card-title">✨ 「<span id="ai-assist-purpose-book-title"></span>」を読む目的を決めますか？</p>
-            <button type="button" id="ai-assist-purpose-close-button" class="ai-assist-close-button"
-              aria-label="閉じる">×</button>
-          </div>
-          <ul id="ai-assist-purpose-options" class="ai-assist-purpose-options"></ul>
         </div>
 
         <!-- 登録した本の一覧（本棚のようにカードを並べる。アクティブなカテゴリの本だけを表示） -->
@@ -646,16 +559,6 @@
             </div>
           </div>
 
-          <!-- AIアシスト：記録を保存した直後（通常時は振り返り、読了時は読了インサイト＋おすすめ本）に表示するカード -->
-          <div id="ai-assist-post-record-card" class="ai-assist-card" hidden>
-            <div class="ai-assist-card-header">
-              <p class="ai-assist-card-title">✨ AIからの提案</p>
-              <button type="button" id="ai-assist-post-record-close-button" class="ai-assist-close-button"
-                aria-label="閉じる">×</button>
-            </div>
-            <div id="ai-assist-post-record-body" class="ai-assist-card-body"></div>
-          </div>
-
           <!-- 実践の入力（読書記録を保存した直後に表示される） -->
           <div id="action-form-section" hidden>
             <h3>この学びから何を実践しますか？</h3>
@@ -703,10 +606,6 @@
 
         <!-- ---------- 読書履歴 タブ ---------- -->
         <div id="detail-history-panel" class="detail-tab-panel" hidden>
-          <!-- 読書記録が1件以上あるときだけ表示。押すとこの本の読書データを読み込んだ状態でAI読書コーチを開く -->
-          <button type="button" id="ai-coach-book-button" class="ai-coach-book-button" hidden>🤖
-            この本についてAI読書コーチに相談する</button>
-
           <div class="detail-history-summary">
             <div class="dashboard-tile dashboard-tile-primary">
               <span class="dashboard-icon icon-blue">🕐</span>
@@ -1097,147 +996,8 @@
         </div>
       </div>
 
-      <!-- AI読書コーチ画面：「コーチに相談」「読書を分析」の2つをタブで切り替える -->
-      <div id="screen-aiCoach" class="page" hidden>
-        <!-- タブ切り替え -->
-        <div class="ai-tab-switcher" role="group" aria-label="AI読書コーチの機能切り替え">
-          <button type="button" class="ai-tab-button active" data-ai-tab="coach">💬 コーチに相談</button>
-          <button type="button" class="ai-tab-button" data-ai-tab="analysis">📊 読書を分析</button>
-        </div>
-
-        <!-- ---------- コーチに相談タブ ---------- -->
-        <div id="ai-coach-panel" class="ai-tab-panel">
-          <!-- 本の詳細画面から開いたときだけ表示：読み込んだ読書データと、本専用のクイックアクション -->
-          <div id="ai-coach-book-panel" class="ai-coach-book-panel" hidden>
-            <p class="ai-coach-book-panel-label">読み込んだ読書データ</p>
-            <h3 id="ai-coach-book-title" class="ai-coach-book-title"></h3>
-            <p id="ai-coach-book-meta" class="ai-coach-book-meta"></p>
-            <p class="ai-coach-book-question">この本について何をしたいですか？</p>
-
-            <div class="ai-coach-quick-actions">
-              <button type="button" class="ai-coach-quick-action-button" data-reading-action="organize">💡
-                学びを整理する</button>
-              <button type="button" class="ai-coach-quick-action-button" data-reading-action="actionList">✅
-                実践リストを作る</button>
-              <button type="button" class="ai-coach-quick-action-button" data-reading-action="summarize">📝
-                学んだことを要約する</button>
-              <button type="button" class="ai-coach-quick-action-button" data-reading-action="deepen">❓
-                内容を深掘りする</button>
-            </div>
-
-            <button type="button" id="ai-coach-clear-book-context-button" class="link-button">本の文脈を解除して、自由に質問する</button>
-          </div>
-
-          <!-- 本の文脈が無いとき（サイドバーから直接開いたとき）だけ表示：よく使う相談を入力欄にセットするボタン。送信するかはユーザーが選ぶ -->
-          <div id="ai-coach-generic-quick-actions" class="ai-coach-quick-actions">
-            <button type="button" class="ai-coach-quick-action-button"
-              data-prompt="最近の読書で得た学びを整理したいです。内容を聞きながら、一緒に整理してもらえますか？">💡 学びを整理したい</button>
-            <button type="button" class="ai-coach-quick-action-button"
-              data-prompt="読書で得た学びを、実際の行動にどう活かせるか考えたいです。一緒に考えてもらえますか？">✅ 実践できることを考えたい</button>
-            <button type="button" class="ai-coach-quick-action-button" data-prompt="今考えていることについて、もっと深く掘り下げる質問をしてください。">❓
-              内容を深掘りしたい</button>
-          </div>
-
-          <form id="ai-coach-form" class="ai-coach-form">
-            <textarea id="ai-coach-input" rows="4" placeholder="AIに聞きたいことを入力してください" required></textarea>
-            <button type="submit" id="ai-coach-send-button">送信</button>
-          </form>
-
-          <p id="ai-coach-error" class="ai-coach-error" hidden></p>
-
-          <!-- 通信中のローディング表示 -->
-          <div id="ai-coach-loading" class="ai-coach-loading" hidden>
-            <span class="ai-coach-spinner" aria-hidden="true"></span>
-            AIが考えています…
-          </div>
-
-          <div id="ai-coach-response-card" class="ai-coach-response-card" hidden>
-            <p class="ai-coach-response-label">AIの返答</p>
-            <div id="ai-coach-response-text" class="ai-coach-response-text"></div>
-          </div>
-        </div>
-
-        <!-- ---------- 読書を分析タブ：保存されている読書履歴全体をAIへ送り、傾向・強み・偏り・おすすめ本を表示する ---------- -->
-        <div id="ai-analysis-panel" class="ai-tab-panel" hidden>
-          <button type="button" id="ai-analysis-run-button" class="ai-analysis-run-button">📊 読書履歴を分析する</button>
-
-          <div id="ai-analysis-loading" class="ai-coach-loading" hidden>
-            <span class="ai-coach-spinner" aria-hidden="true"></span>
-            読書履歴を分析しています…
-          </div>
-
-          <p id="ai-analysis-error" class="ai-coach-error" hidden></p>
-
-          <div id="ai-analysis-result" class="ai-analysis-result" hidden>
-            <div class="ai-analysis-card">
-              <h3>📊 あなたの読書傾向</h3>
-              <ul id="ai-analysis-trends" class="ai-analysis-list"></ul>
-            </div>
-
-            <div class="ai-analysis-card">
-              <h3>💪 あなたの強み</h3>
-              <ul id="ai-analysis-strengths" class="ai-analysis-list"></ul>
-            </div>
-
-            <div class="ai-analysis-card">
-              <h3>📈 成長ポイント</h3>
-              <ul id="ai-analysis-gaps" class="ai-analysis-list"></ul>
-              <p class="ai-analysis-next-theme-label">次に読むべきテーマ</p>
-              <p id="ai-analysis-next-theme" class="ai-analysis-next-theme"></p>
-            </div>
-
-            <div class="ai-analysis-card">
-              <h3>📚 おすすめの本</h3>
-              <ul id="ai-analysis-recommendations" class="ai-analysis-recommendation-list"></ul>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- 設定画面 -->
       <div id="screen-settings" class="page" hidden>
-
-        <div class="settings-card">
-          <h3>Google Books APIキー</h3>
-          <p class="field-hint">
-            APIキーなしでも本の検索はできますが、利用者全体で共有する少ない無料枠のため、
-            すぐに上限（エラー）に達することがあります。ご自身のAPIキーを設定すると、
-            検索できる回数の上限が大きく緩和されます。
-          </p>
-          <div class="settings-row">
-            <input type="text" id="google-books-api-key-input" placeholder="APIキーを貼り付け">
-            <button type="button" id="save-api-key-button">保存</button>
-          </div>
-          <p id="api-key-saved-note" class="field-hint" hidden>保存しました。</p>
-        </div>
-
-        <div class="settings-card">
-          <h3>OpenAI APIキー（AI読書コーチ用）</h3>
-          <p class="field-hint">
-            「AI読書コーチ」でAIと対話するには、ご自身のOpenAI APIキーが必要です。
-            APIキーはこのブラウザ内（localStorage）にのみ保存され、アプリのサーバーなどには送信されません。
-            ただし、AIへ送信するときにブラウザから直接OpenAIへ送られる仕組みのため、
-            共有・公開のパソコンでは入力しないでください。
-          </p>
-          <div class="settings-row">
-            <input type="text" id="openai-api-key-input" placeholder="APIキーを貼り付け">
-            <button type="button" id="save-openai-api-key-button">保存</button>
-          </div>
-          <p id="openai-api-key-saved-note" class="field-hint" hidden>保存しました。</p>
-        </div>
-
-        <div class="settings-card">
-          <h3>今月の読書目標</h3>
-          <p class="field-hint">
-            今月読み終えたい本の冊数を設定すると、ホームにAIからの応援メッセージが表示されます。
-            0冊のまま（未設定）にすると表示されません。
-          </p>
-          <div class="settings-row">
-            <input type="text" inputmode="numeric" id="monthly-goal-input" placeholder="例：3">
-            <button type="button" id="save-monthly-goal-button">保存</button>
-          </div>
-          <p id="monthly-goal-saved-note" class="field-hint" hidden>保存しました。</p>
-        </div>
 
         <div class="settings-card">
           <h3>1日の読書目標時間</h3>
@@ -1253,23 +1013,6 @@
       </div>
 
     </main>
-
-    <!-- 右サイドバー：画面に余裕があるとき（PC幅）だけ表示する。スクロールしてもその場に固定される -->
-    <aside class="recommend-rail" id="recommend-rail">
-      <!-- あなたへのおすすめ：登録している本の読書傾向（カテゴリ・著者）をもとに、Google Books APIから
-           取得したおすすめを表示する（AIは使用しない）。PC幅ではここだけに表示し、メインコンテンツ側には
-           表示しない（タブレット・スマホ幅での表示は#dashboard-recommend-carousel-section参照） -->
-      <section class="sidebar-dashboard-recommend-section" id="sidebar-dashboard-recommend-section">
-        <div class="recommend-rail-heading">
-          <span class="recommend-rail-icon">✨</span>
-          <h2 class="recommend-rail-title">あなたへのおすすめ</h2>
-        </div>
-        <ul id="dashboard-recommend-list" class="dashboard-recommend-list dashboard-recommend-list-rail">
-          <!-- ここにおすすめの本がJavaScriptで追加されていきます -->
-        </ul>
-        <p id="dashboard-recommend-message" class="page-placeholder" hidden></p>
-      </section>
-    </aside>
   </div>
 
   <!-- 本一覧から「編集」を選んだときに開く、本の情報を編集するモーダル -->
@@ -1376,7 +1119,7 @@
         <section class="help-step">
           <h4>📖 本を登録する</h4>
           <ul>
-            <li>本一覧の「＋ 新しい本を追加」からタイトルを検索し、候補をタップすると表紙・著者・ページ数まで入った状態でそのまま本棚に追加されます。</li>
+            <li>本一覧の「＋ 新しい本を追加」からタイトル・著者・総ページ数・表紙画像を入力すると、そのまま本棚に追加されます。</li>
             <li>「今から読む」「あとで読む」を選んでから追加できます。</li>
           </ul>
         </section>
@@ -1475,10 +1218,6 @@
   <!-- 保存完了などを知らせる、画面下に浮かぶ小さな通知 -->
   <div id="toast" class="toast" hidden></div>
 
-  <!-- ---------- 外部ライブラリ ---------- -->
-  <!-- バーコード（ISBN）読み取りに使用。ネット通信なしで動作するよう、ファイルをこのプロジェクトに同梱している -->
-  <script src="js/vendor/zxing.umd.min.js?v=1"></script>
-
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
   <script src="js/models/storage.js?v=25"></script>
   <script src="js/models/booksModel.js?v=25"></script>
@@ -1489,26 +1228,12 @@
   <script src="js/models/categoryModel.js?v=24"></script>
   <script src="js/models/settingsModel.js?v=24"></script>
 
-  <!-- ---------- サービス層（外部API通信・読書データの取得のみ。DOM操作はしない） ---------- -->
-  <script src="js/services/aiService.js?v=24"></script>
-  <script src="js/services/readingRepository.js?v=24"></script>
-  <script src="js/services/recommendationService.js?v=3"></script>
-
-  <!-- ---------- ViewModel層（Viewと通信層の仲介） ---------- -->
-  <script src="js/viewmodels/aiCoachViewModel.js?v=24"></script>
-  <script src="js/viewmodels/readingCoachViewModel.js?v=24"></script>
-  <script src="js/viewmodels/analysisViewModel.js?v=24"></script>
-  <script src="js/viewmodels/assistViewModel.js?v=24"></script>
-
   <!-- ---------- 画面層（描画・イベント処理） ---------- -->
   <script src="js/screens/modal.js?v=24"></script>
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=24"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
   <script src="js/screens/books.js?v=31"></script>
-  <script src="js/screens/bookSearch.js?v=30"></script>
-  <script src="js/screens/bookBarcode.js?v=1"></script>
-  <script src="js/screens/dashboardRecommend.js?v=3"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/timer.js?v=25"></script>
   <script src="js/screens/records.js?v=25"></script>
@@ -1520,10 +1245,6 @@
   <script src="js/screens/quotes.js?v=24"></script>
   <script src="js/screens/motivationCard.js?v=24"></script>
   <script src="js/screens/settings.js?v=24"></script>
-  <script src="js/screens/aiCoach.js?v=24"></script>
-  <script src="js/screens/aiAnalysis.js?v=25"></script>
-  <!-- assist.jsは、aiAnalysis.jsのbuildRecommendationCardとAssistViewModelを両方使うため、それらの後に読み込む -->
-  <script src="js/screens/assist.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/app.js?v=28"></script>
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、

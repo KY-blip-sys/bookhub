@@ -1,7 +1,7 @@
 // ---------- localStorage 汎用エンジン ----------
 // 各モデルファイル（booksModel.js・actionsModel.js・reviewsModel.js）は、
 // ここにある2つの関数を使ってデータをJSONとして保存・読み込みする。
-// ダークモード設定やAPIキー、アクティブなカテゴリのような単純な文字列1つだけの値は、
+// ダークモード設定やアクティブなカテゴリのような単純な文字列1つだけの値は、
 // 各モデルファイルでlocalStorageを直接読み書きする（JSON化する必要がないため）。
 
 // 指定したキーの値をJSONとして読み込む（保存されていなければfallbackを返す）
@@ -37,26 +37,6 @@ function enableFlexibleDigitInput(inputEl) {
     const newPosition = Math.max(0, inputEl.value.length - cursorFromEnd);
     inputEl.setSelectionRange(newPosition, newPosition);
   });
-}
-
-// ---------- Google Books APIの共通の変換処理 ----------
-// bookSearch.js（本の検索）・recommendationService.js（おすすめ機能）の両方で使う
-
-// industryIdentifiersから、重複判定などに使うISBNを1つ選ぶ（ISBN_13を優先し、無ければISBN_10）
-function pickPreferredIsbn(identifiers) {
-  if (!identifiers) {
-    return "";
-  }
-  const isbn13 = identifiers.find(function (identifier) {
-    return identifier.type === "ISBN_13";
-  });
-  if (isbn13) {
-    return isbn13.identifier;
-  }
-  const isbn10 = identifiers.find(function (identifier) {
-    return identifier.type === "ISBN_10";
-  });
-  return isbn10 ? isbn10.identifier : "";
 }
 
 // ---------- Enterキーでの誤送信を防ぐ ----------

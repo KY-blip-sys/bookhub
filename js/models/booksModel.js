@@ -22,19 +22,6 @@ function saveBooks(books) {
   saveJSON(BOOKS_KEY, books);
 }
 
-// 指定した本の「読む目的」を保存する（AI読書アシスタントの提案から選んだときに使う）
-function saveBookPurpose(bookId, purpose) {
-  const books = loadBooks();
-  const book = books.find(function (b) {
-    return b.id === bookId;
-  });
-  if (!book) {
-    return;
-  }
-  book.purpose = purpose;
-  saveBooks(books);
-}
-
 // 指定したカテゴリ（"practical" | "novel"）の本だけを返す
 // 一覧・ダッシュボード・記録・統計など、複数の本をまとめて表示する画面で使う
 function getBooksByCategory(category) {

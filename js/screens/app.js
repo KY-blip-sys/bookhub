@@ -66,7 +66,7 @@ detailTabButtons.forEach(function (button) {
 
 // 指定した本の詳細画面を表示する
 function showDetailScreen(bookId) {
-  // 今開いている本自身の表示を更新するだけ（編集・AI提案の反映など）なら確認しない。
+  // 今開いている本自身の表示を更新するだけ（編集内容の反映など）なら確認しない。
   // 別の本の詳細に切り替えようとしたときだけ、タイマー作動中の移動確認をする
   if (bookId === currentBookId) {
     showDetailScreenNow(bookId);
@@ -100,7 +100,7 @@ function showDetailScreenNow(bookId) {
   detailStatusBadge.textContent = statusInfo.label;
   detailStatusBadge.className = "status-badge detail-status-badge status-" + statusInfo.key;
 
-  // AIアシストで選んだ「読む目的」があれば表示する（無ければ何も表示しない）
+  // 「読む目的」が設定されていれば表示する（無ければ何も表示しない）
   if (book.purpose) {
     detailBookPurpose.textContent = "🎯 読む目的：" + book.purpose;
     detailBookPurpose.hidden = false;
@@ -121,7 +121,6 @@ function showDetailScreenNow(bookId) {
   timerFirstTimeHint.hidden = book.records.length > 0; // まだ一度も記録が無い本だけ、次にすることのヒントを出す
   hideRecordForm(); // 記録フォームを毎回隠した状態にしておく
   hideActionForm(); // 実践フォームも毎回隠した状態にしておく
-  hidePostRecordCard(); // 別の本のAIアシストカードが残らないようにする
   // 読書履歴の横バーは、本を開くたびに必ず畳んだ状態から始める（前の本で開いていた状態を持ち越さない）
   historyToggleButton.setAttribute("aria-expanded", "false");
   historyList.hidden = true;
@@ -278,7 +277,6 @@ const NAV_LABELS = {
   novelQuotes: "好きな言葉",
   records: "記録",
   stats: "統計",
-  aiCoach: "AI読書コーチ",
   settings: "設定"
 };
 
@@ -302,9 +300,6 @@ function goToNavPage(navKey) {
   if (navKey === "dashboard" || navKey === "books") {
     renderBookList();
   }
-  if (navKey === "dashboard") {
-    showGoalEncouragementCard(); // AIアシスト：今月の読書目標に対する応援メッセージ（未設定なら何も起きない）
-  }
   if (navKey === "actions") {
     showActionsTab("inProgress"); // サイドバーから開いたときは、常に「実践中」タブから始める
   }
@@ -323,19 +318,11 @@ function goToNavPage(navKey) {
   if (navKey === "stats") {
     renderStatsScreen();
   }
-  if (navKey === "aiCoach") {
-    showAiTab("coach"); // サイドバーから開いたときは、常に「コーチに相談」タブから始める
-  }
 }
 
 navItems.forEach(function (navItem) {
   navItem.addEventListener("click", function () {
     confirmLeaveWhileTimerRunning(function () {
-      // サイドバーから直接「AI読書コーチ」を開いたときは、前に見ていた本の文脈を持ち越さず汎用モードに戻す
-      // （本の詳細画面の専用ボタンから開いたときは、この前にbookContextがセットされた状態でgoToNavPageが呼ばれる）
-      if (navItem.dataset.nav === "aiCoach") {
-        ReadingCoachViewModel.clearBookContext();
-      }
       goToNavPage(navItem.dataset.nav);
       closeSidebarDrawer(); // スマホ・タブレット幅でドロワーから選んだときは、選んだら自動で閉じる
     });
