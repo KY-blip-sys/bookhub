@@ -10,4 +10,5 @@ function loadActiveCategory() {
 // 選んだカテゴリを保存する
 function saveActiveCategory(category) {
   localStorage.setItem(ACTIVE_CATEGORY_KEY, category);
+  queueCloudSync(ACTIVE_CATEGORY_KEY, category); // ログイン中なら、Supabaseにも保存する（js/services/cloudSync.js）
 }

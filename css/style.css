@@ -1450,6 +1450,8 @@ h4 {
 /* ---------- 入力欄・ボタンの共通スタイル ---------- */
 input[type="text"],
 input[type="number"],
+input[type="email"],
+input[type="password"],
 textarea {
     width: 100%;
     padding: 10px 12px;
@@ -1511,6 +1513,8 @@ textarea {
 
 input[type="text"]:focus,
 input[type="number"]:focus,
+input[type="email"]:focus,
+input[type="password"]:focus,
 .scroll-date-input:focus,
 textarea:focus,
 select:focus {
@@ -4704,4 +4708,131 @@ html.dark-mode .dashboard-hero-banner {
 .toast.toast-visible {
     opacity: 1;
     transform: translate(-50%, 0);
+}
+
+/* ---------- ログイン・新規登録画面 ---------- */
+/* アプリ本体（.app-shell）より前に表示する、全画面の認証画面。
+   ログイン状態が確認できるまでは常にこちらだけを表示し、確認できたら隠す（js/screens/auth.js） */
+#auth-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background-color: var(--color-bg);
+    overflow-y: auto;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 360px;
+    padding: 32px 28px;
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-md);
+    text-align: center;
+}
+
+.auth-card-icon {
+    font-size: 32px;
+}
+
+.auth-card h1 {
+    margin: 8px 0 4px;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.auth-card-subtitle {
+    margin: 0 0 24px;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+.auth-form {
+    text-align: left;
+}
+
+.auth-form label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+.auth-form input {
+    margin-bottom: 14px;
+}
+
+.auth-submit-button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 4px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-body);
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.auth-submit-button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.auth-switch-row {
+    margin-top: 18px;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+.auth-switch-button {
+    background: none;
+    border: none;
+    padding: 0;
+    color: var(--color-accent);
+    font-weight: 600;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.auth-message {
+    margin: 0 0 14px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-meta);
+    text-align: left;
+}
+
+.auth-message[hidden] {
+    display: none;
+}
+
+.auth-message-error {
+    background-color: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.auth-message-success {
+    background-color: var(--color-success-soft);
+    color: var(--color-success);
+}
+
+.auth-loading-text {
+    font-size: var(--font-size-body);
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 設定画面：アカウント欄 ---------- */
+.account-email {
+    margin: 0 0 12px;
+    font-size: var(--font-size-body);
+    color: var(--color-text);
+    word-break: break-all;
 }

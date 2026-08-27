@@ -16,6 +16,7 @@ function loadJSON(key, fallback) {
 // 指定したキーに、値をJSONとして保存する
 function saveJSON(key, value) {
   localStorage.setItem(key, JSON.stringify(value));
+  queueCloudSync(key, value); // ログイン中なら、Supabaseにも同じ内容を保存する（js/services/cloudSync.js）
 }
 
 // ---------- 数値入力欄（全角・半角どちらの数字にも対応する） ----------

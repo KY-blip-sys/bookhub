@@ -20,7 +20,45 @@
 
 <body>
 
-  <div class="app-shell">
+  <!-- ログイン・新規登録画面：ログイン状態が確認できるまでは、常にこちらだけを表示する（js/screens/auth.js） -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <p class="auth-card-icon">📖</p>
+      <h1>BookHub</h1>
+      <p class="auth-card-subtitle" id="auth-subtitle">読み込んでいます…</p>
+
+      <p id="auth-loading" class="auth-loading-text">少々お待ちください…</p>
+
+      <div id="auth-form-section" hidden>
+        <p id="auth-message" class="auth-message" hidden></p>
+        <form id="auth-form" class="auth-form">
+          <label for="auth-email">メールアドレス</label>
+          <input type="email" id="auth-email" autocomplete="email" required>
+
+          <label for="auth-password">パスワード</label>
+          <input type="password" id="auth-password" autocomplete="current-password" required minlength="6">
+
+          <div id="auth-password-confirm-field" hidden>
+            <label for="auth-password-confirm">パスワード（確認用）</label>
+            <input type="password" id="auth-password-confirm" autocomplete="new-password" minlength="6">
+          </div>
+
+          <button type="submit" id="auth-submit-button" class="auth-submit-button">ログイン</button>
+        </form>
+
+        <p class="auth-switch-row" id="auth-switch-row-signup">
+          アカウントをお持ちでない方は
+          <button type="button" id="auth-switch-to-signup" class="auth-switch-button">新規登録</button>
+        </p>
+        <p class="auth-switch-row" id="auth-switch-row-login" hidden>
+          すでにアカウントをお持ちの方は
+          <button type="button" id="auth-switch-to-login" class="auth-switch-button">ログイン</button>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-shell" hidden>
 
     <!-- スマホ・タブレット幅だけに表示するトップバー（PC幅では常時表示のサイドバーがあるため、
          このバー自体をCSSで非表示にする）。開くのは左上固定の「≡」ボタン（#sidebar-toggle-tab）が
@@ -1015,6 +1053,12 @@
         <div id="screen-settings" class="page" hidden>
 
           <div class="settings-card">
+            <h3>アカウント</h3>
+            <p class="account-email" id="account-email"></p>
+            <button type="button" id="logout-button">ログアウト</button>
+          </div>
+
+          <div class="settings-card">
             <h3>1日の読書目標時間</h3>
             <p class="field-hint">
               サイドバーの「今日の読書時間」リングで使う、1日あたりの目標時間（分）です。
@@ -1261,15 +1305,19 @@
   <!-- 保存完了などを知らせる、画面下に浮かぶ小さな通知 -->
   <div id="toast" class="toast" hidden></div>
 
+  <!-- Supabase（ログイン・クラウド保存）のクライアントライブラリ -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="js/services/cloudSync.js?v=1"></script>
+
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
-  <script src="js/models/storage.js?v=25"></script>
+  <script src="js/models/storage.js?v=26"></script>
   <script src="js/models/booksModel.js?v=25"></script>
   <script src="js/models/actionsModel.js?v=24"></script>
   <script src="js/models/reviewsModel.js?v=24"></script>
   <script src="js/models/favoriteQuotesModel.js?v=24"></script>
   <script src="js/models/favoriteLearningsModel.js?v=24"></script>
-  <script src="js/models/categoryModel.js?v=24"></script>
-  <script src="js/models/settingsModel.js?v=24"></script>
+  <script src="js/models/categoryModel.js?v=25"></script>
+  <script src="js/models/settingsModel.js?v=25"></script>
 
   <!-- ---------- 画面層（描画・イベント処理） ---------- -->
   <script src="js/screens/modal.js?v=24"></script>
@@ -1293,6 +1341,9 @@
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
   <script src="js/screens/categorySelect.js?v=28"></script>
+  <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
+       ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
+  <script src="js/screens/auth.js?v=1"></script>
 </body>
 
 </html>

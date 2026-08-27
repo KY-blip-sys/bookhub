@@ -10,6 +10,7 @@ function loadDarkModePreference() {
 // ダークモードの設定をlocalStorageに保存する
 function saveDarkModePreference(isDarkMode) {
   localStorage.setItem(DARK_MODE_KEY, isDarkMode);
+  queueCloudSync(DARK_MODE_KEY, isDarkMode); // ログイン中なら、Supabaseにも保存する（js/services/cloudSync.js）
 }
 
 // ---------- 1日の読書目標時間（サイドバーのリング表示用） ----------
@@ -26,4 +27,5 @@ function loadDailyReadingGoalMinutes() {
 // 1日の目標時間（分）をlocalStorageに保存する
 function saveDailyReadingGoalMinutes(minutes) {
   localStorage.setItem(DAILY_READING_GOAL_MINUTES_KEY, String(minutes));
+  queueCloudSync(DAILY_READING_GOAL_MINUTES_KEY, minutes); // ログイン中なら、Supabaseにも保存する（js/services/cloudSync.js）
 }
