@@ -14,15 +14,17 @@
 -- ---------- profiles：ユーザーごとのプラン・AIクレジット残高 ----------
 
 create table if not exists public.profiles (
-  id uuid primary key references auth.users(id) on delete cascade,
-  plan text not null default 'free' check (plan in ('free', 'premium')),
-  ai_credit integer not null default 100,
-  credit_reset_date date not null default date_trunc('month', now())::date,
-  updated_at timestamptz not null default now()
+  id uuid primary key references auth.users(id) on delete cascade
 );
 
--- 新規登録時にプロフィール表示用として保存する項目
--- （既存のprofilesテーブルにも安全に追加できるよう、ADD COLUMN IF NOT EXISTSにしている）
+-- profilesテーブルが（display_name・avatar_urlだけを持つなど）別の経緯で先に作られていた場合でも
+-- 必要な列がそろうよう、1列ずつ ADD COLUMN IF NOT EXISTS で追加する
+-- （CREATE TABLE IF NOT EXISTSは、テーブルが既に存在すると列定義ごと無視されてしまうため、
+-- 　このファイルで必要な列は必ずここで個別に追加する）
+alter table public.profiles add column if not exists plan text not null default 'free' check (plan in ('free', 'premium'));
+alter table public.profiles add column if not exists ai_credit integer not null default 100;
+alter table public.profiles add column if not exists credit_reset_date date not null default date_trunc('month', now())::date;
+alter table public.profiles add column if not exists updated_at timestamptz not null default now();
 alter table public.profiles add column if not exists display_name text;
 alter table public.profiles add column if not exists avatar_url text;
 
