@@ -90,6 +90,7 @@ const detailTabPanels = {
   history: document.getElementById("detail-history-panel"),
   learning: document.getElementById("detail-learning-panel"),
   quotes: document.getElementById("detail-quotes-panel"),
+  aiQuestion: document.getElementById("detail-ai-question-panel"),
   actions: document.getElementById("detail-actions-panel")
 };
 
@@ -101,6 +102,10 @@ function showDetailTab(tabName) {
   Object.keys(detailTabPanels).forEach(function (key) {
     detailTabPanels[key].hidden = key !== tabName;
   });
+
+  if (tabName === "aiQuestion") {
+    prepareBookQuestionTab(currentBookId); // js/screens/bookQuestion.js
+  }
 }
 
 detailTabButtons.forEach(function (button) {

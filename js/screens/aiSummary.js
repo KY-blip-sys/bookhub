@@ -70,6 +70,7 @@ aiSummaryGenerateButton.addEventListener("click", async function () {
   aiSummaryResultEl.hidden = true;
   aiSummaryLoadingEl.hidden = false;
   aiSummaryGenerateButton.disabled = true;
+  hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
 
   try {
     const contextText = formatAiReadingContext(notesContext);
@@ -78,6 +79,7 @@ aiSummaryGenerateButton.addEventListener("click", async function () {
       "\n\n上記から、（1）3行要約、（2）学んだことを3つ、（3）明日から実践できることを3つ、それぞれ作成してください。";
 
     const data = await sendChatMessage(message, {
+      feature: "summary",
       instructions: AI_SUMMARY_INSTRUCTIONS,
       schema: AI_SUMMARY_SCHEMA
     });
@@ -87,8 +89,12 @@ aiSummaryGenerateButton.addEventListener("click", async function () {
     fillAiSummaryList(aiSummaryActionsEl, data.actions || []);
     aiSummaryResultEl.hidden = false;
   } catch (error) {
-    aiSummaryErrorEl.textContent = error.message || "要約の作成に失敗しました。";
-    aiSummaryErrorEl.hidden = false;
+    if (error.insufficientCredit) {
+      showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+    } else {
+      aiSummaryErrorEl.textContent = error.message || "要約の作成に失敗しました。";
+      aiSummaryErrorEl.hidden = false;
+    }
   } finally {
     aiSummaryLoadingEl.hidden = true;
     aiSummaryGenerateButton.disabled = false;

@@ -100,6 +100,7 @@ aiRecommendGenerateButton.addEventListener("click", async function () {
   aiRecommendLoadingEl.hidden = false;
   aiRecommendGenerateButton.disabled = true;
   aiRecommendListEl.innerHTML = "";
+  hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
 
   try {
     const contextText = formatAiReadingContext(buildAiReadingContext());
@@ -108,14 +109,19 @@ aiRecommendGenerateButton.addEventListener("click", async function () {
       "\n\n上記を踏まえて、次に読むのにおすすめの本を3〜5冊、提案してください。";
 
     const data = await sendChatMessage(message, {
+      feature: "recommend",
       instructions: AI_RECOMMEND_INSTRUCTIONS,
       schema: AI_RECOMMEND_SCHEMA
     });
 
     renderAiRecommendCards(data.recommendations || []);
   } catch (error) {
-    aiRecommendErrorEl.textContent = error.message || "おすすめ本の取得に失敗しました。";
-    aiRecommendErrorEl.hidden = false;
+    if (error.insufficientCredit) {
+      showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+    } else {
+      aiRecommendErrorEl.textContent = error.message || "おすすめ本の取得に失敗しました。";
+      aiRecommendErrorEl.hidden = false;
+    }
   } finally {
     aiRecommendLoadingEl.hidden = true;
     aiRecommendGenerateButton.disabled = false;

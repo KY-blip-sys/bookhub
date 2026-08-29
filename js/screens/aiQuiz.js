@@ -141,10 +141,12 @@ async function showAiQuizResult() {
   try {
     const comment = await sendChatMessage(
       "読書理解度クイズで、正答数 " + aiQuizCorrectCount + " / " + total + "（正答率" + rate + "%）でした。この結果に対する短いコメントをください。",
-      { instructions: AI_QUIZ_COMMENT_INSTRUCTIONS }
+      { feature: "quizComment", instructions: AI_QUIZ_COMMENT_INSTRUCTIONS }
     );
     aiQuizCommentEl.textContent = comment || "";
   } catch (error) {
+    // 結果コメントはおまけの演出のため、AIクレジット不足時もクイズ結果自体は表示済みなので、
+    // コメント欄を静かに空にするだけで、バナー表示などはしない
     aiQuizCommentEl.textContent = "";
   }
 }
@@ -162,6 +164,7 @@ aiQuizStartButton.addEventListener("click", async function () {
   aiQuizIntroEl.hidden = true;
   aiQuizLoadingEl.hidden = false;
   aiQuizStartButton.disabled = true;
+  hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
 
   try {
     const contextText = formatAiReadingContext(notesContext);
@@ -170,6 +173,7 @@ aiQuizStartButton.addEventListener("click", async function () {
       "\n\n上記の内容から理解度クイズを3〜5問作成してください。";
 
     const data = await sendChatMessage(message, {
+      feature: "quiz",
       instructions: AI_QUIZ_INSTRUCTIONS,
       schema: AI_QUIZ_SCHEMA
     });
@@ -184,9 +188,14 @@ aiQuizStartButton.addEventListener("click", async function () {
     aiQuizQuestionSection.hidden = false;
     renderAiQuizQuestion();
   } catch (error) {
-    aiQuizErrorEl.textContent = error.message || "クイズの作成に失敗しました。";
-    aiQuizErrorEl.hidden = false;
-    aiQuizIntroEl.hidden = false;
+    if (error.insufficientCredit) {
+      showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+      aiQuizIntroEl.hidden = false;
+    } else {
+      aiQuizErrorEl.textContent = error.message || "クイズの作成に失敗しました。";
+      aiQuizErrorEl.hidden = false;
+      aiQuizIntroEl.hidden = false;
+    }
   } finally {
     aiQuizLoadingEl.hidden = true;
     aiQuizStartButton.disabled = false;

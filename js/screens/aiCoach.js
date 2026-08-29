@@ -46,6 +46,7 @@ aiCoachGenerateButton.addEventListener("click", async function () {
   aiCoachResultEl.hidden = true;
   aiCoachLoadingEl.hidden = false;
   aiCoachGenerateButton.disabled = true;
+  hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
 
   try {
     const contextText = formatAiReadingContext(context);
@@ -55,6 +56,7 @@ aiCoachGenerateButton.addEventListener("click", async function () {
       "（3）おすすめのジャンル、（4）今後の学習アドバイス、をまとめてください。";
 
     const data = await sendChatMessage(message, {
+      feature: "coach",
       instructions: AI_COACH_INSTRUCTIONS,
       schema: AI_COACH_SCHEMA
     });
@@ -65,8 +67,12 @@ aiCoachGenerateButton.addEventListener("click", async function () {
     aiCoachAdviceEl.textContent = data.advice || "";
     aiCoachResultEl.hidden = false;
   } catch (error) {
-    aiCoachErrorEl.textContent = error.message || "分析に失敗しました。";
-    aiCoachErrorEl.hidden = false;
+    if (error.insufficientCredit) {
+      showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+    } else {
+      aiCoachErrorEl.textContent = error.message || "分析に失敗しました。";
+      aiCoachErrorEl.hidden = false;
+    }
   } finally {
     aiCoachLoadingEl.hidden = true;
     aiCoachGenerateButton.disabled = false;

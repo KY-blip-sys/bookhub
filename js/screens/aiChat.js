@@ -41,6 +41,7 @@ aiChatForm.addEventListener("submit", async function (event) {
     return;
   }
 
+  hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
   appendAiChatBubble(message, "ai-chat-message-user");
   aiChatInput.value = "";
 
@@ -49,12 +50,17 @@ aiChatForm.addEventListener("submit", async function (event) {
   const loadingBubble = appendAiChatBubble("考え中…", "ai-chat-message-ai ai-chat-message-loading");
 
   try {
-    const reply = await sendChatMessage(message); // js/services/aiChat.js（内部でPOST /api/chatを呼ぶ）
+    const reply = await sendChatMessage(message, { feature: "chat" }); // js/services/aiChat.js（内部でPOST /api/chatを呼ぶ）
     loadingBubble.textContent = reply || "（空の返答が返ってきました）";
     loadingBubble.className = "ai-chat-message ai-chat-message-ai";
   } catch (error) {
-    loadingBubble.textContent = error.message || "AIとの通信に失敗しました。";
-    loadingBubble.className = "ai-chat-message ai-chat-message-error";
+    if (error.insufficientCredit) {
+      loadingBubble.remove();
+      showInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
+    } else {
+      loadingBubble.textContent = error.message || "AIとの通信に失敗しました。";
+      loadingBubble.className = "ai-chat-message ai-chat-message-error";
+    }
   } finally {
     aiChatSendButton.disabled = false;
     aiChatInput.disabled = false;
