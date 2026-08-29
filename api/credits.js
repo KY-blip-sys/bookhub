@@ -4,14 +4,20 @@
 // Free・Plusプランでの「AI機能はPremiumプラン以上で利用できます。」案内の出し分けのために使う。
 // クレジットは消費しない（月替わりのリセットだけは反映される。Supabase側のget_ai_credit_status参照）。
 //
+// プラン自体（profiles.plan）は、Stripe Webhook（api/stripe/webhook.js）がsubscriptionsテーブルを
+// 更新するたびに自動で同期されるため、ここでは読み取るだけでよい（Stripe側の状態には触れない）。
+// 料金プラン画面（js/screens/pricing.js）で「次回更新日」「解約予定」を表示できるよう、
+// subscriptionsテーブルのstatus・expires_atも合わせて返す。
+//
 // 必要なVercelの環境変数：api/chat.jsと共通（SUPABASE_URL / SUPABASE_ANON_KEY）
 //
 // 呼び出し方：
 //   GET /api/credits を、Authorizationヘッダー（"Bearer " + Supabaseのアクセストークン）付きで送ると
 //   {
 //     "credits": { "plan": "premium", "remaining": 820, "monthlyLimit": 1000, "aiEnabled": true },
-//     "featureCosts": [{ "feature": "chat", "label": "AIチャット", "cost": 5 }, ...]
-//   } のような残高・消費クレジット一覧が返る。
+//     "featureCosts": [{ "feature": "chat", "label": "AIチャット", "cost": 5 }, ...],
+//     "subscription": { "status": "active", "expiresAt": "2026-09-30T00:00:00.000Z" } // 未契約ならnull
+//   } のような残高・消費クレジット一覧・契約状況が返る。
 
 const { getAuthenticatedUser } = require("./_lib/supabaseUser");
 const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getPublicFeatureCosts } = require("./_lib/aiCredits");
@@ -41,6 +47,12 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const { data: subscriptionRow } = await auth.supabase
+    .from("subscriptions")
+    .select("status, expires_at")
+    .eq("user_id", auth.user.id)
+    .maybeSingle();
+
   res.status(200).json({
     credits: {
       plan: data.plan,
@@ -48,6 +60,9 @@ module.exports = async function handler(req, res) {
       monthlyLimit: data.monthlyLimit,
       aiEnabled: data.aiEnabled
     },
-    featureCosts: getPublicFeatureCosts()
+    featureCosts: getPublicFeatureCosts(),
+    subscription: subscriptionRow
+      ? { status: subscriptionRow.status, expiresAt: subscriptionRow.expires_at }
+      : null
   });
 };

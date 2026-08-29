@@ -1,18 +1,32 @@
 // ---------- 料金プラン画面 ----------
 // /api/plans（プラン一覧。api/_lib/aiCredits.jsのPLAN_CATALOGが唯一の情報源）と、
-// /api/credits（今ログインしているユーザーの現在のプラン）を取得してカードを描画する。
+// /api/credits（今ログインしているユーザーの現在のプラン・契約状況）を取得してカードを描画する。
 //
-// 各プランのボタンは、現時点では決済処理を実装していないダミーボタン（handlePlanButtonClick参照）。
-// 将来Stripeを接続するときは、そこを実際の決済ページ（Stripe Checkout等）へのリダイレクトに
-// 差し替えるだけでよい（プランごとのstripePriceIdは、api/_lib/aiCredits.jsのPLAN_CATALOGに
-// あらかじめ用意してある）。
+// 「Plusにアップグレード」「Premiumにアップグレード」ボタンは、api/stripe/create-checkout-session.js を
+// 呼んでStripe Checkoutの決済ページURLを受け取り、そこへブラウザごと遷移させる
+// （プランごとのStripe Price IDはサーバー側の環境変数にのみ置いてあり、ここでは扱わない）。
+// 決済が成功したかどうかの反映（プランの更新）は、Stripe Webhook（api/stripe/webhook.js）が行うため、
+// この画面に戻ってきた直後はまだ反映が終わっていないことがある
+// （?checkout=success/cancel の案内文はjs/screens/auth.jsのhandleCheckoutRedirect参照）。
 
 const pricingCardsEl = document.getElementById("pricing-cards");
 
 let pricingPlansCache = null; // /api/plansの結果（価格・機能は毎回変わらないため、一度取れたら使い回す）
+let currentSubscriptionCache = null; // /api/credits由来のsubscription（status・expiresAt）
 
 function formatYen(priceYen) {
   return priceYen === 0 ? "¥0" : "¥" + priceYen.toLocaleString("ja-JP");
+}
+
+function formatDateJa(isoString) {
+  if (!isoString) {
+    return null;
+  }
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
 }
 
 function buildPricingCard(plan, currentPlanKey) {
@@ -57,6 +71,24 @@ function buildPricingCard(plan, currentPlanKey) {
   adsLine.textContent = "広告：" + (plan.ads ? "あり" : "なし");
   card.appendChild(adsLine);
 
+  if (plan.key === currentPlanKey && currentSubscriptionCache) {
+    const statusNote = document.createElement("p");
+    statusNote.className = "pricing-card-status";
+    if (currentSubscriptionCache.status === "canceled") {
+      const expiresAtJa = formatDateJa(currentSubscriptionCache.expiresAt);
+      statusNote.textContent = expiresAtJa
+        ? "解約手続き済み（" + expiresAtJa + "まで利用できます）"
+        : "解約手続き済みです。";
+      card.appendChild(statusNote);
+    } else if (currentSubscriptionCache.status === "active") {
+      const expiresAtJa = formatDateJa(currentSubscriptionCache.expiresAt);
+      if (expiresAtJa) {
+        statusNote.textContent = "次回更新日：" + expiresAtJa;
+        card.appendChild(statusNote);
+      }
+    }
+  }
+
   const button = document.createElement("button");
   button.type = "button";
   button.className = "pricing-card-button";
@@ -68,7 +100,7 @@ function buildPricingCard(plan, currentPlanKey) {
   } else {
     button.textContent = plan.label;
     button.addEventListener("click", function () {
-      handlePlanButtonClick(plan);
+      handlePlanButtonClick(plan, button);
     });
   }
   card.appendChild(button);
@@ -76,14 +108,66 @@ function buildPricingCard(plan, currentPlanKey) {
   return card;
 }
 
-// 各プランのボタンを押したときの処理（現時点ではダミー）。
-// 将来Stripeを接続するときは、ここをStripe Checkoutなどへのリダイレクトに差し替える
-function handlePlanButtonClick(plan) {
-  showToast(plan.label + "への変更は、現在準備中です。"); // js/screens/app.js
+// Stripe Checkoutに接続済みのプラン（Plus・Premium）のキー一覧
+const STRIPE_CHECKOUT_PLAN_KEYS = ["plus", "premium"];
+
+// 各プランのボタンを押したときの処理。
+// Plus・Premiumなら api/stripe/create-checkout-session.js を呼び、返ってきたStripe Checkoutの
+// 決済ページへ遷移する。それ以外（Free・Pro）は決済処理が未対応のため案内のみ表示する
+async function handlePlanButtonClick(plan, button) {
+  if (STRIPE_CHECKOUT_PLAN_KEYS.indexOf(plan.key) === -1) {
+    showToast(plan.label + "への変更は、現在準備中です。");
+    return;
+  }
+
+  if (!window.sb) {
+    showToast("ログインしてからお試しください。");
+    return;
+  }
+
+  const { data: sessionData } = await window.sb.auth.getSession();
+  const accessToken = sessionData.session ? sessionData.session.access_token : null;
+  if (!accessToken) {
+    showToast("ログインしてからお試しください。");
+    return;
+  }
+
+  const originalText = button.textContent;
+  button.disabled = true;
+  button.textContent = "決済ページを準備中…";
+
+  try {
+    const response = await fetch("/api/stripe/create-checkout-session", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + accessToken
+      },
+      body: JSON.stringify({ plan: plan.key })
+    });
+    const data = await response.json();
+
+    if (!response.ok || !data.url) {
+      showToast(data.error || "決済ページの作成に失敗しました。");
+      button.disabled = false;
+      button.textContent = originalText;
+      return;
+    }
+
+    location.href = data.url; // Stripe Checkoutへ遷移する（戻りはjs/screens/auth.jsのhandleCheckoutRedirect参照）
+  } catch (error) {
+    console.error("[pricing] Checkoutセッションの作成に失敗しました:", error);
+    showToast("通信エラーが発生しました。しばらくしてから再度お試しください。");
+    button.disabled = false;
+    button.textContent = originalText;
+  }
 }
 
-// 今ログインしているユーザーの現在のプランを取得する（未取得・未ログイン時は"free"扱い）
+// 今ログインしているユーザーの現在のプランを取得する（未取得・未ログイン時は"free"扱い）。
+// 合わせてcurrentSubscriptionCache（次回更新日・解約予定の表示用）も更新する
 async function fetchCurrentPlanKey() {
+  currentSubscriptionCache = null;
+
   if (!window.sb) {
     return "free";
   }
@@ -98,7 +182,11 @@ async function fetchCurrentPlanKey() {
       headers: { Authorization: "Bearer " + accessToken }
     });
     const data = await response.json();
-    return response.ok && data.credits ? data.credits.plan : "free";
+    if (!response.ok || !data.credits) {
+      return "free";
+    }
+    currentSubscriptionCache = data.subscription || null;
+    return data.credits.plan;
   } catch (error) {
     console.error("[pricing] 現在のプランの取得に失敗しました:", error);
     return "free";

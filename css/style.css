@@ -5428,6 +5428,12 @@ html.dark-mode .dashboard-hero-banner {
     font-size: var(--font-size-meta);
 }
 
+.pricing-card-status {
+    margin: 0 0 16px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-meta);
+}
+
 .pricing-card-button {
     width: 100%;
     padding: 10px 0;

@@ -5,8 +5,9 @@
 // （api/chat.js・api/credits.js・api/plans.js・Supabase側の関数は書き換える必要はない。
 //   値はAPIレスポンスやRPC呼び出しの引数として渡すだけ）。
 //
-// 将来Stripeを接続するときは、各プランのstripePriceIdを埋め、
-// フロント側のダミーボタン（js/screens/pricing.js）を実際の決済リダイレクトに差し替えるだけでよい。
+// StripeのPrice ID（プランごとの実際の決済先）は、ここではなくVercelの環境変数
+// （STRIPE_PLUS_PRICE_ID / STRIPE_PREMIUM_PRICE_ID）に置き、api/_lib/stripePlans.jsが読む
+// （Price IDはコードに書かず、Stripe Dashboard側でいつでも差し替えられるようにするため）。
 //
 // ファイル名がアンダースコアで始まるディレクトリ（api/_lib）に置いているため、
 // Vercelはこのファイルを独立したAPIエンドポイントとして扱わない。
@@ -23,8 +24,7 @@ const PLAN_CATALOG = [
     features: ["読書記録", "Google Books検索", "本棚", "読書タイマー", "読書統計", "読書目標"],
     // 実際に「現在のプラン」かどうかはjs/screens/pricing.jsが表示時に動的に判定して上書きする
     // （新規登録直後のユーザーは必ずplan=freeのため、通常はこのカードが「現在のプラン」になる）。
-    highlight: false,
-    stripePriceId: null
+    highlight: false
   },
   {
     key: "plus",
@@ -34,8 +34,7 @@ const PLAN_CATALOG = [
     aiEnabled: false,
     ads: false,
     features: ["Freeの全機能"],
-    highlight: false,
-    stripePriceId: null
+    highlight: false
   },
   {
     key: "premium",
@@ -45,8 +44,7 @@ const PLAN_CATALOG = [
     aiEnabled: true,
     ads: false,
     features: ["AIチャット", "AI本推薦", "AI要約", "AIへの質問", "Plusの全機能（広告なし）"],
-    highlight: true,
-    stripePriceId: null
+    highlight: true
   },
   {
     key: "pro",
@@ -56,8 +54,7 @@ const PLAN_CATALOG = [
     aiEnabled: true,
     ads: false,
     features: ["Premiumの全機能", "AIクレジット増量"],
-    highlight: false,
-    stripePriceId: null
+    highlight: false
   }
 ];
 

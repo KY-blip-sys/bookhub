@@ -1315,10 +1315,10 @@
         </div>
 
         <!-- 料金プラン画面：js/screens/pricing.js が /api/plans（プラン一覧）・/api/credits（現在のプラン）
-             から取得して描画する。将来Stripeを接続するときは、pricing.js内のダミーボタンの処理を
-             実際の決済リダイレクトに差し替えるだけでよい -->
+             から取得して描画する。アップグレードボタンはapi/stripe/create-checkout-session.jsを呼び、
+             Stripe Checkoutの決済ページへ遷移する -->
         <div id="screen-pricing" class="page" hidden>
-          <p class="pricing-intro">プランはいつでもアップグレードできます（決済機能は現在準備中です）。</p>
+          <p class="pricing-intro">プランはいつでもアップグレードできます。</p>
           <div id="pricing-cards" class="pricing-cards"></div>
         </div>
 
@@ -1630,7 +1630,7 @@
   <script src="js/screens/aiTabs.js?v=2"></script>
   <!-- pricing.jsは、AI画面の「料金プランを見る」導線・現在のプラン表示（js/screens/aiCredits.jsからの
        data-nav-target="pricing"）より後に置いておけば十分なため、他のAI画面ファイルと同じ並びに置く -->
-  <script src="js/screens/pricing.js?v=1"></script>
+  <script src="js/screens/pricing.js?v=2"></script>
   <!-- bookQuestion.jsは、本の詳細画面「AIに質問」タブの処理。aiContext.js・booksModel.jsを使うため、
        それらより後に読み込む -->
   <script src="js/screens/bookQuestion.js?v=2"></script>
@@ -1640,7 +1640,7 @@
   <script src="js/screens/categorySelect.js?v=28"></script>
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
-  <script src="js/screens/auth.js?v=6"></script>
+  <script src="js/screens/auth.js?v=7"></script>
 </body>
 
 </html>

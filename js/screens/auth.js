@@ -172,10 +172,37 @@ async function onSignedIn(user) {
   }
   updateCategorySwitcherUI();
   updateNavVisibility();
-  goToNavPage("dashboard");
+
+  if (!handleCheckoutRedirect()) {
+    goToNavPage("dashboard");
+  }
 
   authScreen.hidden = true;
   document.querySelector(".app-shell").hidden = false;
+}
+
+// Stripe Checkoutの決済ページから戻ってきたときの処理（js/screens/pricing.jsのhandlePlanButtonClick参照）。
+// URLの?checkout=success/cancelを見て、料金プラン画面へ遷移しつつ結果を案内する。
+// 戻り値：料金プラン画面へ遷移した場合はtrue（呼び出し側でgoToNavPage("dashboard")を省略するため）
+function handleCheckoutRedirect() {
+  const params = new URLSearchParams(location.search);
+  const checkoutResult = params.get("checkout");
+  if (checkoutResult !== "success" && checkoutResult !== "cancel") {
+    return false;
+  }
+
+  // 同じURLのままリロードしても再度案内が出ないよう、クエリパラメータだけを取り除く
+  history.replaceState(null, "", location.pathname);
+
+  goToNavPage("pricing");
+
+  if (checkoutResult === "success") {
+    showToast("お支払いが完了しました。プランの反映まで少し時間がかかる場合があります。");
+  } else {
+    showToast("決済がキャンセルされました。");
+  }
+
+  return true;
 }
 
 // ---------- 起動時の処理 ----------
