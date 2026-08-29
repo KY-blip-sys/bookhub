@@ -16,6 +16,48 @@
       document.documentElement.classList.add("dark-mode");
     }
   </script>
+  <!-- このテストページだけで使う、レスポンス詳細表示用のスタイル（既存デザインのCSS変数を流用） -->
+  <style>
+    .chat-test-details {
+      margin: 14px 0 0;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      background-color: var(--color-bg-secondary);
+      border: 1px solid var(--color-border);
+      text-align: left;
+      font-family: "SFMono-Regular", Consolas, Menlo, monospace;
+      font-size: var(--font-size-caption);
+      color: var(--color-text);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .chat-test-details[hidden] {
+      display: none;
+    }
+
+    .chat-test-details-label {
+      font-family: "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      margin-bottom: 2px;
+    }
+
+    .chat-test-details dt {
+      font-family: "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+      font-weight: 700;
+      color: var(--color-text-secondary);
+      margin: 10px 0 2px;
+    }
+
+    .chat-test-details dt:first-child {
+      margin-top: 0;
+    }
+
+    .chat-test-details dd {
+      margin: 0;
+    }
+  </style>
 </head>
 
 <body>
@@ -36,20 +78,55 @@
 
         <button type="submit" id="chat-test-submit" class="auth-submit-button">送信</button>
       </form>
+
+      <!-- /api/chat の生のレスポンス（status・本文・エラー全文）をそのまま画面に出す。
+           コンソールを開かなくても、ここを見るだけで原因が分かるようにするため。 -->
+      <dl id="chat-test-details" class="chat-test-details" hidden>
+        <dt>ステータスコード</dt>
+        <dd id="chat-test-status"></dd>
+
+        <dt>レスポンス本文（生データ）</dt>
+        <dd id="chat-test-raw-body"></dd>
+
+        <dt id="chat-test-error-label" hidden>エラーメッセージ（全文）</dt>
+        <dd id="chat-test-error-detail" hidden></dd>
+      </dl>
     </div>
   </div>
 
-  <script src="js/services/aiChat.js?v=1"></script>
   <script>
     const chatTestForm = document.getElementById("chat-test-form");
     const chatTestInput = document.getElementById("chat-test-input");
     const chatTestSubmit = document.getElementById("chat-test-submit");
     const chatTestMessage = document.getElementById("chat-test-message");
+    const chatTestDetails = document.getElementById("chat-test-details");
+    const chatTestStatus = document.getElementById("chat-test-status");
+    const chatTestRawBody = document.getElementById("chat-test-raw-body");
+    const chatTestErrorLabel = document.getElementById("chat-test-error-label");
+    const chatTestErrorDetail = document.getElementById("chat-test-error-detail");
 
     function showChatTestMessage(text, isError) {
       chatTestMessage.textContent = text;
       chatTestMessage.className = "auth-message " + (isError ? "auth-message-error" : "auth-message-success");
       chatTestMessage.hidden = false;
+    }
+
+    // status・生のレスポンス本文・エラー全文を、画面のdlにそのまま表示する
+    function showChatTestDetails({ status, rawBody, errorText }) {
+      chatTestStatus.textContent = status !== null ? String(status) : "（リクエストが送信できませんでした）";
+      chatTestRawBody.textContent = rawBody || "（本文なし）";
+
+      if (errorText) {
+        chatTestErrorLabel.hidden = false;
+        chatTestErrorDetail.hidden = false;
+        chatTestErrorDetail.textContent = errorText;
+      } else {
+        chatTestErrorLabel.hidden = true;
+        chatTestErrorDetail.hidden = true;
+        chatTestErrorDetail.textContent = "";
+      }
+
+      chatTestDetails.hidden = false;
     }
 
     chatTestForm.addEventListener("submit", async (event) => {
@@ -62,12 +139,50 @@
 
       chatTestSubmit.disabled = true;
       chatTestSubmit.textContent = "送信中…";
+      chatTestMessage.hidden = true;
+      chatTestDetails.hidden = true;
+
+      let response = null;
+      let rawBody = "";
 
       try {
-        const reply = await sendChatMessage(message);
-        showChatTestMessage(reply || "（空の返答が返ってきました）", false);
-      } catch (error) {
-        showChatTestMessage(error.message || "AIとの通信に失敗しました。", true);
+        // ここで /api/chat を直接呼び出す（POST・Content-Type: application/json・JSON.stringify({ message })）
+        response = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        // レスポンスはまず生テキストで受け取る（JSONでなくても中身がそのまま見えるように）
+        rawBody = await response.text();
+
+        let data = {};
+        let parseErrorText = "";
+        try {
+          data = rawBody ? JSON.parse(rawBody) : {};
+        } catch (parseError) {
+          parseErrorText = "レスポンスをJSONとして解析できませんでした: " + parseError.message;
+        }
+
+        if (!response.ok) {
+          const errorText = parseErrorText || data.error || "（サーバーからエラー内容が返されませんでした）";
+          showChatTestMessage("エラーが発生しました（詳細は下に表示）", true);
+          showChatTestDetails({ status: response.status, rawBody, errorText });
+        } else if (parseErrorText) {
+          showChatTestMessage("レスポンスの形式が不正です（詳細は下に表示）", true);
+          showChatTestDetails({ status: response.status, rawBody, errorText: parseErrorText });
+        } else {
+          showChatTestMessage(data.reply || "（空の返答が返ってきました）", false);
+          showChatTestDetails({ status: response.status, rawBody, errorText: "" });
+        }
+      } catch (networkError) {
+        // fetch自体が失敗した場合（オフライン・URL間違い・CORSなど）
+        showChatTestMessage("サーバーに接続できませんでした。", true);
+        showChatTestDetails({
+          status: response ? response.status : null,
+          rawBody,
+          errorText: networkError.message
+        });
       } finally {
         chatTestSubmit.disabled = false;
         chatTestSubmit.textContent = "送信";
