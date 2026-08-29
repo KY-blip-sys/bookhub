@@ -36,6 +36,37 @@ function clearAuthMessage() {
   authMessageEl.hidden = true;
 }
 
+// Supabase Authのエラー（英語）を、ユーザー向けの日本語メッセージに変換する
+function translateAuthError(error, mode) {
+  const code = error && error.code;
+  const message = (error && error.message) || "";
+
+  if (code === "user_already_exists" || /already registered/i.test(message)) {
+    return "このメールアドレスは既に登録されています。";
+  }
+  if (code === "weak_password" || /password/i.test(message) && /(short|weak|at least)/i.test(message)) {
+    return "パスワードは6文字以上で設定してください。";
+  }
+  if (code === "invalid_credentials" || /invalid login credentials/i.test(message)) {
+    return "メールアドレスまたはパスワードが違います。";
+  }
+  if (code === "email_not_confirmed" || /email not confirmed/i.test(message)) {
+    return "メール認証が完了していません。届いた確認メール内のリンクを開いてください。";
+  }
+  if (code === "invalid_email" || /invalid email/i.test(message)) {
+    return "メールアドレスの形式が正しくありません。";
+  }
+  if (code === "over_email_send_rate_limit" || code === "over_request_rate_limit" || /rate limit/i.test(message)) {
+    return "しばらく時間をおいてから、もう一度お試しください。";
+  }
+  if (code === "signup_disabled") {
+    return "現在、新規登録を受け付けていません。";
+  }
+  return mode === "signup"
+    ? "登録に失敗しました。時間をおいて再度お試しください。"
+    : "ログインに失敗しました。時間をおいて再度お試しください。";
+}
+
 function setAuthMode(mode) {
   authMode = mode;
   clearAuthMessage();
@@ -73,9 +104,15 @@ authForm.addEventListener("submit", async function (event) {
   authSubmitButton.disabled = true;
   try {
     if (authMode === "signup") {
-      const { data, error } = await window.sb.auth.signUp({ email, password });
+      // display_nameはprofilesテーブルのトリガー（supabase/ai_credits.sql）が
+      // raw_user_meta_dataから読み取り、新規登録時のプロフィール行に保存する
+      const { data, error } = await window.sb.auth.signUp({
+        email,
+        password,
+        options: { data: { display_name: email.split("@")[0] } }
+      });
       if (error) {
-        showAuthMessage(error.message, "error");
+        showAuthMessage(translateAuthError(error, "signup"), "error");
         return;
       }
       if (!data.session) {
@@ -92,11 +129,13 @@ authForm.addEventListener("submit", async function (event) {
     } else {
       const { data, error } = await window.sb.auth.signInWithPassword({ email, password });
       if (error) {
-        showAuthMessage("メールアドレスまたはパスワードが違います。", "error");
+        showAuthMessage(translateAuthError(error, "login"), "error");
         return;
       }
       await onSignedIn(data.session.user);
     }
+  } catch (e) {
+    showAuthMessage("通信エラーが発生しました。インターネット接続を確認して、もう一度お試しください。", "error");
   } finally {
     authSubmitButton.disabled = false;
   }

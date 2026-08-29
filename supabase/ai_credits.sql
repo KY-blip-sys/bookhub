@@ -21,6 +21,11 @@ create table if not exists public.profiles (
   updated_at timestamptz not null default now()
 );
 
+-- 新規登録時にプロフィール表示用として保存する項目
+-- （既存のprofilesテーブルにも安全に追加できるよう、ADD COLUMN IF NOT EXISTSにしている）
+alter table public.profiles add column if not exists display_name text;
+alter table public.profiles add column if not exists avatar_url text;
+
 alter table public.profiles enable row level security;
 
 -- 自分の行だけ読める（残高・プランの表示用）。
@@ -34,6 +39,9 @@ create policy "profiles_select_own"
 
 -- 新規登録（auth.usersへのINSERT）のたびに、自動でprofilesの行を1つ作る
 -- （plan=free、ai_credit=100、credit_reset_date=当月）
+-- display_name・avatar_urlは、signUp時にoptions.dataで渡されたユーザーメタデータ
+-- （new.raw_user_meta_data）から取る。display_nameが渡されていなければ、
+-- メールアドレスの@より前の部分を仮の表示名として使う
 create or replace function public.handle_new_user()
 returns trigger
 language plpgsql
@@ -41,8 +49,15 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, plan, ai_credit, credit_reset_date)
-  values (new.id, 'free', 100, date_trunc('month', now())::date)
+  insert into public.profiles (id, plan, ai_credit, credit_reset_date, display_name, avatar_url)
+  values (
+    new.id,
+    'free',
+    100,
+    date_trunc('month', now())::date,
+    coalesce(new.raw_user_meta_data->>'display_name', split_part(new.email, '@', 1)),
+    new.raw_user_meta_data->>'avatar_url'
+  )
   on conflict (id) do nothing;
   return new;
 end;
@@ -54,11 +69,24 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 
 -- 既にログイン済みのユーザー（このSQLを後から実行する場合）にも、profilesの行を作っておく
-insert into public.profiles (id, plan, ai_credit, credit_reset_date)
-select u.id, 'free', 100, date_trunc('month', now())::date
+insert into public.profiles (id, plan, ai_credit, credit_reset_date, display_name, avatar_url)
+select
+  u.id,
+  'free',
+  100,
+  date_trunc('month', now())::date,
+  coalesce(u.raw_user_meta_data->>'display_name', split_part(u.email, '@', 1)),
+  u.raw_user_meta_data->>'avatar_url'
 from auth.users u
 left join public.profiles p on p.id = u.id
 where p.id is null;
+
+-- display_nameカラムを今回追加したことで既存行はnullのままなので、
+-- メールアドレスの@より前の部分で埋めておく（このSQLを再実行しても安全）
+update public.profiles p
+set display_name = coalesce(p.display_name, split_part(u.email, '@', 1))
+from auth.users u
+where u.id = p.id and p.display_name is null;
 
 -- ---------- 月替わりリセット＋クレジット判定・消費（すべてSECURITY DEFINERで実行） ----------
 --
