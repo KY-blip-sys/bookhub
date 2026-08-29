@@ -387,7 +387,7 @@ function goToNavPage(navKey) {
     renderStatsScreen();
   }
   if (navKey === "ai") {
-    prepareAiChatScreen(); // aiChat.js：入力欄にフォーカスするだけで、会話履歴はそのまま保持する
+    prepareAiScreen(); // aiTabs.js：常に「チャット」タブから開き直す（実践リスト等の他タブ画面と同じ挙動）
   }
 }
 

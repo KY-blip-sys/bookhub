@@ -4943,3 +4943,298 @@ html.dark-mode .dashboard-hero-banner {
         max-width: 90%;
     }
 }
+
+/* ---------- AI画面：おすすめ本／クイズ／要約／学習コーチ タブの共通部品 ---------- */
+
+.ai-tab-panel[hidden] {
+    display: none;
+}
+
+/* 返答待ちの間だけ表示する、控えめな回転スピナー */
+@keyframes ai-loading-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.ai-loading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+}
+
+.ai-loading-spinner {
+    width: 18px;
+    height: 18px;
+    border: 2px solid var(--color-border);
+    border-top-color: var(--color-accent);
+    border-radius: 50%;
+    animation: ai-loading-spin 0.8s linear infinite;
+}
+
+.ai-error-message {
+    margin: 14px 0;
+    padding: 12px 14px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-danger-soft);
+    color: var(--color-danger);
+    font-size: var(--font-size-body);
+    line-height: 1.6;
+}
+
+/* ---------- おすすめ本 ---------- */
+.ai-recommend-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.ai-recommend-card {
+    min-width: 0;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    animation: floating-modal-fade-in var(--transition-standard) var(--ease-emphasized);
+}
+
+.ai-recommend-title {
+    font-size: var(--font-size-heading);
+    font-weight: 700;
+    color: var(--color-text);
+    line-height: 1.4;
+}
+
+.ai-recommend-author {
+    margin-top: 2px;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+.ai-recommend-line {
+    margin-top: 12px;
+    font-size: var(--font-size-body);
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+.ai-recommend-line strong {
+    display: block;
+    margin-bottom: 2px;
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.ai-recommend-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+.ai-recommend-stars {
+    color: var(--color-accent);
+    letter-spacing: 1px;
+}
+
+/* ---------- クイズ ---------- */
+.ai-quiz-question-section,
+.ai-quiz-result-section {
+    margin-top: 20px;
+    padding: 22px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    animation: floating-modal-fade-in var(--transition-standard) var(--ease-emphasized);
+}
+
+.ai-quiz-progress {
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+    color: var(--color-text-secondary);
+    letter-spacing: 0.02em;
+}
+
+.ai-quiz-question-text {
+    margin-top: 8px;
+    font-size: var(--font-size-heading);
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.ai-quiz-choices {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.ai-quiz-choice-button {
+    padding: 12px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    font-family: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color var(--transition-fast) var(--ease-standard),
+        background-color var(--transition-fast) var(--ease-standard);
+}
+
+.ai-quiz-choice-button:not(:disabled):hover {
+    border-color: var(--color-accent);
+}
+
+.ai-quiz-choice-button:disabled {
+    cursor: default;
+}
+
+.ai-quiz-choice-correct {
+    border-color: var(--color-success);
+    background-color: var(--color-success-soft);
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+.ai-quiz-choice-wrong {
+    border-color: var(--color-danger);
+    background-color: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.ai-quiz-explanation {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    line-height: 1.7;
+}
+
+.ai-quiz-next-button {
+    margin-top: 18px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-size: var(--font-size-body);
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.ai-quiz-next-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.ai-quiz-score-text {
+    margin-top: 10px;
+    font-size: var(--font-size-heading);
+    font-weight: 700;
+    color: var(--color-accent);
+}
+
+.ai-quiz-comment {
+    margin-top: 10px;
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+/* ---------- 要約 ---------- */
+.ai-summary-result {
+    display: grid;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.ai-summary-section {
+    padding: 18px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+    animation: floating-modal-fade-in var(--transition-standard) var(--ease-emphasized);
+}
+
+.ai-summary-section h3 {
+    font-size: var(--font-size-heading);
+    color: var(--color-text);
+}
+
+.ai-summary-list {
+    margin-top: 10px;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-size: var(--font-size-body);
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+/* ---------- 学習コーチ ---------- */
+.ai-coach-result {
+    margin-top: 20px;
+    animation: floating-modal-fade-in var(--transition-standard) var(--ease-emphasized);
+}
+
+.ai-coach-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.ai-coach-value {
+    margin-top: 6px;
+    font-size: var(--font-size-body);
+    line-height: 1.6;
+    color: var(--color-text);
+}
+
+.ai-coach-advice-card {
+    margin-top: 16px;
+    padding: 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.ai-coach-advice-card h3 {
+    font-size: var(--font-size-heading);
+    color: var(--color-text);
+}
+
+.ai-coach-advice-card p {
+    margin-top: 10px;
+    line-height: 1.7;
+    color: var(--color-text);
+}
+
+/* スマホ幅：カード類を1カラムにする */
+@media (max-width: 600px) {
+    .ai-recommend-list {
+        grid-template-columns: 1fr;
+    }
+
+    .ai-coach-tiles {
+        grid-template-columns: 1fr;
+    }
+}

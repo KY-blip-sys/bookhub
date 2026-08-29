@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=44">
+  <link rel="stylesheet" href="css/style.css?v=45">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -1057,18 +1057,137 @@
           </div>
         </div>
 
-        <!-- AIチャット画面：/api/chat（Vercel Function・共通のOpenAI呼び出しAPI）と会話する -->
+        <!-- AI画面：/api/chat（Vercel Function・共通のOpenAI呼び出しAPI）を使ったAI機能をまとめる。
+             機能ごとにタブで切り替える（js/screens/aiTabs.js） -->
         <div id="screen-ai" class="page" hidden>
-          <div class="ai-chat-card">
-            <div id="ai-chat-messages" class="ai-chat-messages">
-              <p id="ai-chat-empty-message" class="page-placeholder">
-                AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
-              </p>
+          <div class="pill-tabs" id="ai-tab-switcher" role="group" aria-label="AI機能の切り替え">
+            <button type="button" class="pill-tab active" data-ai-tab="chat">チャット</button>
+            <button type="button" class="pill-tab" data-ai-tab="recommend">おすすめ本</button>
+            <button type="button" class="pill-tab" data-ai-tab="quiz">クイズ</button>
+            <button type="button" class="pill-tab" data-ai-tab="summary">要約</button>
+            <button type="button" class="pill-tab" data-ai-tab="coach">学習コーチ</button>
+          </div>
+
+          <!-- ---------- チャット タブ（js/screens/aiChat.js） ---------- -->
+          <div id="ai-chat-panel" class="ai-tab-panel">
+            <div class="ai-chat-card">
+              <div id="ai-chat-messages" class="ai-chat-messages">
+                <p id="ai-chat-empty-message" class="page-placeholder">
+                  AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
+                </p>
+              </div>
+              <form id="ai-chat-form" class="ai-chat-form">
+                <input type="text" id="ai-chat-input" placeholder="メッセージを入力" autocomplete="off" required>
+                <button type="submit" id="ai-chat-send-button">送信</button>
+              </form>
             </div>
-            <form id="ai-chat-form" class="ai-chat-form">
-              <input type="text" id="ai-chat-input" placeholder="メッセージを入力" autocomplete="off" required>
-              <button type="submit" id="ai-chat-send-button">送信</button>
-            </form>
+          </div>
+
+          <!-- ---------- おすすめ本 タブ（js/screens/aiRecommend.js） ---------- -->
+          <div id="ai-recommend-panel" class="ai-tab-panel" hidden>
+            <p class="page-placeholder" id="ai-recommend-empty">
+              これまでの読書記録（読んだ本・ジャンル・学んだこと・感想）から、AIが次に読む本を提案します。
+            </p>
+            <button type="button" id="ai-recommend-generate-button" class="dashed-add-button">✨ おすすめを見る</button>
+            <div id="ai-recommend-loading" class="ai-loading" hidden>
+              <span class="ai-loading-spinner" aria-hidden="true"></span>
+              <span>AIが考えています…</span>
+            </div>
+            <p id="ai-recommend-error" class="ai-error-message" hidden></p>
+            <ul id="ai-recommend-list" class="ai-recommend-list"></ul>
+          </div>
+
+          <!-- ---------- クイズ タブ（js/screens/aiQuiz.js） ---------- -->
+          <div id="ai-quiz-panel" class="ai-tab-panel" hidden>
+            <div id="ai-quiz-intro">
+              <p class="page-placeholder">
+                読書メモや感想から、理解度を確かめる4択クイズをAIが作成します（1回につき3〜5問）。
+              </p>
+              <button type="button" id="ai-quiz-start-button" class="dashed-add-button">📝 クイズを作る</button>
+            </div>
+
+            <div id="ai-quiz-loading" class="ai-loading" hidden>
+              <span class="ai-loading-spinner" aria-hidden="true"></span>
+              <span>AIが問題を作っています…</span>
+            </div>
+            <p id="ai-quiz-error" class="ai-error-message" hidden></p>
+
+            <div id="ai-quiz-question-section" class="ai-quiz-question-section" hidden>
+              <p class="ai-quiz-progress" id="ai-quiz-progress"></p>
+              <h3 id="ai-quiz-question-text" class="ai-quiz-question-text"></h3>
+              <div id="ai-quiz-choices" class="ai-quiz-choices"></div>
+              <p id="ai-quiz-explanation" class="ai-quiz-explanation" hidden></p>
+              <button type="button" id="ai-quiz-next-button" class="ai-quiz-next-button" hidden>次の問題へ</button>
+            </div>
+
+            <div id="ai-quiz-result-section" class="ai-quiz-result-section" hidden>
+              <h3>結果</h3>
+              <p id="ai-quiz-score-text" class="ai-quiz-score-text"></p>
+              <p id="ai-quiz-comment" class="ai-quiz-comment"></p>
+              <button type="button" id="ai-quiz-retry-button" class="dashed-add-button">🔁 もう一度作る</button>
+            </div>
+          </div>
+
+          <!-- ---------- 要約 タブ（js/screens/aiSummary.js） ---------- -->
+          <div id="ai-summary-panel" class="ai-tab-panel" hidden>
+            <p class="page-placeholder" id="ai-summary-empty">
+              読書メモや感想から、AIが要点を3行要約・学んだこと・明日から実践できることにまとめます。
+            </p>
+            <button type="button" id="ai-summary-generate-button" class="dashed-add-button">🧾 要約を作る</button>
+            <div id="ai-summary-loading" class="ai-loading" hidden>
+              <span class="ai-loading-spinner" aria-hidden="true"></span>
+              <span>AIが要約を作っています…</span>
+            </div>
+            <p id="ai-summary-error" class="ai-error-message" hidden></p>
+
+            <div id="ai-summary-result" class="ai-summary-result" hidden>
+              <section class="ai-summary-section">
+                <h3>3行要約</h3>
+                <ul id="ai-summary-lines" class="ai-summary-list"></ul>
+              </section>
+              <section class="ai-summary-section">
+                <h3>学んだこと</h3>
+                <ul id="ai-summary-learnings" class="ai-summary-list"></ul>
+              </section>
+              <section class="ai-summary-section">
+                <h3>明日から実践できること</h3>
+                <ul id="ai-summary-actions" class="ai-summary-list"></ul>
+              </section>
+            </div>
+          </div>
+
+          <!-- ---------- 学習コーチ タブ（js/screens/aiCoach.js） ---------- -->
+          <div id="ai-coach-panel" class="ai-tab-panel" hidden>
+            <p class="page-placeholder" id="ai-coach-empty">
+              読書履歴を分析して、最近の傾向・偏り・おすすめジャンル・学習アドバイスをAIが提案します。
+            </p>
+            <button type="button" id="ai-coach-generate-button" class="dashed-add-button">🧭 分析する</button>
+            <div id="ai-coach-loading" class="ai-loading" hidden>
+              <span class="ai-loading-spinner" aria-hidden="true"></span>
+              <span>AIが分析しています…</span>
+            </div>
+            <p id="ai-coach-error" class="ai-error-message" hidden></p>
+
+            <div id="ai-coach-result" class="ai-coach-result" hidden>
+              <div class="ai-coach-tiles">
+                <div class="dashboard-tile">
+                  <p class="dashboard-label">最近読んでいるジャンル</p>
+                  <p id="ai-coach-recent-genres" class="ai-coach-value"></p>
+                </div>
+                <div class="dashboard-tile">
+                  <p class="dashboard-label">ジャンルの偏り</p>
+                  <p id="ai-coach-bias" class="ai-coach-value"></p>
+                </div>
+                <div class="dashboard-tile">
+                  <p class="dashboard-label">おすすめジャンル</p>
+                  <p id="ai-coach-recommended-genres" class="ai-coach-value"></p>
+                </div>
+              </div>
+              <div class="ai-coach-advice-card">
+                <h3>学習アドバイス</h3>
+                <p id="ai-coach-advice"></p>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1331,7 +1450,7 @@
   <!-- Supabase（ログイン・クラウド保存）のクライアントライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="js/services/cloudSync.js?v=1"></script>
-  <script src="js/services/aiChat.js?v=1"></script>
+  <script src="js/services/aiChat.js?v=2"></script>
 
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
   <script src="js/models/storage.js?v=26"></script>
@@ -1342,6 +1461,10 @@
   <script src="js/models/favoriteLearningsModel.js?v=24"></script>
   <script src="js/models/categoryModel.js?v=25"></script>
   <script src="js/models/settingsModel.js?v=25"></script>
+
+  <!-- AIの各機能（おすすめ本・クイズ・要約・学習コーチ）が共通で使う、読書データの要約ロジック。
+       モデル層の関数（loadBooks等）を使うため、モデル層より後に読み込む -->
+  <script src="js/services/aiContext.js?v=1"></script>
 
   <!-- ---------- 画面層（描画・イベント処理） ---------- -->
   <script src="js/screens/modal.js?v=24"></script>
@@ -1362,7 +1485,14 @@
   <script src="js/screens/settings.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/aiChat.js?v=1"></script>
-  <script src="js/screens/app.js?v=28"></script>
+  <script src="js/screens/aiRecommend.js?v=1"></script>
+  <script src="js/screens/aiQuiz.js?v=1"></script>
+  <script src="js/screens/aiSummary.js?v=1"></script>
+  <script src="js/screens/aiCoach.js?v=1"></script>
+  <!-- aiTabs.jsは、AI画面の各タブ（chat/recommend/quiz/summary/coach）の初期化関数を呼ぶため、
+       それぞれの画面ファイルが揃った後に読み込む -->
+  <script src="js/screens/aiTabs.js?v=1"></script>
+  <script src="js/screens/app.js?v=29"></script>
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
   <script src="js/screens/categorySelect.js?v=28"></script>
