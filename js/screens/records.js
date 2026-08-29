@@ -516,6 +516,7 @@ recordForm.addEventListener("submit", function (event) {
 
     // 新しい記録を追加する
     const newRecord = {
+      id: generateRecordId(), // js/models/booksModel.js（Supabaseのbook_records.idがuuid型のため）
       date: new Date().toLocaleDateString("ja-JP"),
       timestamp: Date.now(), // 他の本の記録と時系列で比べるための値（ダッシュボードの並び替えに使う）
       minutes: Math.floor(timerElapsedSecondsForRecord / 60), // 最後まで読んだ時間、または途中リセットまでの経過時間

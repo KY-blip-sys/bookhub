@@ -1,19 +1,19 @@
-// ---------- 本のデータ（Supabaseのbooksテーブルへの保存・読み込み） ----------
-// 本棚（本そのもの：タイトル・著者・表紙・ページ数など）は、Supabaseのbooksテーブルに保存する。
-// 読書記録（本ごとのrecords配列）はbook_recordsテーブルへの移行がまだのため、
-// これまで通りlocalStorage（ただしreading-app-booksとは別のキー）に保存し、
-// 本の中身と組み合わせて、これまでと同じ形（book.records）で扱えるようにしている。
+// ---------- 本のデータ（Supabaseのbooks・book_recordsテーブルへの保存・読み込み） ----------
+// 本棚（本そのもの：タイトル・著者・表紙・ページ数など）はbooksテーブルに、
+// 読書記録（本ごとのrecords配列）はbook_recordsテーブルに、それぞれ保存する。
 //
 // loadBooks()・saveBooks()は、他の画面から見れば以前と同じ「同期的な関数」のまま使えるように、
-// メモリ上のキャッシュ（cachedBooks）を介してSupabaseとやり取りする：
+// メモリ上のキャッシュ（cachedBooks。本の中にrecords配列も含めて丸ごと持つ）を介して
+// Supabaseとやり取りする：
 // ・loadBooks()は、キャッシュの複製を返す（呼び出し側が中身を直接書き換えても、
 //   キャッシュ自体は変わらないようにするため。以前のlocalStorage版もJSON.parseのたびに
 //   新しいオブジェクトを返していたので、その挙動に合わせている）
 // ・saveBooks(books)は、渡された配列をキャッシュ（＝直前の状態）と見比べて、
-//   追加・変更・削除された本だけをSupabaseへ反映する（結果を待たない「投げっぱなし」）
+//   本自体・本ごとのrecords配列それぞれについて、追加・変更・削除された分だけを
+//   Supabaseへ反映する（結果を待たない「投げっぱなし」）
 
-const LEGACY_BOOKS_KEY = "reading-app-books"; // 移行前の旧データ（ローカル）
-const BOOK_RECORDS_KEY = "reading-app-book-records"; // 本ごとの読書記録（{ [bookId]: record[] }）
+const LEGACY_BOOKS_KEY = "reading-app-books"; // 移行前の旧データ（ローカル。本と記録がひとつの配列に同居していた形）
+const INTERIM_LOCAL_RECORDS_KEY = "reading-app-book-records"; // 本の移行後・記録の移行前に、一時的に記録だけを置いていたキー
 
 let cachedBooks = [];
 
@@ -35,51 +35,40 @@ function loadBooks() {
 }
 
 // 本の一覧を保存する：直前の状態（cachedBooks）と見比べて、
-// 追加・変更・削除された本だけをSupabaseのbooksテーブルへ反映する
+// 本自体はbooksテーブルへ、本ごとのrecords配列はbook_recordsテーブルへ、
+// それぞれ追加・変更・削除された分だけを反映する
 function saveBooks(books) {
   const previousById = {};
   cachedBooks.forEach(function (book) {
     previousById[book.id] = book;
   });
 
-  const recordsMap = loadAllBookRecordsMap();
   const nextIds = {};
 
   books.forEach(function (book) {
     nextIds[book.id] = true;
-    recordsMap[book.id] = book.records || [];
 
     const previous = previousById[book.id];
     if (!previous) {
       queueBookInsert(book);
-    } else if (bookCoreSnapshot(previous) !== bookCoreSnapshot(book)) {
-      queueBookUpdate(book);
+      queueRecordsDiff(book.id, [], book.records || []);
+    } else {
+      if (bookCoreSnapshot(previous) !== bookCoreSnapshot(book)) {
+        queueBookUpdate(book);
+      }
+      queueRecordsDiff(book.id, previous.records || [], book.records || []);
     }
   });
 
   Object.keys(previousById).forEach(function (id) {
     if (!nextIds[id]) {
+      // 本自体を削除すると、book_records側もon delete cascadeで自動的に消えるため、
+      // ここから記録ごとの削除を個別に呼ぶ必要はない
       queueBookDelete(previousById[id].id);
-      delete recordsMap[id];
     }
   });
 
-  saveAllBookRecordsMap(recordsMap);
   cachedBooks = books;
-}
-
-// ---------- 本ごとの読書記録（book_recordsテーブルへの移行がまだのため、ローカルに保存） ----------
-
-function loadAllBookRecordsMap() {
-  return loadJSON(BOOK_RECORDS_KEY, {});
-}
-
-function saveAllBookRecordsMap(map) {
-  saveJSON(BOOK_RECORDS_KEY, map);
-}
-
-function loadRecordsForBook(bookId) {
-  return loadAllBookRecordsMap()[bookId] || [];
 }
 
 // ---------- Supabaseとの変換・読み書き ----------
@@ -119,8 +108,8 @@ function bookToSupabaseRow(book) {
   };
 }
 
-// Supabaseのbooks行 → アプリ内で使う本の形（記録はローカルの記録ストアから組み立てる）
-function bookRowToAppBook(row) {
+// Supabaseのbooks行 → アプリ内で使う本の形（recordsは呼び出し側でbook_recordsから組み立てて渡す）
+function bookRowToAppBook(row, records) {
   return normalizeBook({
     id: row.id,
     category: row.category,
@@ -134,7 +123,7 @@ function bookRowToAppBook(row) {
     isbn: row.isbn || "",
     wantToRead: !!row.want_to_read,
     createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
-    records: loadRecordsForBook(row.id)
+    records: records || []
   });
 }
 
@@ -142,6 +131,155 @@ function bookRowToAppBook(row) {
 // 追加した直後から画面遷移などに使えるよう、サーバーへの保存を待たずに先に発行する）
 function generateBookId() {
   return crypto.randomUUID();
+}
+
+// ---------- 読書記録（book_records）の変換・読み書き ----------
+
+// タイムスタンプ（ミリ秒）から、Postgresのdate型に入れるための「YYYY-MM-DD」を、
+// UTCへ変換せずローカルの暦日のまま作る（タイムゾーンによる日付のずれを防ぐ）
+function timestampToIsoDateString(timestamp) {
+  const d = new Date(timestamp);
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return d.getFullYear() + "-" + month + "-" + day;
+}
+
+// Postgresのdate型（「YYYY-MM-DD」文字列）を、これまでの表示形式（例：2026/8/30）に戻す。
+// new Date("YYYY-MM-DD")はUTC扱いになりタイムゾーンによっては前日にずれるため、年月日を直接組み立てる
+function isoDateStringToDisplayLabel(isoDateString) {
+  const parts = isoDateString.split("-").map(Number);
+  return new Date(parts[0], parts[1] - 1, parts[2]).toLocaleDateString("ja-JP");
+}
+
+// 新しい記録のidを発行する（book_records.idがuuid型のため）
+function generateRecordId() {
+  return crypto.randomUUID();
+}
+
+// 記録の内容を比べるためのスナップショット（idを除く。中身が同じならSupabaseへの更新を発生させない）
+function recordSnapshot(record) {
+  return JSON.stringify({
+    pages: record.pages || 0,
+    minutes: record.minutes || 0,
+    date: record.date,
+    timestamp: record.timestamp || 0,
+    impression: record.impression || "",
+    memorableQuote: record.memorableQuote || "",
+    favoriteCharacter: record.favoriteCharacter || "",
+    notes: record.notes || "",
+    learning: record.learning || "",
+    quote: record.quote || ""
+  });
+}
+
+// アプリ内で使う記録の形 → Supabaseのbook_records行の形
+function recordToSupabaseRow(bookId, record) {
+  return {
+    id: record.id,
+    book_id: bookId,
+    user_id: currentUserId, // js/services/cloudSync.js（ログイン中ユーザーのauth.uid()）
+    recorded_date: timestampToIsoDateString(record.timestamp || Date.now()),
+    recorded_at: new Date(record.timestamp || Date.now()).toISOString(),
+    minutes: record.minutes || 0,
+    pages: record.pages || 0,
+    impression: record.impression || null,
+    memorable_quote: record.memorableQuote || null,
+    favorite_character: record.favoriteCharacter || null,
+    notes: record.notes || null,
+    learning: record.learning || null,
+    quote: record.quote || null
+  };
+}
+
+// Supabaseのbook_records行 → アプリ内で使う記録の形
+function supabaseRowToRecord(row) {
+  return {
+    id: row.id,
+    date: isoDateStringToDisplayLabel(row.recorded_date),
+    timestamp: new Date(row.recorded_at).getTime(),
+    minutes: row.minutes,
+    pages: row.pages,
+    impression: row.impression || "",
+    memorableQuote: row.memorable_quote || "",
+    favoriteCharacter: row.favorite_character || "",
+    notes: row.notes || "",
+    learning: row.learning || "",
+    quote: row.quote || ""
+  };
+}
+
+// 指定した本の記録を新規保存する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+function queueRecordInsert(bookId, record) {
+  if (!currentUserId || !window.sb) {
+    return;
+  }
+  window.sb
+    .from("book_records")
+    .insert(recordToSupabaseRow(bookId, record))
+    .then(function (result) {
+      if (result.error) {
+        console.error("読書記録の追加をクラウドへ保存できませんでした：", result.error);
+      }
+    });
+}
+
+// 指定した記録の変更をSupabaseへ反映する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+function queueRecordUpdate(bookId, record) {
+  if (!currentUserId || !window.sb) {
+    return;
+  }
+  window.sb
+    .from("book_records")
+    .update(recordToSupabaseRow(bookId, record))
+    .eq("id", record.id)
+    .then(function (result) {
+      if (result.error) {
+        console.error("読書記録の更新をクラウドへ保存できませんでした：", result.error);
+      }
+    });
+}
+
+// 指定した記録をSupabaseから削除する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+function queueRecordDelete(recordId) {
+  if (!currentUserId || !window.sb) {
+    return;
+  }
+  window.sb
+    .from("book_records")
+    .delete()
+    .eq("id", recordId)
+    .then(function (result) {
+      if (result.error) {
+        console.error("読書記録の削除をクラウドへ反映できませんでした：", recordId, result.error);
+      }
+    });
+}
+
+// 指定した本の記録一覧について、直前の状態（previousRecords）と見比べて、
+// 追加・変更・削除された記録だけをSupabaseのbook_recordsテーブルへ反映する
+function queueRecordsDiff(bookId, previousRecords, newRecords) {
+  const previousById = {};
+  previousRecords.forEach(function (record) {
+    previousById[record.id] = record;
+  });
+
+  const nextIds = {};
+  newRecords.forEach(function (record) {
+    nextIds[record.id] = true;
+
+    const previous = previousById[record.id];
+    if (!previous) {
+      queueRecordInsert(bookId, record);
+    } else if (recordSnapshot(previous) !== recordSnapshot(record)) {
+      queueRecordUpdate(bookId, record);
+    }
+  });
+
+  Object.keys(previousById).forEach(function (id) {
+    if (!nextIds[id]) {
+      queueRecordDelete(id);
+    }
+  });
 }
 
 // 指定した本をSupabaseへ新規保存する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
@@ -193,31 +331,87 @@ function queueBookDelete(bookId) {
 
 // ---------- 起動時の読み込み・旧データからの移行 ----------
 
-// ログイン直後に1回だけ呼ぶ：Supabaseのbooksテーブルから本一覧を読み込んでキャッシュする。
-// まだ1件も無ければ（このアカウントで本棚機能を初めて使う）、ローカルに残っている
+// ログイン直後に1回だけ呼ぶ：Supabaseのbooks・book_recordsテーブルから本一覧を読み込んでキャッシュする。
+// booksがまだ1件も無ければ（このアカウントで本棚機能を初めて使う）、ローカルに残っている
 // 旧データ（reading-app-books。他の端末で使っていた分はapp_dataテーブルにあるかもしれないので、
 // そちらも確認する）があればSupabaseへ移行する
 async function initializeBooksFromCloud(userId) {
-  const { data: rows, error } = await window.sb
+  const { data: bookRows, error: booksError } = await window.sb
     .from("books")
     .select("*")
     .eq("user_id", userId)
     .order("created_at", { ascending: true });
 
-  if (error) {
-    console.error("本棚の読み込みに失敗しました：", error);
+  if (booksError) {
+    console.error("本棚の読み込みに失敗しました：", booksError);
     cachedBooks = [];
     return;
   }
 
-  if (rows.length === 0) {
+  if (bookRows.length === 0) {
     await migrateLegacyBooksToCloud(userId);
-  } else {
-    cachedBooks = rows.map(bookRowToAppBook);
+    localStorage.removeItem(LEGACY_BOOKS_KEY);
+    localStorage.removeItem(INTERIM_LOCAL_RECORDS_KEY);
+    return;
   }
 
-  // 移行後・通常の読み込み後、いずれの場合も旧データはもう使わないので消しておく
+  // 本の移行は済んでいるが、記録がまだ移行前の一時置き場に残っている場合はここで移す
+  await migrateInterimLocalRecordsToCloud(userId);
+
+  const { data: recordRows, error: recordsError } = await window.sb
+    .from("book_records")
+    .select("*")
+    .eq("user_id", userId)
+    .order("recorded_at", { ascending: true });
+
+  if (recordsError) {
+    console.error("読書記録の読み込みに失敗しました：", recordsError);
+  }
+
+  const recordsByBookId = {};
+  (recordRows || []).forEach(function (row) {
+    if (!recordsByBookId[row.book_id]) {
+      recordsByBookId[row.book_id] = [];
+    }
+    recordsByBookId[row.book_id].push(supabaseRowToRecord(row));
+  });
+
+  cachedBooks = bookRows.map(function (row) {
+    return bookRowToAppBook(row, recordsByBookId[row.id]);
+  });
+
   localStorage.removeItem(LEGACY_BOOKS_KEY);
+}
+
+// 前回（本棚のSupabase移行時）に一時的にローカルへ置いていた読書記録（reading-app-book-records）を、
+// book_recordsテーブルへ移す。何も残っていなければ何もしない
+async function migrateInterimLocalRecordsToCloud(userId) {
+  const recordsByBookId = loadJSON(INTERIM_LOCAL_RECORDS_KEY, {});
+  const bookIds = Object.keys(recordsByBookId);
+  if (bookIds.length === 0) {
+    return;
+  }
+
+  for (const bookId of bookIds) {
+    const records = recordsByBookId[bookId] || [];
+    for (const localRecord of records) {
+      const record = Object.assign({}, localRecord);
+      if (!record.id) {
+        record.id = generateRecordId();
+      }
+      const { error } = await window.sb.from("book_records").insert(recordToSupabaseRow(bookId, record));
+      if (error) {
+        console.error("読書記録の移行に失敗しました：", bookId, error);
+      }
+    }
+  }
+
+  localStorage.removeItem(INTERIM_LOCAL_RECORDS_KEY);
+
+  // app_data側にも同じキーの行が残っており、消しておかないと次回ログイン時に
+  // pullCloudDataOrMigrate（js/services/cloudSync.js）が無条件で復元してしまい、
+  // 移行のたびに記録が重複してしまうため、クラウド側の行も削除しておく
+  await window.sb.from("app_data").delete().eq("user_id", userId).eq("data_key", INTERIM_LOCAL_RECORDS_KEY);
 }
 
 // このブラウザのlocalStorage、無ければ以前の同期先だったapp_dataテーブルから、
@@ -264,7 +458,8 @@ function remapLegacyBookIdReferences(oldIdToNewId) {
   });
 }
 
-// 旧データ（reading-app-books）をSupabaseのbooksテーブルへ移行する
+// 旧データ（reading-app-books。本と記録がひとつの配列に同居していた形）を、
+// Supabaseのbooks・book_recordsテーブルへ移行する
 async function migrateLegacyBooksToCloud(userId) {
   const legacyBooks = await findLegacyBooks(userId);
   if (legacyBooks.length === 0) {
@@ -278,12 +473,20 @@ async function migrateLegacyBooksToCloud(userId) {
   });
   remapLegacyBookIdReferences(oldIdToNewId);
 
-  const recordsMap = loadAllBookRecordsMap();
   const migratedBooks = [];
 
   for (const legacyBook of legacyBooks) {
+    const newId = oldIdToNewId[legacyBook.id];
+    const records = (legacyBook.records || []).map(function (legacyRecord) {
+      const record = Object.assign({}, legacyRecord);
+      if (!record.id) {
+        record.id = generateRecordId();
+      }
+      return record;
+    });
+
     const migratedBook = normalizeBook({
-      id: oldIdToNewId[legacyBook.id],
+      id: newId,
       category: legacyBook.category,
       title: legacyBook.title,
       author: legacyBook.author || "",
@@ -295,19 +498,25 @@ async function migrateLegacyBooksToCloud(userId) {
       isbn: legacyBook.isbn || "",
       wantToRead: !!legacyBook.wantToRead,
       createdAt: Date.now(),
-      records: legacyBook.records || []
+      records: records
     });
 
-    recordsMap[migratedBook.id] = migratedBook.records;
     migratedBooks.push(migratedBook);
 
-    const { error } = await window.sb.from("books").insert(bookToSupabaseRow(migratedBook));
-    if (error) {
-      console.error("本の移行に失敗しました：", legacyBook.title, error);
+    const { error: bookError } = await window.sb.from("books").insert(bookToSupabaseRow(migratedBook));
+    if (bookError) {
+      console.error("本の移行に失敗しました：", legacyBook.title, bookError);
+      continue; // 本自体が保存できなければ、記録も紐づけようがないので次の本へ進む
+    }
+
+    for (const record of records) {
+      const { error: recordError } = await window.sb.from("book_records").insert(recordToSupabaseRow(newId, record));
+      if (recordError) {
+        console.error("読書記録の移行に失敗しました：", legacyBook.title, recordError);
+      }
     }
   }
 
-  saveAllBookRecordsMap(recordsMap);
   cachedBooks = migratedBooks;
 }
 
