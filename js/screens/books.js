@@ -10,6 +10,9 @@ const coverUploadPreview = document.getElementById("cover-upload-preview");
 const bookList = document.getElementById("book-list");
 const booksCountSubtitle = document.getElementById("books-count-subtitle");
 const pageCountInput = document.getElementById("book-page-count");
+const bookPublisherInput = document.getElementById("book-publisher");
+const bookPublishedDateInput = document.getElementById("book-published-date");
+const bookIsbnInput = document.getElementById("book-isbn");
 
 // タイトル・著者・総ページ数を書いている途中でEnterキー（変換確定を含む）を押しても、
 // 他の欄を書き終える前にフォームが送信されないようにする
@@ -334,11 +337,13 @@ const bookFormCloseButton = document.getElementById("book-form-close-button");
 
 function openBookFormPanel() {
   bookFormPanel.hidden = false;
+  resetBookSearch(); // bookSearch.js（前回開いたときの検索結果が残らないようにする）
   bookTitleInput.focus();
 }
 
 function closeBookFormPanel() {
   bookFormPanel.hidden = true;
+  resetBookSearch(); // bookSearch.js
 }
 
 bookFormCloseButton.addEventListener("click", closeBookFormPanel);
@@ -701,8 +706,11 @@ bookForm.addEventListener("submit", function (event) {
 
   addBook(
     buildNewBook(title, author, {
-      coverImage: selectedCoverDataUrl, // 表紙画像のURL（未選択ならnull）
+      coverImage: selectedCoverDataUrl, // 表紙画像のURL（未選択ならnull。検索結果を選んだ場合はGoogle Booksの表紙URL）
       pageCount: Number(pageCountInput.value) || null, // 総ページ数（任意）
+      publisher: bookPublisherInput.value.trim(), // 出版社（任意）
+      publishedDate: bookPublishedDateInput.value.trim(), // 出版日（任意）
+      isbn: bookIsbnInput.value.trim(), // ISBN（任意）
       wantToRead: bookWantToReadInput.checked // 「まだ読んでいない」を選んでいれば、読みたい本として追加する
     })
   );
