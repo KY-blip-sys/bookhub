@@ -157,6 +157,7 @@ async function onSignedIn(user) {
   authLoadingEl.textContent = "データを読み込んでいます…";
 
   await pullCloudDataOrMigrate(user.id); // js/services/cloudSync.js
+  await initializeBooksFromCloud(user.id); // js/models/booksModel.js：本棚はSupabaseのbooksテーブルから読み込む
 
   // クラウドから読み込んだ最新のデータで、画面を描画し直す
   // （ここまでの初期表示は、ログイン確認前のlocalStorageの内容で行われていたため）

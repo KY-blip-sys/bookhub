@@ -426,7 +426,7 @@ quoteAddForm.addEventListener("submit", function (event) {
     return; // 空なら何もしない
   }
 
-  const bookId = quoteAddBookSelect.value ? Number(quoteAddBookSelect.value) : null;
+  const bookId = quoteAddBookSelect.value || null;
   addFavoriteQuote(bookId, text, "novel");
 
   quoteAddForm.reset();
@@ -444,7 +444,7 @@ practicalQuoteAddForm.addEventListener("submit", function (event) {
     return; // 空なら何もしない
   }
 
-  const bookId = practicalQuoteAddBookSelect.value ? Number(practicalQuoteAddBookSelect.value) : null;
+  const bookId = practicalQuoteAddBookSelect.value || null;
   addFavoriteQuote(bookId, text, "practical");
 
   practicalQuoteAddForm.reset();

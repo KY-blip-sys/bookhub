@@ -234,7 +234,7 @@ function updateActionAddBookOptions() {
 actionAddForm.addEventListener("submit", function (event) {
   event.preventDefault();
 
-  const bookId = Number(actionAddBookSelect.value);
+  const bookId = actionAddBookSelect.value;
   const content = actionAddContentInput.value.trim();
   if (!bookId || !content) {
     return; // 本と実践内容は必須
@@ -281,7 +281,7 @@ function renderActionList() {
   });
 
   Object.keys(groupedByBookId).forEach(function (bookIdKey) {
-    const bookId = Number(bookIdKey);
+    const bookId = bookIdKey;
     const book = books.find(function (b) {
       return b.id === bookId;
     });

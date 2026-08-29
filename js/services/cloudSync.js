@@ -11,8 +11,12 @@
 // クラウドと同期する対象のlocalStorageキー一覧
 // （js/models/*.js で定義されている定数と同じ文字列。settingsModel.js・categoryModel.jsの
 //   単純な文字列の設定値も、同じ仕組みでそのまま同期する）
+// 本そのもの（reading-app-books）は、js/models/booksModel.jsからSupabaseの
+// booksテーブルへ直接保存するようになったため、ここには含めない。
+// ただし読書記録（本ごとのrecords配列）はbook_recordsテーブルへの移行がまだのため、
+// 引き続きこの仕組み（app_data）でクラウド同期する
 const CLOUD_SYNCED_KEYS = [
-  "reading-app-books",
+  "reading-app-book-records",
   "reading-app-actions",
   "reading-app-achievements",
   "reading-app-reviews",

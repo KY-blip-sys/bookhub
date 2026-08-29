@@ -221,7 +221,7 @@ function getLatestActivityTimestamp(book) {
   if (book.records.length > 0) {
     return book.records[book.records.length - 1].timestamp || 0;
   }
-  return book.id || 0; // idは追加時刻（Date.now()）なので、記録が無い本の並び順の目安にする
+  return book.createdAt || 0; // 記録が無い本は、追加した時刻を並び順の目安にする
 }
 
 function renderCurrentlyReading(books) {
@@ -653,13 +653,14 @@ bookCoverInput.addEventListener("change", function () {
 function buildNewBook(title, author, extra) {
   return Object.assign(
     {
-      id: Date.now(), // 今の時刻を使った、本ごとの一意なID
+      id: generateBookId(), // 本ごとの一意なID（js/models/booksModel.js。SupabaseのbooksテーブルがUUID型のため）
       category: loadActiveCategory(), // 今開いているカテゴリ（実用書/小説）をそのまま付ける
       title: title,
       author: author,
       coverImage: null,
       pageCount: null,
       pageAdjustment: 0, // 記録の合計ページ数に対する手動補正（現在のページ = 記録の合計 + この値）
+      createdAt: Date.now(), // 追加した順の目安（本一覧の並び替えなどで使う）
       records: [] // この本の読書記録を後で入れるための空の配列
     },
     extra

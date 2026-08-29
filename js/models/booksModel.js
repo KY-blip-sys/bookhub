@@ -1,6 +1,21 @@
-// ---------- 本のデータ（localStorageへの保存・読み込み） ----------
+// ---------- 本のデータ（Supabaseのbooksテーブルへの保存・読み込み） ----------
+// 本棚（本そのもの：タイトル・著者・表紙・ページ数など）は、Supabaseのbooksテーブルに保存する。
+// 読書記録（本ごとのrecords配列）はbook_recordsテーブルへの移行がまだのため、
+// これまで通りlocalStorage（ただしreading-app-booksとは別のキー）に保存し、
+// 本の中身と組み合わせて、これまでと同じ形（book.records）で扱えるようにしている。
+//
+// loadBooks()・saveBooks()は、他の画面から見れば以前と同じ「同期的な関数」のまま使えるように、
+// メモリ上のキャッシュ（cachedBooks）を介してSupabaseとやり取りする：
+// ・loadBooks()は、キャッシュの複製を返す（呼び出し側が中身を直接書き換えても、
+//   キャッシュ自体は変わらないようにするため。以前のlocalStorage版もJSON.parseのたびに
+//   新しいオブジェクトを返していたので、その挙動に合わせている）
+// ・saveBooks(books)は、渡された配列をキャッシュ（＝直前の状態）と見比べて、
+//   追加・変更・削除された本だけをSupabaseへ反映する（結果を待たない「投げっぱなし」）
 
-const BOOKS_KEY = "reading-app-books";
+const LEGACY_BOOKS_KEY = "reading-app-books"; // 移行前の旧データ（ローカル）
+const BOOK_RECORDS_KEY = "reading-app-book-records"; // 本ごとの読書記録（{ [bookId]: record[] }）
+
+let cachedBooks = [];
 
 // 保存されている本の形が古い場合に、今の形へ補う
 // （例：カテゴリが無い本は、これまで通り「実用書」として扱う）
@@ -11,15 +26,289 @@ function normalizeBook(book) {
   return book;
 }
 
-// 本の一覧をlocalStorageから読み込む（カテゴリを問わず、すべての本を返す）
+// 本の一覧をメモリ上のキャッシュから読み込む（カテゴリを問わず、すべての本を返す）
+// 呼び出し側が中身を書き換えてもキャッシュに影響しないよう、複製を返す
 function loadBooks() {
-  const books = loadJSON(BOOKS_KEY, []);
-  return books.map(normalizeBook);
+  return cachedBooks.map(function (book) {
+    return normalizeBook(JSON.parse(JSON.stringify(book)));
+  });
 }
 
-// 本の一覧をlocalStorageに保存する
+// 本の一覧を保存する：直前の状態（cachedBooks）と見比べて、
+// 追加・変更・削除された本だけをSupabaseのbooksテーブルへ反映する
 function saveBooks(books) {
-  saveJSON(BOOKS_KEY, books);
+  const previousById = {};
+  cachedBooks.forEach(function (book) {
+    previousById[book.id] = book;
+  });
+
+  const recordsMap = loadAllBookRecordsMap();
+  const nextIds = {};
+
+  books.forEach(function (book) {
+    nextIds[book.id] = true;
+    recordsMap[book.id] = book.records || [];
+
+    const previous = previousById[book.id];
+    if (!previous) {
+      queueBookInsert(book);
+    } else if (bookCoreSnapshot(previous) !== bookCoreSnapshot(book)) {
+      queueBookUpdate(book);
+    }
+  });
+
+  Object.keys(previousById).forEach(function (id) {
+    if (!nextIds[id]) {
+      queueBookDelete(previousById[id].id);
+      delete recordsMap[id];
+    }
+  });
+
+  saveAllBookRecordsMap(recordsMap);
+  cachedBooks = books;
+}
+
+// ---------- 本ごとの読書記録（book_recordsテーブルへの移行がまだのため、ローカルに保存） ----------
+
+function loadAllBookRecordsMap() {
+  return loadJSON(BOOK_RECORDS_KEY, {});
+}
+
+function saveAllBookRecordsMap(map) {
+  saveJSON(BOOK_RECORDS_KEY, map);
+}
+
+function loadRecordsForBook(bookId) {
+  return loadAllBookRecordsMap()[bookId] || [];
+}
+
+// ---------- Supabaseとの変換・読み書き ----------
+
+// records・pageAdjustmentの補正など、記録以外の「本そのもの」の項目だけを比べるためのスナップショット
+// （recordsが変わっただけではSupabaseへの更新を発生させないようにする）
+function bookCoreSnapshot(book) {
+  return JSON.stringify({
+    category: book.category,
+    title: book.title,
+    author: book.author || "",
+    coverImage: book.coverImage || null,
+    pageCount: book.pageCount || null,
+    pageAdjustment: book.pageAdjustment || 0,
+    publisher: book.publisher || "",
+    publishedDate: book.publishedDate || "",
+    isbn: book.isbn || "",
+    wantToRead: !!book.wantToRead
+  });
+}
+
+// アプリ内で使う本の形 → Supabaseのbooks行の形
+function bookToSupabaseRow(book) {
+  return {
+    id: book.id,
+    user_id: currentUserId, // js/services/cloudSync.js（ログイン中ユーザーのauth.uid()）
+    category: book.category,
+    title: book.title,
+    author: book.author || null,
+    cover_image_url: book.coverImage || null,
+    page_count: book.pageCount || null,
+    page_adjustment: book.pageAdjustment || 0,
+    publisher: book.publisher || null,
+    published_date: book.publishedDate || null,
+    isbn: book.isbn || null,
+    want_to_read: !!book.wantToRead
+  };
+}
+
+// Supabaseのbooks行 → アプリ内で使う本の形（記録はローカルの記録ストアから組み立てる）
+function bookRowToAppBook(row) {
+  return normalizeBook({
+    id: row.id,
+    category: row.category,
+    title: row.title,
+    author: row.author || "",
+    coverImage: row.cover_image_url || null,
+    pageCount: row.page_count,
+    pageAdjustment: row.page_adjustment || 0,
+    publisher: row.publisher || "",
+    publishedDate: row.published_date || "",
+    isbn: row.isbn || "",
+    wantToRead: !!row.want_to_read,
+    createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+    records: loadRecordsForBook(row.id)
+  });
+}
+
+// 新しい本のidを発行する（Supabaseのbooks.idがuuid型のため、ここでもUUIDを使う。
+// 追加した直後から画面遷移などに使えるよう、サーバーへの保存を待たずに先に発行する）
+function generateBookId() {
+  return crypto.randomUUID();
+}
+
+// 指定した本をSupabaseへ新規保存する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+function queueBookInsert(book) {
+  if (!currentUserId || !window.sb) {
+    return;
+  }
+  window.sb
+    .from("books")
+    .insert(bookToSupabaseRow(book))
+    .then(function (result) {
+      if (result.error) {
+        console.error("本の追加をクラウドへ保存できませんでした：", book.title, result.error);
+      }
+    });
+}
+
+// 指定した本の変更をSupabaseへ反映する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+function queueBookUpdate(book) {
+  if (!currentUserId || !window.sb) {
+    return;
+  }
+  window.sb
+    .from("books")
+    .update(bookToSupabaseRow(book))
+    .eq("id", book.id)
+    .then(function (result) {
+      if (result.error) {
+        console.error("本の更新をクラウドへ保存できませんでした：", book.title, result.error);
+      }
+    });
+}
+
+// 指定した本をSupabaseから削除する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+function queueBookDelete(bookId) {
+  if (!currentUserId || !window.sb) {
+    return;
+  }
+  window.sb
+    .from("books")
+    .delete()
+    .eq("id", bookId)
+    .then(function (result) {
+      if (result.error) {
+        console.error("本の削除をクラウドへ反映できませんでした：", bookId, result.error);
+      }
+    });
+}
+
+// ---------- 起動時の読み込み・旧データからの移行 ----------
+
+// ログイン直後に1回だけ呼ぶ：Supabaseのbooksテーブルから本一覧を読み込んでキャッシュする。
+// まだ1件も無ければ（このアカウントで本棚機能を初めて使う）、ローカルに残っている
+// 旧データ（reading-app-books。他の端末で使っていた分はapp_dataテーブルにあるかもしれないので、
+// そちらも確認する）があればSupabaseへ移行する
+async function initializeBooksFromCloud(userId) {
+  const { data: rows, error } = await window.sb
+    .from("books")
+    .select("*")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.error("本棚の読み込みに失敗しました：", error);
+    cachedBooks = [];
+    return;
+  }
+
+  if (rows.length === 0) {
+    await migrateLegacyBooksToCloud(userId);
+  } else {
+    cachedBooks = rows.map(bookRowToAppBook);
+  }
+
+  // 移行後・通常の読み込み後、いずれの場合も旧データはもう使わないので消しておく
+  localStorage.removeItem(LEGACY_BOOKS_KEY);
+}
+
+// このブラウザのlocalStorage、無ければ以前の同期先だったapp_dataテーブルから、
+// 旧形式の本一覧（reading-app-books）を探す
+async function findLegacyBooks(userId) {
+  const localRaw = localStorage.getItem(LEGACY_BOOKS_KEY);
+  if (localRaw) {
+    try {
+      return JSON.parse(localRaw);
+    } catch (e) {
+      // 壊れていれば、下のapp_data側の確認へ進む
+    }
+  }
+
+  const { data, error } = await window.sb
+    .from("app_data")
+    .select("data_value")
+    .eq("user_id", userId)
+    .eq("data_key", LEGACY_BOOKS_KEY)
+    .maybeSingle();
+
+  if (error || !data) {
+    return [];
+  }
+  return data.data_value || [];
+}
+
+// 実践・実績・レビュー・好きな言葉・学んだこと、それぞれに保存されているbookIdを、
+// 移行で新しく発行したidに合わせて書き換える（本の移行前後で紐づけが外れないようにするため）
+function remapLegacyBookIdReferences(oldIdToNewId) {
+  ["reading-app-actions", "reading-app-achievements", "reading-app-reviews",
+    "reading-app-favorite-quotes", "reading-app-favorite-learnings"].forEach(function (key) {
+    const items = loadJSON(key, []);
+    let changed = false;
+    items.forEach(function (item) {
+      if (item.bookId !== undefined && item.bookId !== null && Object.prototype.hasOwnProperty.call(oldIdToNewId, item.bookId)) {
+        item.bookId = oldIdToNewId[item.bookId];
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveJSON(key, items);
+    }
+  });
+}
+
+// 旧データ（reading-app-books）をSupabaseのbooksテーブルへ移行する
+async function migrateLegacyBooksToCloud(userId) {
+  const legacyBooks = await findLegacyBooks(userId);
+  if (legacyBooks.length === 0) {
+    cachedBooks = [];
+    return;
+  }
+
+  const oldIdToNewId = {};
+  legacyBooks.forEach(function (legacyBook) {
+    oldIdToNewId[legacyBook.id] = generateBookId();
+  });
+  remapLegacyBookIdReferences(oldIdToNewId);
+
+  const recordsMap = loadAllBookRecordsMap();
+  const migratedBooks = [];
+
+  for (const legacyBook of legacyBooks) {
+    const migratedBook = normalizeBook({
+      id: oldIdToNewId[legacyBook.id],
+      category: legacyBook.category,
+      title: legacyBook.title,
+      author: legacyBook.author || "",
+      coverImage: legacyBook.coverImage || null,
+      pageCount: legacyBook.pageCount || null,
+      pageAdjustment: legacyBook.pageAdjustment || 0,
+      publisher: legacyBook.publisher || "",
+      publishedDate: legacyBook.publishedDate || "",
+      isbn: legacyBook.isbn || "",
+      wantToRead: !!legacyBook.wantToRead,
+      createdAt: Date.now(),
+      records: legacyBook.records || []
+    });
+
+    recordsMap[migratedBook.id] = migratedBook.records;
+    migratedBooks.push(migratedBook);
+
+    const { error } = await window.sb.from("books").insert(bookToSupabaseRow(migratedBook));
+    if (error) {
+      console.error("本の移行に失敗しました：", legacyBook.title, error);
+    }
+  }
+
+  saveAllBookRecordsMap(recordsMap);
+  cachedBooks = migratedBooks;
 }
 
 // 指定したカテゴリ（"practical" | "novel"）の本だけを返す
