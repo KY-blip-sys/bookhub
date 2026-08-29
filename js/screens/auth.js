@@ -159,6 +159,9 @@ async function onSignedIn(user) {
   await pullCloudDataOrMigrate(user.id); // js/services/cloudSync.js
   await initializeBooksFromCloud(user.id); // js/models/booksModel.js：本棚はSupabaseのbooksテーブルから読み込む
   await initializeActionsFromCloud(user.id); // js/models/actionsModel.js：実践・実績はSupabaseのactionsテーブルから読み込む
+  await initializeReviewsFromCloud(user.id); // js/models/reviewsModel.js：レビューはSupabaseのreviewsテーブルから読み込む
+  await initializeFavoriteQuotesFromCloud(user.id); // js/models/favoriteQuotesModel.js：好きな言葉はSupabaseのfavorite_quotesテーブルから読み込む
+  await initializeFavoriteLearningsFromCloud(user.id); // js/models/favoriteLearningsModel.js：学んだことはSupabaseのfavorite_learningsテーブルから読み込む
 
   // クラウドから読み込んだ最新のデータで、画面を描画し直す
   // （ここまでの初期表示は、ログイン確認前のlocalStorageの内容で行われていたため）

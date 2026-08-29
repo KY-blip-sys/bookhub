@@ -1806,12 +1806,6 @@ button[type="submit"]:hover {
     flex-direction: column;
 }
 
-.book-form-meta {
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    margin-top: -2px;
-}
-
 .page-count-field {
     display: flex;
     flex-direction: column;

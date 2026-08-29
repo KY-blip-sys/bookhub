@@ -22,7 +22,6 @@
 
 async function sendChatMessage(message, options) {
   options = options || {};
-  console.log("[aiChat] リクエスト送信:", { message, feature: options.feature, hasSchema: !!options.schema });
 
   // ログイン中のSupabaseセッションからアクセストークンを取り出し、Authorizationヘッダーで送る
   // （/api/chatはこのトークンで「誰の呼び出しか」を確認し、その人のAIクレジットを判定・消費する）
@@ -57,7 +56,6 @@ async function sendChatMessage(message, options) {
 
   // レスポンスをまず生テキストで受け取る（JSONでない場合＝サーバー側でクラッシュしている等も見えるように）
   const rawBody = await response.text();
-  console.log("[aiChat] レスポンス受信:", { status: response.status, body: rawBody });
 
   let data = {};
   try {

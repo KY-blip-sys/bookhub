@@ -144,51 +144,22 @@ function supabaseRowToAction(row) {
   return action;
 }
 
-// 指定した実践をSupabaseへ新規保存する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+// js/services/cloudSync.jsの共通CRUD（ログイン確認・投げっぱなし送信・エラーログを1箇所にまとめたもの）
+const actionsCrud = createCloudCrud("actions", "実践");
+
+// 指定した実践をSupabaseへ新規保存する
 function queueActionInsert(action) {
-  if (!currentUserId || !window.sb) {
-    return;
-  }
-  window.sb
-    .from("actions")
-    .insert(actionToSupabaseRow(action))
-    .then(function (result) {
-      if (result.error) {
-        console.error("実践の追加をクラウドへ保存できませんでした：", result.error);
-      }
-    });
+  actionsCrud.insert(actionToSupabaseRow(action));
 }
 
-// 指定した実践の変更をSupabaseへ反映する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+// 指定した実践の変更をSupabaseへ反映する
 function queueActionUpdate(action) {
-  if (!currentUserId || !window.sb) {
-    return;
-  }
-  window.sb
-    .from("actions")
-    .update(actionToSupabaseRow(action))
-    .eq("id", action.id)
-    .then(function (result) {
-      if (result.error) {
-        console.error("実践の更新をクラウドへ保存できませんでした：", result.error);
-      }
-    });
+  actionsCrud.update(action.id, actionToSupabaseRow(action));
 }
 
-// 指定した実践をSupabaseから削除する（ログインしていなければ何もしない。結果を待たない「投げっぱなし」）
+// 指定した実践をSupabaseから削除する
 function queueActionDelete(actionId) {
-  if (!currentUserId || !window.sb) {
-    return;
-  }
-  window.sb
-    .from("actions")
-    .delete()
-    .eq("id", actionId)
-    .then(function (result) {
-      if (result.error) {
-        console.error("実践の削除をクラウドへ反映できませんでした：", actionId, result.error);
-      }
-    });
+  actionsCrud.remove(actionId);
 }
 
 // ---------- 起動時の読み込み・旧データからの移行 ----------
@@ -211,7 +182,11 @@ async function initializeActionsFromCloud(userId) {
   }
 
   if (rows.length === 0) {
-    await migrateLegacyActionsToCloud(userId);
+    const migrationSucceeded = await migrateLegacyActionsToCloud(userId);
+    if (!migrationSucceeded) {
+      // 失敗した分があれば、次回ログイン時にもう一度試せるよう旧データは消さずに残す
+      return;
+    }
   } else {
     cachedActions = rows.map(supabaseRowToAction);
   }
@@ -246,7 +221,9 @@ async function findLegacyActionItems(userId, key) {
 }
 
 // 旧データ（reading-app-actions・reading-app-achievements）をSupabaseのactionsテーブルへ移行する。
-// 実績は物理的に別リストへ移すことで表現していたため、移行時にstatusを明示的に"cleared"にする
+// 実績は物理的に別リストへ移すことで表現していたため、移行時にstatusを明示的に"cleared"にする。
+// 戻り値：すべて移行できればtrue。1件でも失敗すればfalse
+// （呼び出し元は、falseのときは旧データを消さずに残す＝次回ログイン時にもう一度試せるようにする）
 async function migrateLegacyActionsToCloud(userId) {
   const legacyActions = await findLegacyActionItems(userId, LEGACY_ACTIONS_KEY);
   const legacyAchievements = await findLegacyActionItems(userId, LEGACY_ACHIEVEMENTS_KEY);
@@ -284,17 +261,20 @@ async function migrateLegacyActionsToCloud(userId) {
 
   if (migrated.length === 0) {
     cachedActions = [];
-    return;
+    return true;
   }
 
+  let hasError = false;
   for (const action of migrated) {
     const { error } = await window.sb.from("actions").insert(actionToSupabaseRow(action));
     if (error) {
       console.error("実践の移行に失敗しました：", action.content, error);
+      hasError = true;
     }
   }
 
   cachedActions = migrated;
+  return !hasError;
 }
 
 // ---------- 実践の状態にまつわる、純粋な計算 ----------
