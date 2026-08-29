@@ -2038,6 +2038,30 @@ button[type="submit"]:hover {
     color: var(--color-accent);
 }
 
+/* 検索を使わず自分で入力したいときの入口（基本は表示、開いたら隠す） */
+.book-manual-entry-toggle {
+    display: block;
+    margin-top: 12px;
+    padding: 4px 0;
+    border: none;
+    background: none;
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    color: var(--color-accent);
+    text-align: left;
+}
+
+.book-manual-entry-toggle:hover {
+    text-decoration: underline;
+    background: none;
+}
+
+/* 読書ステータス・本の詳細入力欄：開いたときにふわっと現れるようにする */
+#book-manual-entry-section {
+    margin-top: 18px;
+    animation: floating-modal-fade-in var(--transition-standard) var(--ease-emphasized);
+}
+
 /* ---------- ダッシュボード：統計タイル ---------- */
 /* 「記録」ページのサマリーと同じ6枚構成（実用書6枚＝3列2段／小説4枚＝2列2段）に揃えている。
    下のモチベーションカード・今読んでいる本の一覧と見分けやすいよう、区切り線とゆとりを入れている。 */

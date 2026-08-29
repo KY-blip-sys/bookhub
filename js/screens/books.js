@@ -337,8 +337,8 @@ const bookFormCloseButton = document.getElementById("book-form-close-button");
 
 function openBookFormPanel() {
   bookFormPanel.hidden = false;
-  resetBookSearch(); // bookSearch.js（前回開いたときの検索結果が残らないようにする）
-  bookTitleInput.focus();
+  resetBookSearch(); // bookSearch.js（前回開いたときの検索結果・入力欄の開閉状態が残らないようにする）
+  bookSearchInput.focus(); // bookSearch.js（検索が基本の入口なので、まず検索欄にフォーカスする）
 }
 
 function closeBookFormPanel() {

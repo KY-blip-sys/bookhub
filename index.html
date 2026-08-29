@@ -404,64 +404,71 @@
                 <p class="book-search-empty" id="book-search-empty" hidden>該当する本が見つかりませんでした</p>
 
                 <ul class="book-search-results" id="book-search-results" hidden></ul>
+
+                <!-- 検索を使わず自分で入力したいときの入口。検索で見つからなかったとき（0件）は自動で開く -->
+                <button type="button" id="book-manual-entry-toggle" class="book-manual-entry-toggle">✏️ 手動で入力する</button>
               </div>
 
-              <!-- 読書ステータス：実体は隠したチェックボックスで、既存のロジックをそのまま使う -->
-              <div class="reading-status-field">
-                <p class="reading-status-label">読書ステータス</p>
-                <div class="reading-status-toggle" id="reading-status-toggle" role="group" aria-label="読書ステータスを選ぶ">
-                  <button type="button" class="reading-status-option active" data-want-to-read="false">📖 今から読む</button>
-                  <button type="button" class="reading-status-option" data-want-to-read="true">🔖 あとで読む</button>
-                </div>
-                <input type="checkbox" id="book-want-to-read" form="book-form" hidden>
-              </div>
-
-              <!-- 本を追加するフォーム -->
-              <form id="book-form">
-                <div class="book-form-row">
-                  <!-- 表紙画像の選択（クリックでファイル選択を開く） -->
-                  <label class="cover-upload">
-                    <input type="file" id="book-cover-input" accept="image/*" hidden>
-                    <span class="cover-upload-placeholder" id="cover-upload-placeholder">
-                      <svg class="cover-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="3" y="3" width="18" height="18" rx="4" />
-                        <circle cx="9" cy="9" r="2" />
-                        <path d="m21 15-5-5L5 21" />
-                      </svg>
-                      <span>表紙を選択</span>
-                    </span>
-                    <img id="cover-upload-preview" class="cover-upload-preview" alt="選択した表紙画像" hidden>
-                  </label>
-
-                  <div class="book-form-fields">
-                    <input type="text" id="book-title" placeholder="タイトル" required>
-                    <input type="text" id="book-author" placeholder="著者（任意）">
-
-                    <label class="page-count-field">
-                      総ページ数（任意）
-                      <input type="text" inputmode="numeric" id="book-page-count" placeholder="例：320">
-                    </label>
-
-                    <label class="page-count-field">
-                      出版社（任意）
-                      <input type="text" id="book-publisher" placeholder="例：〇〇出版">
-                    </label>
-
-                    <label class="page-count-field">
-                      出版日（任意）
-                      <input type="text" id="book-published-date" placeholder="例：2023-04-01">
-                    </label>
-
-                    <label class="page-count-field">
-                      ISBN（任意）
-                      <input type="text" id="book-isbn" placeholder="例：9784000000000">
-                    </label>
+              <!-- 読書ステータス・本の詳細入力：基本は閉じておき、検索結果を選んだとき／検索で見つからなかったとき／
+                   上の「手動で入力する」を押したときだけ開く -->
+              <div id="book-manual-entry-section" hidden>
+                <!-- 読書ステータス：実体は隠したチェックボックスで、既存のロジックをそのまま使う -->
+                <div class="reading-status-field">
+                  <p class="reading-status-label">読書ステータス</p>
+                  <div class="reading-status-toggle" id="reading-status-toggle" role="group" aria-label="読書ステータスを選ぶ">
+                    <button type="button" class="reading-status-option active" data-want-to-read="false">📖 今から読む</button>
+                    <button type="button" class="reading-status-option" data-want-to-read="true">🔖 あとで読む</button>
                   </div>
+                  <input type="checkbox" id="book-want-to-read" form="book-form" hidden>
                 </div>
 
-                <button type="submit">本棚に追加</button>
-              </form>
+                <!-- 本を追加するフォーム -->
+                <form id="book-form">
+                  <div class="book-form-row">
+                    <!-- 表紙画像の選択（クリックでファイル選択を開く） -->
+                    <label class="cover-upload">
+                      <input type="file" id="book-cover-input" accept="image/*" hidden>
+                      <span class="cover-upload-placeholder" id="cover-upload-placeholder">
+                        <svg class="cover-upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <rect x="3" y="3" width="18" height="18" rx="4" />
+                          <circle cx="9" cy="9" r="2" />
+                          <path d="m21 15-5-5L5 21" />
+                        </svg>
+                        <span>表紙を選択</span>
+                      </span>
+                      <img id="cover-upload-preview" class="cover-upload-preview" alt="選択した表紙画像" hidden>
+                    </label>
+
+                    <div class="book-form-fields">
+                      <input type="text" id="book-title" placeholder="タイトル" required>
+                      <input type="text" id="book-author" placeholder="著者（任意）">
+
+                      <label class="page-count-field">
+                        総ページ数（任意）
+                        <input type="text" inputmode="numeric" id="book-page-count" placeholder="例：320">
+                      </label>
+
+                      <label class="page-count-field">
+                        出版社（任意）
+                        <input type="text" id="book-publisher" placeholder="例：〇〇出版">
+                      </label>
+
+                      <label class="page-count-field">
+                        出版日（任意）
+                        <input type="text" id="book-published-date" placeholder="例：2023-04-01">
+                      </label>
+
+                      <label class="page-count-field">
+                        ISBN（任意）
+                        <input type="text" id="book-isbn" placeholder="例：9784000000000">
+                      </label>
+                    </div>
+                  </div>
+
+                  <button type="submit">本棚に追加</button>
+                </form>
+              </div>
             </div>
           </div>
 

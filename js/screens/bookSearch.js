@@ -11,6 +11,8 @@ const bookSearchResultsList = document.getElementById("book-search-results");
 const bookSearchLoadingEl = document.getElementById("book-search-loading");
 const bookSearchErrorEl = document.getElementById("book-search-error");
 const bookSearchEmptyEl = document.getElementById("book-search-empty");
+const bookManualEntryToggle = document.getElementById("book-manual-entry-toggle");
+const bookManualEntrySection = document.getElementById("book-manual-entry-section");
 
 let bookSearchDebounceTimer = null;
 let bookSearchAbortController = null; // 検索中に新しい検索が始まったら、前の通信を打ち切るために覚えておく
@@ -23,6 +25,21 @@ function hideBookSearchStates() {
   bookSearchResultsList.hidden = true;
 }
 
+// 読書ステータス・本の詳細入力欄を開く。
+// 検索結果を選んだとき／検索で見つからなかったとき／「手動で入力する」を押したときに呼ぶ
+function openManualEntry() {
+  bookManualEntrySection.hidden = false;
+  bookManualEntryToggle.hidden = true; // すでに開いているので、開くためのボタンはもう不要
+}
+
+// 読書ステータス・本の詳細入力欄を閉じる（基本の状態。モーダルを開き直すときに戻す）
+function closeManualEntry() {
+  bookManualEntrySection.hidden = true;
+  bookManualEntryToggle.hidden = false;
+}
+
+bookManualEntryToggle.addEventListener("click", openManualEntry);
+
 // 検索欄・検索結果を初期状態に戻す（モーダルを開き直す・閉じるときに呼ぶ）
 function resetBookSearch() {
   if (bookSearchAbortController) {
@@ -34,6 +51,7 @@ function resetBookSearch() {
   bookSearchResultsList.innerHTML = "";
   bookSearchButton.disabled = false;
   hideBookSearchStates();
+  closeManualEntry();
 }
 
 // 検索結果1件ぶんのカードを組み立てる
@@ -90,6 +108,7 @@ function renderBookSearchResults(results) {
 
   if (results.length === 0) {
     bookSearchEmptyEl.hidden = false;
+    openManualEntry(); // 検索で見つからなかったときは、自分で入力できるよう自動で開く
     return;
   }
 
@@ -120,6 +139,7 @@ function applyBookSearchResult(result) {
 
   hideBookSearchStates();
   bookSearchResultsList.innerHTML = "";
+  openManualEntry(); // 選んだ内容を確認・編集してから登録できるよう、入力欄を開く
   bookTitleInput.focus();
 }
 
