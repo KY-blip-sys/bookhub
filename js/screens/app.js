@@ -344,6 +344,7 @@ const NAV_LABELS = {
   novelQuotes: "好きな言葉",
   records: "記録",
   stats: "統計",
+  ai: "AI",
   settings: "設定"
 };
 
@@ -384,6 +385,9 @@ function goToNavPage(navKey) {
   }
   if (navKey === "stats") {
     renderStatsScreen();
+  }
+  if (navKey === "ai") {
+    prepareAiChatScreen(); // aiChat.js：入力欄にフォーカスするだけで、会話履歴はそのまま保持する
   }
 }
 

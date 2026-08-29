@@ -166,6 +166,14 @@
           </svg>
           <span>統計</span>
         </button>
+        <button class="nav-item" type="button" data-nav="ai">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
+            <path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z" />
+          </svg>
+          <span>AI</span>
+        </button>
         <button class="nav-item" type="button" data-nav="settings">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -1049,6 +1057,21 @@
           </div>
         </div>
 
+        <!-- AIチャット画面：/api/chat（Vercel Function・共通のOpenAI呼び出しAPI）と会話する -->
+        <div id="screen-ai" class="page" hidden>
+          <div class="ai-chat-card">
+            <div id="ai-chat-messages" class="ai-chat-messages">
+              <p id="ai-chat-empty-message" class="page-placeholder">
+                AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
+              </p>
+            </div>
+            <form id="ai-chat-form" class="ai-chat-form">
+              <input type="text" id="ai-chat-input" placeholder="メッセージを入力" autocomplete="off" required>
+              <button type="submit" id="ai-chat-send-button">送信</button>
+            </form>
+          </div>
+        </div>
+
         <!-- 設定画面 -->
         <div id="screen-settings" class="page" hidden>
 
@@ -1338,6 +1361,7 @@
   <script src="js/screens/motivationCard.js?v=24"></script>
   <script src="js/screens/settings.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
+  <script src="js/screens/aiChat.js?v=1"></script>
   <script src="js/screens/app.js?v=28"></script>
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
