@@ -48,6 +48,7 @@ aiChatForm.addEventListener("submit", async function (event) {
   aiChatSendButton.disabled = true;
   aiChatInput.disabled = true;
   const loadingBubble = appendAiChatBubble("考え中…", "ai-chat-message-ai ai-chat-message-loading");
+  let lostAiAccess = false;
 
   try {
     const reply = await sendChatMessage(message, { feature: "chat" }); // js/services/aiChat.js（内部でPOST /api/chatを呼ぶ）
@@ -57,14 +58,21 @@ aiChatForm.addEventListener("submit", async function (event) {
     if (error.insufficientCredit) {
       loadingBubble.remove();
       showInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
+    } else if (error.planNotEligible) {
+      // ロック案内・入力欄の無効化はsendChatMessage内でapplyAiAccessStateがすでに反映済みなので、
+      // このあとで入力欄を再度有効化しないようにしておく
+      loadingBubble.remove();
+      lostAiAccess = true;
     } else {
       loadingBubble.textContent = error.message || "AIとの通信に失敗しました。";
       loadingBubble.className = "ai-chat-message ai-chat-message-error";
     }
   } finally {
-    aiChatSendButton.disabled = false;
-    aiChatInput.disabled = false;
+    aiChatSendButton.disabled = lostAiAccess;
+    aiChatInput.disabled = lostAiAccess;
     scrollAiChatToBottom();
-    aiChatInput.focus();
+    if (!lostAiAccess) {
+      aiChatInput.focus();
+    }
   }
 });

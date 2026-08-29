@@ -101,6 +101,7 @@ aiRecommendGenerateButton.addEventListener("click", async function () {
   aiRecommendGenerateButton.disabled = true;
   aiRecommendListEl.innerHTML = "";
   hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
+  let lostAiAccess = false;
 
   try {
     const contextText = formatAiReadingContext(buildAiReadingContext());
@@ -118,12 +119,16 @@ aiRecommendGenerateButton.addEventListener("click", async function () {
   } catch (error) {
     if (error.insufficientCredit) {
       showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+    } else if (error.planNotEligible) {
+      // ロック案内・ボタンの無効化はsendChatMessage内でapplyAiAccessStateがすでに反映済みなので、
+      // このあとでボタンを再度有効化しないようにしておく
+      lostAiAccess = true;
     } else {
       aiRecommendErrorEl.textContent = error.message || "おすすめ本の取得に失敗しました。";
       aiRecommendErrorEl.hidden = false;
     }
   } finally {
     aiRecommendLoadingEl.hidden = true;
-    aiRecommendGenerateButton.disabled = false;
+    aiRecommendGenerateButton.disabled = lostAiAccess;
   }
 });

@@ -33,5 +33,5 @@ aiTabButtons.forEach(function (button) {
 // 実践リストなど他のタブ付き画面と同じく、常に最初のタブ（チャット）から開き直す
 function prepareAiScreen() {
   showAiTab("chat");
-  refreshAiCreditBadge(); // js/screens/aiCredits.js（月替わりのリセットも、ここで最新化される）
+  refreshAiAccessStatus(); // js/screens/aiCredits.js（月替わりのリセット・AI利用可否も、ここで最新化される）
 }

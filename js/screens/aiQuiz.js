@@ -165,6 +165,7 @@ aiQuizStartButton.addEventListener("click", async function () {
   aiQuizLoadingEl.hidden = false;
   aiQuizStartButton.disabled = true;
   hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
+  let lostAiAccess = false;
 
   try {
     const contextText = formatAiReadingContext(notesContext);
@@ -191,6 +192,11 @@ aiQuizStartButton.addEventListener("click", async function () {
     if (error.insufficientCredit) {
       showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
       aiQuizIntroEl.hidden = false;
+    } else if (error.planNotEligible) {
+      // ロック案内・ボタンの無効化はsendChatMessage内でapplyAiAccessStateがすでに反映済みなので、
+      // このあとでボタンを再度有効化しないようにしておく
+      lostAiAccess = true;
+      aiQuizIntroEl.hidden = false;
     } else {
       aiQuizErrorEl.textContent = error.message || "クイズの作成に失敗しました。";
       aiQuizErrorEl.hidden = false;
@@ -198,7 +204,7 @@ aiQuizStartButton.addEventListener("click", async function () {
     }
   } finally {
     aiQuizLoadingEl.hidden = true;
-    aiQuizStartButton.disabled = false;
+    aiQuizStartButton.disabled = lostAiAccess;
   }
 });
 

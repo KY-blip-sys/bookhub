@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=46">
+  <link rel="stylesheet" href="css/style.css?v=47">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -173,6 +173,15 @@
             <path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z" />
           </svg>
           <span>AI</span>
+        </button>
+        <button class="nav-item" type="button" data-nav="pricing">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 15.5c0 1.1 1.1 2 2.5 2s2.5-.8 2.5-2-1-1.6-2.5-2-2.5-.9-2.5-2 1.1-2 2.5-2 2.5.8 2.5 2" />
+            <path d="M12 7.5v1M12 15.5v1" />
+          </svg>
+          <span>料金プラン</span>
         </button>
         <button class="nav-item" type="button" data-nav="settings">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -782,11 +791,17 @@
 
           <!-- ---------- AIに質問 タブ（js/screens/bookQuestion.js）：この本について自由に質問できる ---------- -->
           <div id="detail-ai-question-panel" class="detail-tab-panel" hidden>
+            <!-- Free・Plusプラン：AI機能は利用不可（js/screens/aiCredits.js） -->
+            <div id="book-question-locked-notice" class="ai-locked-notice" hidden>
+              <p>AI機能はAI Premiumプラン以上で利用できます。</p>
+              <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
+            </div>
+
             <div class="ai-credit-insufficient-banner" id="book-question-credit-banner" hidden>
               <p>AIクレジットが不足しています。</p>
-              <p>プレミアムプランでは毎月3,000クレジット利用できます。</p>
+              <p>プランをアップグレードすると、毎月のAIクレジットが増えます。</p>
               <div class="ai-credit-insufficient-actions">
-                <button type="button" class="dashed-add-button" data-open-premium-info>プレミアムを見る</button>
+                <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
                 <button type="button" class="ai-credit-insufficient-close-button" aria-label="閉じる">×</button>
               </div>
             </div>
@@ -1124,18 +1139,46 @@
         <!-- AI画面：/api/chat（Vercel Function・共通のOpenAI呼び出しAPI）を使ったAI機能をまとめる。
              機能ごとにタブで切り替える（js/screens/aiTabs.js） -->
         <div id="screen-ai" class="page" hidden>
-          <!-- AIクレジットの残高表示（js/screens/aiCredits.js）。実際の判定・消費はサーバー側（/api/chat）で行う -->
-          <div id="ai-credit-badge" class="ai-credit-badge" hidden>
-            <span id="ai-credit-badge-plan" class="ai-credit-badge-plan"></span>
-            <span id="ai-credit-badge-amount" class="ai-credit-badge-amount"></span>
+          <!-- Free・Plusプラン：AI機能は利用不可（js/screens/aiCredits.js） -->
+          <div id="ai-locked-notice" class="ai-locked-notice" hidden>
+            <p>AI機能はAI Premiumプラン以上で利用できます。</p>
+            <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
+          </div>
+
+          <!-- AI Premium・AI Proプラン：AIクレジットカード（js/screens/aiCredits.js）。
+               実際の判定・消費はサーバー側（/api/chat）で行う -->
+          <div id="ai-credit-card" class="ai-credit-card" hidden>
+            <div class="ai-credit-card-top">
+              <div>
+                <p id="ai-credit-card-plan" class="ai-credit-card-plan"></p>
+                <p id="ai-credit-card-amount" class="ai-credit-card-amount"></p>
+              </div>
+              <button type="button" class="ai-credit-card-plan-link" data-nav-target="pricing">料金プランを見る</button>
+            </div>
+
+            <div class="ai-credit-progress-track">
+              <div id="ai-credit-progress-bar" class="ai-credit-progress-bar"></div>
+            </div>
+
+            <button type="button" id="ai-credit-explain-toggle" class="ai-credit-explain-toggle" aria-expanded="false">
+              AIクレジットとは？
+            </button>
+            <p id="ai-credit-explain-text" class="ai-credit-explain-text" hidden>
+              AI機能を利用するたびにAIクレジットを消費します。AI機能ごとに消費クレジットは異なります。毎月プランに応じたAIクレジットが付与されます。
+            </p>
+
+            <div class="ai-credit-usage">
+              <p class="ai-credit-usage-title">消費クレジット一覧</p>
+              <ul id="ai-credit-usage-list" class="ai-credit-usage-list"></ul>
+            </div>
           </div>
 
           <!-- 残高不足のときの案内（js/screens/aiCredits.js。チャット／おすすめ本／クイズ／要約／学習コーチの5タブ共通） -->
           <div class="ai-credit-insufficient-banner" id="ai-credit-insufficient-banner" hidden>
             <p>AIクレジットが不足しています。</p>
-            <p>プレミアムプランでは毎月3,000クレジット利用できます。</p>
+            <p>プランをアップグレードすると、毎月のAIクレジットが増えます。</p>
             <div class="ai-credit-insufficient-actions">
-              <button type="button" class="dashed-add-button" data-open-premium-info>プレミアムを見る</button>
+              <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
               <button type="button" class="ai-credit-insufficient-close-button" aria-label="閉じる">×</button>
             </div>
           </div>
@@ -1271,6 +1314,14 @@
           </div>
         </div>
 
+        <!-- 料金プラン画面：js/screens/pricing.js が /api/plans（プラン一覧）・/api/credits（現在のプラン）
+             から取得して描画する。将来Stripeを接続するときは、pricing.js内のダミーボタンの処理を
+             実際の決済リダイレクトに差し替えるだけでよい -->
+        <div id="screen-pricing" class="page" hidden>
+          <p class="pricing-intro">プランはいつでもアップグレードできます（決済機能は現在準備中です）。</p>
+          <div id="pricing-cards" class="pricing-cards"></div>
+        </div>
+
         <!-- 設定画面 -->
         <div id="screen-settings" class="page" hidden>
 
@@ -1346,22 +1397,6 @@
           <button type="button" id="book-edit-cancel-button">キャンセル</button>
         </div>
       </form>
-    </div>
-  </div>
-
-  <!-- プレミアムプランの案内モーダル（js/screens/aiCredits.js）：
-       AIクレジット残高不足のときの「プレミアムを見る」ボタンから開く。
-       Stripe決済導入までは、案内を表示するだけの準備中ページとして置いておく -->
-  <div id="premium-info-modal" class="modal-overlay floating-modal" hidden>
-    <div class="modal-card floating-modal-card">
-      <div class="floating-modal-header">
-        <h3>プレミアムプラン</h3>
-        <button type="button" id="premium-info-close-button" class="modal-close-button" aria-label="閉じる">×</button>
-      </div>
-      <div class="premium-info-body">
-        <p>プレミアムプランでは、AIクレジットが毎月<strong>3,000クレジット</strong>利用できます（無料プランは毎月100クレジット）。</p>
-        <p class="premium-info-note">プレミアムプランのお申し込みは、現在準備中です。公開までしばらくお待ちください。</p>
-      </div>
     </div>
   </div>
 
@@ -1546,7 +1581,7 @@
   <!-- Supabase（ログイン・クラウド保存）のクライアントライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="js/services/cloudSync.js?v=1"></script>
-  <script src="js/services/aiChat.js?v=3"></script>
+  <script src="js/services/aiChat.js?v=4"></script>
   <script src="js/services/googleBooks.js?v=1"></script>
 
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
@@ -1567,7 +1602,7 @@
   <script src="js/screens/modal.js?v=24"></script>
   <!-- aiCredits.jsは、AIクレジットの残高表示・プレミアム案内モーダルの開閉を担う。
        bindModalDismissal（modal.js）を使うため、modal.jsより後に読み込む -->
-  <script src="js/screens/aiCredits.js?v=1"></script>
+  <script src="js/screens/aiCredits.js?v=2"></script>
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=24"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
@@ -1585,18 +1620,21 @@
   <script src="js/screens/motivationCard.js?v=24"></script>
   <script src="js/screens/settings.js?v=24"></script>
   <script src="js/screens/help.js?v=24"></script>
-  <script src="js/screens/aiChat.js?v=2"></script>
-  <script src="js/screens/aiRecommend.js?v=2"></script>
-  <script src="js/screens/aiQuiz.js?v=2"></script>
-  <script src="js/screens/aiSummary.js?v=2"></script>
-  <script src="js/screens/aiCoach.js?v=2"></script>
+  <script src="js/screens/aiChat.js?v=3"></script>
+  <script src="js/screens/aiRecommend.js?v=3"></script>
+  <script src="js/screens/aiQuiz.js?v=3"></script>
+  <script src="js/screens/aiSummary.js?v=3"></script>
+  <script src="js/screens/aiCoach.js?v=3"></script>
   <!-- aiTabs.jsは、AI画面の各タブ（chat/recommend/quiz/summary/coach）の初期化関数を呼ぶため、
        それぞれの画面ファイルが揃った後に読み込む -->
   <script src="js/screens/aiTabs.js?v=2"></script>
+  <!-- pricing.jsは、AI画面の「料金プランを見る」導線・現在のプラン表示（js/screens/aiCredits.jsからの
+       data-nav-target="pricing"）より後に置いておけば十分なため、他のAI画面ファイルと同じ並びに置く -->
+  <script src="js/screens/pricing.js?v=1"></script>
   <!-- bookQuestion.jsは、本の詳細画面「AIに質問」タブの処理。aiContext.js・booksModel.jsを使うため、
        それらより後に読み込む -->
-  <script src="js/screens/bookQuestion.js?v=1"></script>
-  <script src="js/screens/app.js?v=30"></script>
+  <script src="js/screens/bookQuestion.js?v=2"></script>
+  <script src="js/screens/app.js?v=31"></script>
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
   <script src="js/screens/categorySelect.js?v=28"></script>

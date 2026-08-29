@@ -71,6 +71,7 @@ aiSummaryGenerateButton.addEventListener("click", async function () {
   aiSummaryLoadingEl.hidden = false;
   aiSummaryGenerateButton.disabled = true;
   hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
+  let lostAiAccess = false;
 
   try {
     const contextText = formatAiReadingContext(notesContext);
@@ -91,12 +92,16 @@ aiSummaryGenerateButton.addEventListener("click", async function () {
   } catch (error) {
     if (error.insufficientCredit) {
       showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+    } else if (error.planNotEligible) {
+      // ロック案内・ボタンの無効化はsendChatMessage内でapplyAiAccessStateがすでに反映済みなので、
+      // このあとでボタンを再度有効化しないようにしておく
+      lostAiAccess = true;
     } else {
       aiSummaryErrorEl.textContent = error.message || "要約の作成に失敗しました。";
       aiSummaryErrorEl.hidden = false;
     }
   } finally {
     aiSummaryLoadingEl.hidden = true;
-    aiSummaryGenerateButton.disabled = false;
+    aiSummaryGenerateButton.disabled = lostAiAccess;
   }
 });

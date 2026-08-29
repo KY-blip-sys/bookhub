@@ -47,6 +47,7 @@ aiCoachGenerateButton.addEventListener("click", async function () {
   aiCoachLoadingEl.hidden = false;
   aiCoachGenerateButton.disabled = true;
   hideInsufficientCreditBanner(aiCreditInsufficientBannerEl); // js/screens/aiCredits.js
+  let lostAiAccess = false;
 
   try {
     const contextText = formatAiReadingContext(context);
@@ -69,12 +70,16 @@ aiCoachGenerateButton.addEventListener("click", async function () {
   } catch (error) {
     if (error.insufficientCredit) {
       showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
+    } else if (error.planNotEligible) {
+      // ロック案内・ボタンの無効化はsendChatMessage内でapplyAiAccessStateがすでに反映済みなので、
+      // このあとでボタンを再度有効化しないようにしておく
+      lostAiAccess = true;
     } else {
       aiCoachErrorEl.textContent = error.message || "分析に失敗しました。";
       aiCoachErrorEl.hidden = false;
     }
   } finally {
     aiCoachLoadingEl.hidden = true;
-    aiCoachGenerateButton.disabled = false;
+    aiCoachGenerateButton.disabled = lostAiAccess;
   }
 });

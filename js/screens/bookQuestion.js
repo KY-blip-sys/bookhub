@@ -40,6 +40,7 @@ function prepareBookQuestionTab(bookId) {
     hideInsufficientCreditBanner(bookQuestionCreditBannerEl); // js/screens/aiCredits.js
   }
   scrollBookQuestionToBottom();
+  refreshAiAccessStatus(); // js/screens/aiCredits.js：AI利用可否・残高を最新化する
 }
 
 // この本についての質問に答えるための指示文（学んだこと・感想があれば参考情報として添える）
@@ -85,6 +86,7 @@ bookQuestionForm.addEventListener("submit", async function (event) {
   bookQuestionSendButton.disabled = true;
   bookQuestionInput.disabled = true;
   const loadingBubble = appendBookQuestionBubble("考え中…", "ai-chat-message-ai ai-chat-message-loading");
+  let lostAiAccess = false;
 
   try {
     const reply = await sendChatMessage(message, {
@@ -97,14 +99,21 @@ bookQuestionForm.addEventListener("submit", async function (event) {
     if (error.insufficientCredit) {
       loadingBubble.remove();
       showInsufficientCreditBanner(bookQuestionCreditBannerEl);
+    } else if (error.planNotEligible) {
+      // ロック案内・入力欄の無効化はsendChatMessage内でapplyAiAccessStateがすでに反映済みなので、
+      // このあとのfinallyで入力欄を再度有効化しないようにしておく
+      loadingBubble.remove();
+      lostAiAccess = true;
     } else {
       loadingBubble.textContent = error.message || "AIとの通信に失敗しました。";
       loadingBubble.className = "ai-chat-message ai-chat-message-error";
     }
   } finally {
-    bookQuestionSendButton.disabled = false;
-    bookQuestionInput.disabled = false;
+    bookQuestionSendButton.disabled = lostAiAccess;
+    bookQuestionInput.disabled = lostAiAccess;
     scrollBookQuestionToBottom();
-    bookQuestionInput.focus();
+    if (!lostAiAccess) {
+      bookQuestionInput.focus();
+    }
   }
 });

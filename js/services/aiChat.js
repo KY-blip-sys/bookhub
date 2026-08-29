@@ -16,6 +16,9 @@
 //
 // AIクレジットが不足している場合、投げるエラーのerror.insufficientCreditがtrueになる
 // （呼び出し側は、これを見て「AIクレジットが不足しています」の案内を出す）。
+// Free・PlusプランなどAI機能自体が使えないプランの場合、error.planNotEligibleがtrueになる
+// （画面側の対応はjs/screens/aiCredits.jsのapplyAiAccessStateがまとめて行うため、
+//   呼び出し側で個別に案内を出す必要は基本的にない）。
 
 async function sendChatMessage(message, options) {
   options = options || {};
@@ -63,10 +66,10 @@ async function sendChatMessage(message, options) {
     console.error("[aiChat] レスポンスをJSONとして解析できませんでした:", parseError);
   }
 
-  // 最新のAIクレジット残高が返ってきていれば（成功時・残高不足時のどちらでも）、画面の表示を更新する
+  // 最新のAIクレジット残高・AI利用可否が返ってきていれば（成功時・エラー時のどちらでも）、画面の表示を更新する
   // （js/screens/aiCredits.js。読み込まれていない画面から呼ばれる可能性もあるため存在確認する）
-  if (data.credits && typeof applyAiCreditStatus === "function") {
-    applyAiCreditStatus(data.credits);
+  if (data.credits && typeof applyAiAccessState === "function") {
+    applyAiAccessState(data.credits);
   }
 
   if (!response.ok) {
@@ -74,6 +77,9 @@ async function sendChatMessage(message, options) {
     const error = new Error(data.error || `AIとの通信に失敗しました。(status: ${response.status})`);
     if (response.status === 402) {
       error.insufficientCredit = true;
+    }
+    if (response.status === 403) {
+      error.planNotEligible = true;
     }
     error.credits = data.credits || null;
     throw error;

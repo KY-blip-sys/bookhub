@@ -1,16 +1,20 @@
-// BookHub: 現在ログインしているユーザーのAIクレジット残高・プランを返すサーバー関数（Vercelが自動で動かす）。
+// BookHub: 現在ログインしているユーザーのAIクレジット残高・プラン・AI利用可否を返すサーバー関数（Vercelが自動で動かす）。
 //
-// AI画面を開いたときの残高表示（例：「AIクレジット 82 / 100」）のために使う。
+// AI画面上部のAIクレジットカード（現在のプラン・残りクレジット・進捗バー・消費クレジット一覧）や、
+// Free・Plusプランでの「AI機能はAI Premiumプラン以上で利用できます。」案内の出し分けのために使う。
 // クレジットは消費しない（月替わりのリセットだけは反映される。Supabase側のget_ai_credit_status参照）。
 //
 // 必要なVercelの環境変数：api/chat.jsと共通（SUPABASE_URL / SUPABASE_ANON_KEY）
 //
 // 呼び出し方：
 //   GET /api/credits を、Authorizationヘッダー（"Bearer " + Supabaseのアクセストークン）付きで送ると
-//   { "credits": { "plan": "free", "remaining": 82, "monthlyLimit": 100 } } のような残高が返る。
+//   {
+//     "credits": { "plan": "premium", "remaining": 820, "monthlyLimit": 1000, "aiEnabled": true },
+//     "featureCosts": [{ "feature": "chat", "label": "AIチャット", "cost": 5 }, ...]
+//   } のような残高・消費クレジット一覧が返る。
 
 const { getAuthenticatedUser } = require("./_lib/supabaseUser");
-const { MONTHLY_CREDITS } = require("./_lib/aiCredits");
+const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getPublicFeatureCosts } = require("./_lib/aiCredits");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -27,8 +31,8 @@ module.exports = async function handler(req, res) {
   }
 
   const { data, error } = await auth.supabase.rpc("get_ai_credit_status", {
-    p_free_monthly: MONTHLY_CREDITS.free,
-    p_premium_monthly: MONTHLY_CREDITS.premium
+    p_monthly_credits: MONTHLY_CREDITS,
+    p_ai_enabled_plans: AI_ENABLED_PLANS
   });
 
   if (error || !data || !data.ok) {
@@ -38,6 +42,12 @@ module.exports = async function handler(req, res) {
   }
 
   res.status(200).json({
-    credits: { plan: data.plan, remaining: data.remaining, monthlyLimit: data.monthlyLimit }
+    credits: {
+      plan: data.plan,
+      remaining: data.remaining,
+      monthlyLimit: data.monthlyLimit,
+      aiEnabled: data.aiEnabled
+    },
+    featureCosts: getPublicFeatureCosts()
   });
 };

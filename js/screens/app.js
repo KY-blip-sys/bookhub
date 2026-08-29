@@ -350,6 +350,7 @@ const NAV_LABELS = {
   records: "記録",
   stats: "統計",
   ai: "AI",
+  pricing: "料金プラン",
   settings: "設定"
 };
 
@@ -393,6 +394,9 @@ function goToNavPage(navKey) {
   }
   if (navKey === "ai") {
     prepareAiScreen(); // aiTabs.js：常に「チャット」タブから開き直す（実践リスト等の他タブ画面と同じ挙動）
+  }
+  if (navKey === "pricing") {
+    preparePricingScreen(); // pricing.js
   }
 }
 

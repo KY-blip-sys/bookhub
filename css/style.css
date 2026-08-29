@@ -5134,30 +5134,139 @@ html.dark-mode .dashboard-hero-banner {
     line-height: 1.6;
 }
 
-/* ---------- AIクレジットの残高バッジ・残高不足バナー・プレミアム案内 ---------- */
+/* ---------- Free・Plusプラン：AI利用不可の案内 ---------- */
 
-.ai-credit-badge {
-    display: inline-flex;
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 2px;
-    margin-bottom: 16px;
-    padding: 8px 14px;
-    border-radius: var(--radius-sm);
+.ai-locked-notice {
+    margin: 0 0 16px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-bg-secondary);
+    text-align: center;
+}
+
+.ai-locked-notice p {
+    margin: 0 0 12px;
+    color: var(--color-text);
+    font-size: var(--font-size-body);
+    line-height: 1.6;
+}
+
+.ai-locked-notice .dashed-add-button {
+    margin-bottom: 0;
+}
+
+/* ---------- AI Premium・AI Proプラン：AIクレジットカード ---------- */
+
+.ai-credit-card {
+    margin: 0 0 16px;
+    padding: 18px 20px;
+    border-radius: var(--radius-md);
     background-color: var(--color-bg-secondary);
 }
 
-.ai-credit-badge-plan {
+.ai-credit-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.ai-credit-card-plan {
+    margin: 0 0 2px;
     font-size: var(--font-size-caption);
     color: var(--color-text-secondary);
     font-weight: 600;
 }
 
-.ai-credit-badge-amount {
+.ai-credit-card-amount {
+    margin: 0;
     font-size: var(--font-size-heading);
     color: var(--color-text);
     font-weight: 700;
 }
+
+.ai-credit-card-plan-link {
+    flex-shrink: 0;
+    border: none;
+    background: none;
+    color: var(--color-accent);
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.ai-credit-card-plan-link:hover {
+    text-decoration: underline;
+}
+
+.ai-credit-progress-track {
+    margin-top: 14px;
+    height: 8px;
+    border-radius: 999px;
+    background-color: var(--color-border);
+    overflow: hidden;
+}
+
+.ai-credit-progress-bar {
+    height: 100%;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    transition: width var(--transition-fast) var(--ease-standard);
+}
+
+.ai-credit-explain-toggle {
+    margin-top: 14px;
+    border: none;
+    background: none;
+    padding: 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.ai-credit-explain-text {
+    margin: 8px 0 0;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-meta);
+    line-height: 1.7;
+}
+
+.ai-credit-usage {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--color-border);
+}
+
+.ai-credit-usage-title {
+    margin: 0 0 8px;
+    font-size: var(--font-size-caption);
+    color: var(--color-text-secondary);
+    font-weight: 600;
+}
+
+.ai-credit-usage-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.ai-credit-usage-list li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: var(--font-size-body);
+    color: var(--color-text);
+}
+
+.ai-credit-usage-list li span:last-child {
+    color: var(--color-text-secondary);
+}
+
+/* ---------- 残高不足バナー ---------- */
 
 .ai-credit-insufficient-banner {
     position: relative;
@@ -5201,13 +5310,138 @@ html.dark-mode .dashboard-hero-banner {
     opacity: 1;
 }
 
-.premium-info-body p {
-    line-height: 1.7;
+/* ---------- 料金プラン画面 ---------- */
+
+.pricing-intro {
+    margin: 0 0 20px;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
 }
 
-.premium-info-note {
+.pricing-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    align-items: stretch;
+}
+
+@media (max-width: 900px) {
+    .pricing-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 600px) {
+    .pricing-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+.pricing-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 22px 20px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-surface);
+    box-shadow: var(--shadow-sm);
+}
+
+.pricing-card-highlight {
+    border-color: var(--color-accent);
+    box-shadow: var(--shadow-md);
+}
+
+.pricing-card-badge {
+    position: absolute;
+    top: -12px;
+    left: 20px;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-size: var(--font-size-caption);
+    font-weight: 700;
+}
+
+.pricing-card-title {
+    margin: 0 0 8px;
+    font-size: var(--font-size-heading);
+}
+
+.pricing-card-price {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.pricing-card-credits {
+    margin: 4px 0 0;
+    color: var(--color-accent);
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+}
+
+.pricing-card-features {
+    list-style: none;
+    margin: 16px 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.pricing-card-features li {
+    padding-left: 20px;
+    position: relative;
+    font-size: var(--font-size-body);
+    color: var(--color-text);
+    line-height: 1.5;
+}
+
+.pricing-card-features li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: var(--color-success);
+    font-weight: 700;
+}
+
+.pricing-card-ads {
+    margin: 0 0 16px;
     color: var(--color-text-secondary);
     font-size: var(--font-size-meta);
+}
+
+.pricing-card-button {
+    width: 100%;
+    padding: 10px 0;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-accent);
+    color: #ffffff;
+    font-size: var(--font-size-body);
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background-color var(--transition-fast) var(--ease-standard);
+}
+
+.pricing-card-button:hover {
+    background-color: var(--color-accent-hover);
+}
+
+.pricing-card-button-current {
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    cursor: default;
+}
+
+.pricing-card-button-current:hover {
+    background-color: var(--color-bg-secondary);
 }
 
 /* ---------- おすすめ本 ---------- */

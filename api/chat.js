@@ -21,8 +21,10 @@
 //   POST /api/chat に
 //   { "message": "...", "feature": "chat" }
 //   を、Authorizationヘッダー（"Bearer " + Supabaseのアクセストークン）付きで送ると
-//   { "reply": "...", "credits": { "plan": "free", "remaining": 95, "monthlyLimit": 100 } }
+//   { "reply": "...", "credits": { "plan": "premium", "remaining": 995, "monthlyLimit": 1000, "aiEnabled": true } }
 //   のようにOpenAIの返答と最新のクレジット残高が返る。
+//   Free・PlusプランなどAIが使えないプランの場合は403、クレジット残高不足の場合は402が返る
+//   （どちらもOpenAI APIは呼ばれない）。
 //
 //   機能ごとの役割（instructions）を伝えたい場合や、カード表示・クイズ表示のためにAIの返答を
 //   JSONの形で受け取りたい場合は、
@@ -34,7 +36,7 @@
 
 const OpenAI = require("openai");
 const { getAuthenticatedUser } = require("./_lib/supabaseUser");
-const { MONTHLY_CREDITS, getFeatureCost } = require("./_lib/aiCredits");
+const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getFeatureCost } = require("./_lib/aiCredits");
 
 let client = null;
 function getClient() {
@@ -80,11 +82,12 @@ module.exports = async function handler(req, res) {
     return;
   }
 
-  // ②③④ 月替わりのクレジットリセット・必要クレジットの判定・残高判定（Supabase側で原子的に処理する）
+  // ②③④ 月替わりのクレジットリセット・プランのAI利用可否・必要クレジットの判定・残高判定
+  // （Supabase側で原子的に処理する）
   const { data: checkResult, error: checkError } = await auth.supabase.rpc("check_ai_credit", {
     p_cost: cost,
-    p_free_monthly: MONTHLY_CREDITS.free,
-    p_premium_monthly: MONTHLY_CREDITS.premium
+    p_monthly_credits: MONTHLY_CREDITS,
+    p_ai_enabled_plans: AI_ENABLED_PLANS
   });
 
   if (checkError) {
@@ -94,6 +97,19 @@ module.exports = async function handler(req, res) {
   }
 
   if (!checkResult || !checkResult.ok) {
+    if (checkResult && checkResult.error === "plan_not_eligible") {
+      // Free・PlusプランなどAIが使えないプラン：OpenAI APIは呼ばない
+      res.status(403).json({
+        error: "AI機能はAI Premiumプラン以上で利用できます。",
+        credits: {
+          plan: checkResult.plan,
+          remaining: checkResult.remaining,
+          monthlyLimit: checkResult.monthlyLimit,
+          aiEnabled: false
+        }
+      });
+      return;
+    }
     if (checkResult && checkResult.error === "insufficient_credit") {
       // 残高不足：OpenAI APIは呼ばない
       res.status(402).json({
@@ -101,7 +117,8 @@ module.exports = async function handler(req, res) {
         credits: {
           plan: checkResult.plan,
           remaining: checkResult.remaining,
-          monthlyLimit: checkResult.monthlyLimit
+          monthlyLimit: checkResult.monthlyLimit,
+          aiEnabled: true
         }
       });
       return;
@@ -152,7 +169,8 @@ module.exports = async function handler(req, res) {
       credits: {
         plan: checkResult.plan,
         remaining: deductResult && deductResult.ok ? deductResult.remaining : checkResult.remaining,
-        monthlyLimit: checkResult.monthlyLimit
+        monthlyLimit: checkResult.monthlyLimit,
+        aiEnabled: true
       }
     });
   } catch (error) {
