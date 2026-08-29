@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
     if (checkResult && checkResult.error === "plan_not_eligible") {
       // Free・PlusプランなどAIが使えないプラン：OpenAI APIは呼ばない
       res.status(403).json({
-        error: "AI機能はAI Premiumプラン以上で利用できます。",
+        error: "AI機能はPremiumプラン以上で利用できます。",
         credits: {
           plan: checkResult.plan,
           remaining: checkResult.remaining,

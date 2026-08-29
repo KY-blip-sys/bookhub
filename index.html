@@ -793,7 +793,7 @@
           <div id="detail-ai-question-panel" class="detail-tab-panel" hidden>
             <!-- Free・Plusプラン：AI機能は利用不可（js/screens/aiCredits.js） -->
             <div id="book-question-locked-notice" class="ai-locked-notice" hidden>
-              <p>AI機能はAI Premiumプラン以上で利用できます。</p>
+              <p>AI機能はPremiumプラン以上で利用できます。</p>
               <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
             </div>
 
@@ -1141,11 +1141,11 @@
         <div id="screen-ai" class="page" hidden>
           <!-- Free・Plusプラン：AI機能は利用不可（js/screens/aiCredits.js） -->
           <div id="ai-locked-notice" class="ai-locked-notice" hidden>
-            <p>AI機能はAI Premiumプラン以上で利用できます。</p>
+            <p>AI機能はPremiumプラン以上で利用できます。</p>
             <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
           </div>
 
-          <!-- AI Premium・AI Proプラン：AIクレジットカード（js/screens/aiCredits.js）。
+          <!-- Premium・Proプラン：AIクレジットカード（js/screens/aiCredits.js）。
                実際の判定・消費はサーバー側（/api/chat）で行う -->
           <div id="ai-credit-card" class="ai-credit-card" hidden>
             <div class="ai-credit-card-top">
@@ -1328,7 +1328,7 @@
           <div class="settings-card">
             <h3>アカウント</h3>
             <p class="account-email" id="account-email"></p>
-            <button type="button" id="logout-button">ログアウト</button>
+            <button type="button" id="logout-button" class="danger-button">ログアウト</button>
           </div>
 
           <div class="settings-card">

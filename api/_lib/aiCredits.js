@@ -23,7 +23,6 @@ const PLAN_CATALOG = [
     features: ["読書記録", "Google Books検索", "本棚", "読書タイマー", "読書統計", "読書目標"],
     // 実際に「現在のプラン」かどうかはjs/screens/pricing.jsが表示時に動的に判定して上書きする
     // （新規登録直後のユーザーは必ずplan=freeのため、通常はこのカードが「現在のプラン」になる）。
-    buttonLabel: "Freeを選択",
     highlight: false,
     stripePriceId: null
   },
@@ -35,31 +34,28 @@ const PLAN_CATALOG = [
     aiEnabled: false,
     ads: false,
     features: ["Freeの全機能"],
-    buttonLabel: "Plusを選択",
     highlight: false,
     stripePriceId: null
   },
   {
     key: "premium",
-    label: "AI Premium",
+    label: "Premium",
     priceYen: 980,
-    monthlyCredits: 1000, // 仮
+    monthlyCredits: 1000,
     aiEnabled: true,
     ads: false,
     features: ["AIチャット", "AI本推薦", "AI要約", "AIへの質問", "Plusの全機能（広告なし）"],
-    buttonLabel: "AI Premiumを選択",
     highlight: true,
     stripePriceId: null
   },
   {
     key: "pro",
-    label: "AI Pro",
+    label: "Pro",
     priceYen: 1980,
-    monthlyCredits: 3000, // 仮
+    monthlyCredits: 3000,
     aiEnabled: true,
     ads: false,
-    features: ["AI Premiumの全機能", "AIクレジット増量"],
-    buttonLabel: "AI Proを選択",
+    features: ["Premiumの全機能", "AIクレジット増量"],
     highlight: false,
     stripePriceId: null
   }

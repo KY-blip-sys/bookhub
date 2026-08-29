@@ -21,7 +21,7 @@ const aiCreditInsufficientBannerEl = document.getElementById("ai-credit-insuffic
 // 本の詳細画面「AIに質問」タブ
 const bookQuestionLockedNoticeEl = document.getElementById("book-question-locked-notice");
 
-const PLAN_DISPLAY_LABELS = { free: "Free", plus: "Plus", premium: "AI Premium", pro: "AI Pro" };
+const PLAN_DISPLAY_LABELS = { free: "Free", plus: "Plus", premium: "Premium", pro: "Pro" };
 
 function formatPlanLabel(planKey) {
   return PLAN_DISPLAY_LABELS[planKey] || planKey;

@@ -39,7 +39,7 @@ function buildPricingCard(plan, currentPlanKey) {
   if (plan.aiEnabled) {
     const credits = document.createElement("p");
     credits.className = "pricing-card-credits";
-    credits.textContent = plan.monthlyCredits.toLocaleString("ja-JP") + "クレジット / 月（仮）";
+    credits.textContent = plan.monthlyCredits.toLocaleString("ja-JP") + "クレジット / 月";
     card.appendChild(credits);
   }
 
@@ -66,7 +66,7 @@ function buildPricingCard(plan, currentPlanKey) {
     button.disabled = true;
     button.classList.add("pricing-card-button-current");
   } else {
-    button.textContent = plan.buttonLabel;
+    button.textContent = plan.label;
     button.addEventListener("click", function () {
       handlePlanButtonClick(plan);
     });

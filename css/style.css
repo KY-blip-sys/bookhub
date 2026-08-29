@@ -822,6 +822,7 @@ h1 {
 
 .page-placeholder {
     padding: 20px;
+    margin-bottom: 16px;
     border: 1px dashed var(--color-border);
     border-radius: var(--radius-md);
     color: var(--color-text-secondary);
@@ -1400,10 +1401,15 @@ h1 {
 /* ---------- 設定画面 ---------- */
 .settings-card {
     padding: 20px;
+    margin-bottom: 20px;
     border-radius: var(--radius-md);
     background-color: var(--color-surface);
     box-shadow: var(--shadow-sm);
     max-width: 480px;
+}
+
+.settings-card:last-child {
+    margin-bottom: 0;
 }
 
 .settings-card h3 {
@@ -1424,6 +1430,18 @@ h1 {
 .settings-row input {
     flex: 1;
     margin-bottom: 0;
+}
+
+.settings-row button {
+    flex-shrink: 0;
+    background-color: var(--color-accent);
+    color: #ffffff;
+    border-color: var(--color-accent);
+    font-weight: 700;
+}
+
+.settings-row button:hover {
+    background-color: var(--color-accent-hover);
 }
 
 h2 {
@@ -5155,7 +5173,7 @@ html.dark-mode .dashboard-hero-banner {
     margin-bottom: 0;
 }
 
-/* ---------- AI Premium・AI Proプラン：AIクレジットカード ---------- */
+/* ---------- Premium・Proプラン：AIクレジットカード ---------- */
 
 .ai-credit-card {
     margin: 0 0 16px;
@@ -5612,6 +5630,7 @@ html.dark-mode .dashboard-hero-banner {
 
 .ai-quiz-comment {
     margin-top: 10px;
+    margin-bottom: 18px;
     line-height: 1.7;
     color: var(--color-text);
 }

@@ -1,7 +1,7 @@
 // BookHub: 現在ログインしているユーザーのAIクレジット残高・プラン・AI利用可否を返すサーバー関数（Vercelが自動で動かす）。
 //
 // AI画面上部のAIクレジットカード（現在のプラン・残りクレジット・進捗バー・消費クレジット一覧）や、
-// Free・Plusプランでの「AI機能はAI Premiumプラン以上で利用できます。」案内の出し分けのために使う。
+// Free・Plusプランでの「AI機能はPremiumプラン以上で利用できます。」案内の出し分けのために使う。
 // クレジットは消費しない（月替わりのリセットだけは反映される。Supabase側のget_ai_credit_status参照）。
 //
 // 必要なVercelの環境変数：api/chat.jsと共通（SUPABASE_URL / SUPABASE_ANON_KEY）
