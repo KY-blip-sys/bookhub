@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AIチャット テスト - BookHub</title>
+  <!-- 既存のindex.htmlと同じフォント・スタイルシートを読み込むことで、デザインを揃える -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=44">
+  <script>
+    // 本体アプリと同じダークモード設定（localStorage）を反映する
+    if (localStorage.getItem("reading-app-dark-mode") === "true") {
+      document.documentElement.classList.add("dark-mode");
+    }
+  </script>
+</head>
+
+<body>
+
+  <!-- #auth-screen / .auth-card は index.html のログイン画面と同じスタイルを流用した、
+       中央寄せのカードレイアウト -->
+  <div id="auth-screen">
+    <div class="auth-card">
+      <p class="auth-card-icon">💬</p>
+      <h1>AIチャット テスト</h1>
+      <p class="auth-card-subtitle">/api/chat の動作確認用ページです</p>
+
+      <form id="chat-test-form" class="auth-form">
+        <label for="chat-test-input">メッセージ</label>
+        <input type="text" id="chat-test-input" placeholder="こんにちは" autocomplete="off" required>
+
+        <p id="chat-test-message" class="auth-message" hidden></p>
+
+        <button type="submit" id="chat-test-submit" class="auth-submit-button">送信</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="js/services/aiChat.js?v=1"></script>
+  <script>
+    const chatTestForm = document.getElementById("chat-test-form");
+    const chatTestInput = document.getElementById("chat-test-input");
+    const chatTestSubmit = document.getElementById("chat-test-submit");
+    const chatTestMessage = document.getElementById("chat-test-message");
+
+    function showChatTestMessage(text, isError) {
+      chatTestMessage.textContent = text;
+      chatTestMessage.className = "auth-message " + (isError ? "auth-message-error" : "auth-message-success");
+      chatTestMessage.hidden = false;
+    }
+
+    chatTestForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+
+      const message = chatTestInput.value.trim();
+      if (!message) {
+        return;
+      }
+
+      chatTestSubmit.disabled = true;
+      chatTestSubmit.textContent = "送信中…";
+
+      try {
+        const reply = await sendChatMessage(message);
+        showChatTestMessage(reply || "（空の返答が返ってきました）", false);
+      } catch (error) {
+        showChatTestMessage(error.message || "AIとの通信に失敗しました。", true);
+      } finally {
+        chatTestSubmit.disabled = false;
+        chatTestSubmit.textContent = "送信";
+      }
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,8 @@
+{
+  "name": "bookhub",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "openai": "^7.8.0"
+  }
+}
