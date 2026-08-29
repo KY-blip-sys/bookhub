@@ -104,7 +104,7 @@ actionForm.addEventListener("submit", function (event) {
   }
 
   const newAction = {
-    id: Date.now(),
+    id: generateActionId(), // js/models/actionsModel.js（Supabaseのactions.idがuuid型のため）
     bookId: currentBookId, // どの本から生まれた実践かを紐づける
     content: content,
     purpose: actionPurposeInput.value.trim(),
@@ -241,7 +241,7 @@ actionAddForm.addEventListener("submit", function (event) {
   }
 
   const newAction = {
-    id: Date.now(),
+    id: generateActionId(), // js/models/actionsModel.js（Supabaseのactions.idがuuid型のため）
     bookId: bookId,
     content: content,
     purpose: actionAddPurposeInput.value.trim(),
@@ -619,7 +619,7 @@ function buildClearButton(action) {
   return wrapper;
 }
 
-// 完了した実践を、確認のうえ実践リストから実績へ移動する
+// 完了した実践を、確認のうえ実績へ切り替える（Supabase側ではstatusを"cleared"にすることで表す）
 function clearAction(actionId) {
   const confirmed = confirm("この実践を実績として記録しますか？実践リストから削除されます。");
   if (!confirmed) {
@@ -627,22 +627,17 @@ function clearAction(actionId) {
   }
 
   const actions = loadActions();
-  const actionIndex = actions.findIndex(function (a) {
+  const action = actions.find(function (a) {
     return a.id === actionId;
   });
-  if (actionIndex === -1) {
+  if (!action) {
     return;
   }
 
-  const [clearedAction] = actions.splice(actionIndex, 1);
-  saveActions(actions);
-
-  clearedAction.clearedDate = new Date().toLocaleDateString("ja-JP");
-  clearedAction.clearedTimestamp = Date.now();
-
-  const achievements = loadAchievements();
-  achievements.push(clearedAction);
-  saveAchievements(achievements);
+  action.status = "cleared";
+  action.clearedDate = new Date().toLocaleDateString("ja-JP");
+  action.clearedTimestamp = Date.now();
+  saveActions(actions); // statusが"cleared"になったことで、以後loadActions()には出ずloadAchievements()に出るようになる
 
   if (openActionDetailId === actionId) {
     closeActionDetailModal();

@@ -13,10 +13,10 @@
 //   単純な文字列の設定値も、同じ仕組みでそのまま同期する）
 // 本そのもの（reading-app-books）・読書記録（reading-app-book-records）は、
 // js/models/booksModel.jsからSupabaseのbooks・book_recordsテーブルへ直接保存するようになったため、
-// ここには含めない
+// また実践・実績（reading-app-actions・reading-app-achievements）は、
+// js/models/actionsModel.jsからSupabaseのactionsテーブルへ直接保存するようになったため、
+// いずれもここには含めない
 const CLOUD_SYNCED_KEYS = [
-  "reading-app-actions",
-  "reading-app-achievements",
   "reading-app-reviews",
   "reading-app-favorite-quotes",
   "reading-app-favorite-learnings",
