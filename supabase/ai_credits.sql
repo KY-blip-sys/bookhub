@@ -28,6 +28,15 @@ alter table public.profiles add column if not exists updated_at timestamptz not 
 alter table public.profiles add column if not exists display_name text;
 alter table public.profiles add column if not exists avatar_url text;
 
+-- plan列の初回追加時はplanが'free'/'premium'の2値しか想定していなかったが、
+-- 現在はapi/_lib/aiCredits.jsのPLAN_CATALOG・supabase/stripe_subscriptions.sqlに合わせて
+-- 'free'|'plus'|'premium'|'pro'の4プラン運用になっている。既存の制約が残ったままだと
+-- サブスク同期トリガー（sync_profile_plan_from_subscription）がplan='plus'/'pro'を
+-- 書き込もうとした瞬間に制約違反で失敗するため、ここで許可する値を4プランに広げ直す
+-- （このSQLを再実行しても安全なように、まず既存の制約名を決め打ちせずdrop constraintする）。
+alter table public.profiles drop constraint if exists profiles_plan_check;
+alter table public.profiles add constraint profiles_plan_check check (plan in ('free', 'plus', 'premium', 'pro'));
+
 alter table public.profiles enable row level security;
 
 -- 自分の行だけ読める（残高・プランの表示用）。
@@ -92,17 +101,27 @@ where u.id = p.id and p.display_name is null;
 
 -- ---------- 月替わりリセット＋クレジット判定・消費（すべてSECURITY DEFINERで実行） ----------
 --
--- p_free_monthly / p_premium_monthly は、プランごとに毎月付与するクレジット数
+-- p_monthly_credits は、プランキー（'free'|'plus'|'premium'|'pro'）→月間クレジット数のjsonbオブジェクト
 -- （api/_lib/aiCredits.jsのMONTHLY_CREDITSをそのまま渡す）。
+-- p_ai_enabled_plans は、AI機能を利用できるプランキーのjsonb配列
+-- （api/_lib/aiCredits.jsのAI_ENABLED_PLANSをそのまま渡す）。
 -- p_cost は、呼び出されたAI機能が消費するクレジット数
 -- （api/_lib/aiCredits.jsのFEATURE_COSTSから、機能名に応じて渡す）。
+--
+-- 以前はplanが'free'/'premium'の2値・p_free_monthly/p_premium_monthly整数2つという前提だったが、
+-- api/_lib/aiCredits.jsが'free'|'plus'|'premium'|'pro'の4プラン・p_monthly_credits/p_ai_enabled_plans
+-- （jsonb）というシグネチャに変わったため、SQL側もそれに合わせて全面的に置き換える。
+-- 引数の型・個数が変わるとcreate or replaceは別関数として追加されてしまいPostgREST側で
+-- 複数候補エラーになるため、まず古いシグネチャの関数を明示的にdropする。
+drop function if exists public._reset_ai_credit_if_needed(uuid, integer, integer);
+drop function if exists public.get_ai_credit_status(integer, integer);
+drop function if exists public.check_ai_credit(integer, integer, integer);
 
 -- 内部共通処理：月が変わっていればプランに応じた上限までリセットしてから、
 -- 現在のplan・残高・上限を返す（プロフィール行が無ければこの場で作る）
 create or replace function public._reset_ai_credit_if_needed(
   p_user_id uuid,
-  p_free_monthly integer,
-  p_premium_monthly integer
+  p_monthly_credits jsonb
 )
 returns table(plan text, ai_credit integer, monthly_limit integer)
 language plpgsql
@@ -123,13 +142,14 @@ begin
   for update;
 
   if not found then
+    v_monthly := coalesce((p_monthly_credits->>'free')::integer, 0);
     insert into public.profiles (id, plan, ai_credit, credit_reset_date)
-    values (p_user_id, 'free', p_free_monthly, v_current_month)
+    values (p_user_id, 'free', v_monthly, v_current_month)
     returning profiles.plan, profiles.ai_credit, profiles.credit_reset_date
       into v_plan, v_credit, v_reset_date;
   end if;
 
-  v_monthly := case when v_plan = 'premium' then p_premium_monthly else p_free_monthly end;
+  v_monthly := coalesce((p_monthly_credits->>v_plan)::integer, 0);
 
   if v_reset_date < v_current_month then
     v_credit := v_monthly;
@@ -142,10 +162,10 @@ begin
 end;
 $$;
 
--- フロント表示用：残高・プラン・上限を返すだけ（消費はしない）。月替わりリセットの反映のためだけに呼ぶ
+-- フロント表示用：残高・プラン・上限・AI利用可否を返すだけ（消費はしない）。月替わりリセットの反映のためだけに呼ぶ
 create or replace function public.get_ai_credit_status(
-  p_free_monthly integer,
-  p_premium_monthly integer
+  p_monthly_credits jsonb,
+  p_ai_enabled_plans jsonb
 )
 returns jsonb
 language plpgsql
@@ -160,22 +180,23 @@ begin
     return jsonb_build_object('ok', false, 'error', 'not_authenticated');
   end if;
 
-  select * into r from public._reset_ai_credit_if_needed(v_user_id, p_free_monthly, p_premium_monthly);
+  select * into r from public._reset_ai_credit_if_needed(v_user_id, p_monthly_credits);
 
   return jsonb_build_object(
     'ok', true,
     'plan', r.plan,
     'remaining', r.ai_credit,
-    'monthlyLimit', r.monthly_limit
+    'monthlyLimit', r.monthly_limit,
+    'aiEnabled', p_ai_enabled_plans @> to_jsonb(r.plan)
   );
 end;
 $$;
 
--- AI機能を呼ぶ「前」に使う：月替わりリセットをした上で、残高がp_cost以上あるか判定する（消費はしない）
+-- AI機能を呼ぶ「前」に使う：月替わりリセット・プランのAI利用可否・残高がp_cost以上あるかを判定する（消費はしない）
 create or replace function public.check_ai_credit(
   p_cost integer,
-  p_free_monthly integer,
-  p_premium_monthly integer
+  p_monthly_credits jsonb,
+  p_ai_enabled_plans jsonb
 )
 returns jsonb
 language plpgsql
@@ -190,7 +211,17 @@ begin
     return jsonb_build_object('ok', false, 'error', 'not_authenticated');
   end if;
 
-  select * into r from public._reset_ai_credit_if_needed(v_user_id, p_free_monthly, p_premium_monthly);
+  select * into r from public._reset_ai_credit_if_needed(v_user_id, p_monthly_credits);
+
+  if not (p_ai_enabled_plans @> to_jsonb(r.plan)) then
+    return jsonb_build_object(
+      'ok', false,
+      'error', 'plan_not_eligible',
+      'plan', r.plan,
+      'remaining', r.ai_credit,
+      'monthlyLimit', r.monthly_limit
+    );
+  end if;
 
   if r.ai_credit < p_cost then
     return jsonb_build_object(
@@ -236,6 +267,6 @@ end;
 $$;
 
 -- ログイン済みユーザー（authenticatedロール）だけがこれらの関数を呼べるようにする
-grant execute on function public.get_ai_credit_status(integer, integer) to authenticated;
-grant execute on function public.check_ai_credit(integer, integer, integer) to authenticated;
+grant execute on function public.get_ai_credit_status(jsonb, jsonb) to authenticated;
+grant execute on function public.check_ai_credit(integer, jsonb, jsonb) to authenticated;
 grant execute on function public.deduct_ai_credit(integer) to authenticated;
