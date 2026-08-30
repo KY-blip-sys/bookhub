@@ -47,10 +47,16 @@ function buildLooseQuery(query) {
   return words.join(" OR ");
 }
 
+// country省略時、Google側はリクエスト元IPから国を自動判定するが、Vercelのサーバーレス関数が使う
+// クラウドIPはこの自動判定に失敗しやすく、503 backendError（Googleのバックエンド内部エラー）の
+// 原因になることが確認されている。country を明示指定してIPベース判定を回避する
+const GOOGLE_BOOKS_COUNTRY = "JP";
+
 async function fetchGoogleBooksVolumes(q, apiKey) {
   const url =
     GOOGLE_BOOKS_ENDPOINT +
     "?maxResults=24&orderBy=relevance&q=" + encodeURIComponent(q) +
+    "&country=" + encodeURIComponent(GOOGLE_BOOKS_COUNTRY) +
     "&key=" + encodeURIComponent(apiKey);
 
   const response = await fetch(url);
