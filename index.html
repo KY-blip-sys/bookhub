@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=49">
+  <link rel="stylesheet" href="css/style.css?v=50">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -1322,6 +1322,10 @@
              Stripe Checkoutの決済ページへ遷移する -->
         <div id="screen-pricing" class="page" hidden>
           <p class="pricing-intro">プランはいつでもアップグレードできます。</p>
+          <div id="pricing-loading" class="ai-loading" hidden>
+            <span class="ai-loading-spinner" aria-hidden="true"></span>
+            <span>プラン情報を読み込んでいます…</span>
+          </div>
           <div id="pricing-cards" class="pricing-cards"></div>
         </div>
 
@@ -1373,7 +1377,7 @@
       <!-- 広告エリア：独立したaside要素にしているので、後から広告サービス（Google AdSense等）の
            コードをこの中にそのまま貼り付けられる。300×250の枠を縦に3つ並べる。
            今はコード未設置のため、仮の枠だけを表示する -->
-      <aside class="ad-container" id="ad-container">
+      <aside class="ad-container" id="ad-container" hidden>
         <div class="ad-block">
           <p class="ad-heading">おすすめ本</p>
           <div class="ad-slot">
@@ -1495,7 +1499,7 @@
   <div id="help-modal" class="modal-overlay" hidden>
     <div class="modal-card help-modal-card">
       <div class="help-modal-header">
-        <h3>📖 読書タイマーの使い方</h3>
+        <h3>📖 BookHubの使い方</h3>
         <button type="button" id="help-close-button" class="modal-close-button" aria-label="閉じる">×</button>
       </div>
 
@@ -1678,9 +1682,9 @@
   <script src="js/services/planStatus.js?v=1"></script>
   <!-- ads.jsは、planStatus.jsが取得した状態を見て広告エリアの表示・非表示を切り替えるだけの
        共通処理。#ad-containerはこのタグより前のbody内に存在する -->
-  <script src="js/services/ads.js?v=1"></script>
-  <script src="js/services/cloudSync.js?v=7"></script>
-  <script src="js/services/aiChat.js?v=5"></script>
+  <script src="js/services/ads.js?v=2"></script>
+  <script src="js/services/cloudSync.js?v=8"></script>
+  <script src="js/services/aiChat.js?v=6"></script>
   <script src="js/services/googleBooks.js?v=1"></script>
 
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
@@ -1698,26 +1702,26 @@
   <script src="js/services/aiContext.js?v=1"></script>
 
   <!-- ---------- 画面層（描画・イベント処理） ---------- -->
-  <script src="js/screens/modal.js?v=24"></script>
+  <script src="js/screens/modal.js?v=25"></script>
   <!-- aiCredits.jsは、AIクレジットの残高表示・プレミアム案内モーダルの開閉を担う。
        bindModalDismissal（modal.js）を使うため、modal.jsより後に読み込む -->
   <script src="js/screens/aiCredits.js?v=2"></script>
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
-  <script src="js/screens/starPicker.js?v=24"></script>
+  <script src="js/screens/starPicker.js?v=25"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=32"></script>
-  <script src="js/screens/bookSearch.js?v=1"></script>
+  <script src="js/screens/books.js?v=33"></script>
+  <script src="js/screens/bookSearch.js?v=2"></script>
   <script src="js/screens/progress.js?v=24"></script>
-  <script src="js/screens/timer.js?v=26"></script>
+  <script src="js/screens/timer.js?v=27"></script>
   <script src="js/screens/records.js?v=26"></script>
-  <script src="js/screens/allRecords.js?v=24"></script>
+  <script src="js/screens/allRecords.js?v=25"></script>
   <script src="js/screens/stats.js?v=26"></script>
   <script src="js/screens/actions.js?v=27"></script>
-  <script src="js/screens/reviews.js?v=24"></script>
-  <script src="js/screens/reviewSummary.js?v=24"></script>
-  <script src="js/screens/quotes.js?v=25"></script>
-  <script src="js/screens/motivationCard.js?v=24"></script>
-  <script src="js/screens/settings.js?v=25"></script>
+  <script src="js/screens/reviews.js?v=25"></script>
+  <script src="js/screens/reviewSummary.js?v=25"></script>
+  <script src="js/screens/quotes.js?v=26"></script>
+  <script src="js/screens/motivationCard.js?v=25"></script>
+  <script src="js/screens/settings.js?v=26"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/aiInfo.js?v=1"></script>
   <script src="js/screens/aiChat.js?v=3"></script>
@@ -1730,7 +1734,7 @@
   <script src="js/screens/aiTabs.js?v=2"></script>
   <!-- pricing.jsは、AI画面の「料金プランを見る」導線・現在のプラン表示（js/screens/aiCredits.jsからの
        data-nav-target="pricing"）より後に置いておけば十分なため、他のAI画面ファイルと同じ並びに置く -->
-  <script src="js/screens/pricing.js?v=2"></script>
+  <script src="js/screens/pricing.js?v=3"></script>
   <!-- bookQuestion.jsは、本の詳細画面「AIに質問」タブの処理。aiContext.js・booksModel.jsを使うため、
        それらより後に読み込む -->
   <script src="js/screens/bookQuestion.js?v=2"></script>
@@ -1740,7 +1744,7 @@
   <script src="js/screens/categorySelect.js?v=28"></script>
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
-  <script src="js/screens/auth.js?v=8"></script>
+  <script src="js/screens/auth.js?v=9"></script>
 </body>
 
 </html>

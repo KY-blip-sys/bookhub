@@ -261,7 +261,7 @@ function renderRecordDetailModal() {
 function buildRecordRow(record, isNovel) {
   const row = document.createElement("li");
   row.className = "record-row";
-  row.addEventListener("click", function () {
+  makeRowClickable(row, function () {
     closeRecordDetail();
     showDetailScreen(record.bookId);
   });

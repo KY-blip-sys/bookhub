@@ -6,8 +6,17 @@
 
 const adContainerEl = document.getElementById("ad-container");
 
+// 広告配信サービス（Google AdSense等）のコードをまだ設置していないため、
+// プラン判定に関わらず常に非表示にしておく。実際の広告コードをindex.htmlの
+// .ad-slot内に設置したら、このフラグをtrueにすればプラン別の出し分けが有効になる
+const ADS_CONFIGURED = false;
+
 function applyAdVisibility(status) {
   if (!adContainerEl) {
+    return;
+  }
+  if (!ADS_CONFIGURED) {
+    adContainerEl.hidden = true;
     return;
   }
   // 状態が未取得の間（起動直後・未ログイン時）は、Freeプラン扱いで広告を表示したままにする

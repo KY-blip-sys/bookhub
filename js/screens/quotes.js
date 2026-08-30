@@ -261,7 +261,7 @@ function buildQuoteCard(quote) {
   }
 
   if (quote.bookId) {
-    li.addEventListener("click", function () {
+    makeRowClickable(li, function () {
       showDetailScreen(quote.bookId);
     });
   } else {

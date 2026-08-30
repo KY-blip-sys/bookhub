@@ -55,15 +55,16 @@ module.exports = async function handler(req, res) {
   }
 
   if (!process.env.OPENAI_API_KEY) {
+    console.error("OPENAI_API_KEYが設定されていません。");
     res.status(500).json({
-      error: "OpenAIの環境変数（OPENAI_API_KEY）がVercelに設定されていません。"
+      error: "AI機能を利用できませんでした。しばらくしてから再度お試しください。"
     });
     return;
   }
 
   const { message, instructions, schema, feature } = req.body || {};
   if (!message || typeof message !== "string") {
-    res.status(400).json({ error: "message（文字列）を指定してください。" });
+    res.status(400).json({ error: "リクエストの内容が正しくありません。" });
     return;
   }
 

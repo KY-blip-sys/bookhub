@@ -60,6 +60,7 @@ function buildReviewSummaryBookCard(book) {
     const ratingEl = document.createElement("p");
     ratingEl.className = "review-summary-book-card-rating";
     ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+    ratingEl.setAttribute("aria-label", "評価5段階中" + review.rating);
     li.appendChild(ratingEl);
   }
 
@@ -151,6 +152,7 @@ function fillReviewSummaryBody(body, book) {
     const ratingEl = document.createElement("p");
     ratingEl.className = "review-rating";
     ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+    ratingEl.setAttribute("aria-label", "評価5段階中" + review.rating);
     reviewCard.appendChild(ratingEl);
 
     if (review.containsSpoiler) {

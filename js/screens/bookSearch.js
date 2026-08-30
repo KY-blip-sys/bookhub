@@ -58,7 +58,7 @@ function resetBookSearch() {
 function buildBookSearchResultCard(result) {
   const li = document.createElement("li");
   li.className = "book-search-result-card";
-  li.addEventListener("click", function () {
+  makeRowClickable(li, function () {
     applyBookSearchResult(result);
   });
 

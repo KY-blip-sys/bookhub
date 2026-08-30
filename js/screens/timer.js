@@ -234,7 +234,7 @@ function notifyTimerFinished() {
   if (typeof Notification !== "undefined" && Notification.permission === "granted") {
     new Notification("読書タイマー終了", { body: "お疲れさまでした！" });
   } else {
-    alert("タイマーが終了しました。お疲れさまでした！");
+    showToast("タイマーが終了しました。お疲れさまでした！");
   }
 
   timerElapsedSecondsForRecord = timerTotalSeconds; // 最後まで読み終えたので、選択していた時間まるごとを記録する

@@ -102,6 +102,7 @@ authForm.addEventListener("submit", async function (event) {
   }
 
   authSubmitButton.disabled = true;
+  authSubmitButton.textContent = authMode === "signup" ? "登録しています…" : "ログインしています…";
   try {
     if (authMode === "signup") {
       // display_nameはprofilesテーブルのトリガー（supabase/ai_credits.sql）が
@@ -138,6 +139,7 @@ authForm.addEventListener("submit", async function (event) {
     showAuthMessage("通信エラーが発生しました。インターネット接続を確認して、もう一度お試しください。", "error");
   } finally {
     authSubmitButton.disabled = false;
+    authSubmitButton.textContent = authMode === "signup" ? "登録する" : "ログイン";
   }
 });
 

@@ -81,7 +81,7 @@ if (settingsSubscriptionButton) {
       location.href = data.url; // Stripe Customer Portalへ遷移する
     } catch (error) {
       console.error("[settings] サブスクリプション管理ページの作成に失敗しました:", error);
-      showToast("通信エラーが発生しました。しばらくしてから再度お試しください。");
+      showToast("通信エラーが発生しました。インターネット接続を確認して、もう一度お試しください。");
       settingsSubscriptionButton.disabled = false;
       settingsSubscriptionButton.textContent = originalText;
     }

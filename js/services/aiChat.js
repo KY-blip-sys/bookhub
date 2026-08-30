@@ -74,7 +74,7 @@ async function sendChatMessage(message, options) {
 
   if (!response.ok) {
     console.error("[aiChat] APIエラー:", { status: response.status, data });
-    const error = new Error(data.error || `AIとの通信に失敗しました。(status: ${response.status})`);
+    const error = new Error(data.error || "AIとの通信に失敗しました。しばらくしてから再度お試しください。");
     if (response.status === 402) {
       error.insufficientCredit = true;
     }

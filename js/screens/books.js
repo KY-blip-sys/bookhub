@@ -89,6 +89,8 @@ function buildBookCoverContent(book, initialClassName) {
     const coverImg = document.createElement("img");
     coverImg.src = book.coverImage;
     coverImg.alt = book.title;
+    coverImg.loading = "lazy";
+    coverImg.decoding = "async";
     return coverImg;
   }
 
@@ -131,7 +133,7 @@ function renderBookList() {
     li.className = "book-card";
     // 「＋ 新しい本を追加」カード（常に先頭）の次から、並び順に沿って少しずつ遅れて現れるようにする
     li.style.setProperty("--stagger-index", index + 1);
-    li.addEventListener("click", function () {
+    makeRowClickable(li, function () {
       showDetailScreen(book.id);
     });
 
@@ -246,7 +248,7 @@ function buildCurrentlyReadingCard(book, staggerIndex) {
   const li = document.createElement("li");
   li.className = "currently-reading-card";
   li.style.setProperty("--stagger-index", staggerIndex || 0);
-  li.addEventListener("click", function () {
+  makeRowClickable(li, function () {
     showDetailScreen(book.id);
   });
 
@@ -312,7 +314,7 @@ function buildCurrentlyReadingStat(label, value) {
 function buildAddBookTriggerCard() {
   const li = document.createElement("li");
   li.className = "book-card add-book-trigger-card";
-  li.addEventListener("click", openBookFormPanel);
+  makeRowClickable(li, openBookFormPanel);
 
   const cover = document.createElement("div");
   cover.className = "book-cover add-book-trigger-cover";

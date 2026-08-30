@@ -50,15 +50,23 @@ function cloudValueToLocalStorageString(value) {
 // insert・update・deleteのSupabase呼び出しを1件送り、エラーがあればconsole.errorに出す
 // （結果を待たない「投げっぱなし」。detailが指定されていれば、エラーメッセージに続けて出す）
 function fireAndForgetCloudWrite(promise, message, detail) {
-  promise.then(function (result) {
-    if (result.error) {
-      if (detail === undefined) {
-        console.error(message, result.error);
-      } else {
-        console.error(message, detail, result.error);
+  promise
+    .then(function (result) {
+      if (result.error) {
+        if (detail === undefined) {
+          console.error(message, result.error);
+        } else {
+          console.error(message, detail, result.error);
+        }
       }
-    }
-  });
+    })
+    .catch(function (error) {
+      if (detail === undefined) {
+        console.error(message, error);
+      } else {
+        console.error(message, detail, error);
+      }
+    });
 }
 
 // 指定したSupabaseテーブルへのinsert・update・deleteを、共通の「投げっぱなし」パターンでまとめる。
@@ -121,6 +129,9 @@ function queueCloudSync(key, value) {
       if (result.error) {
         console.error("クラウドへの保存に失敗しました：", key, result.error);
       }
+    })
+    .catch(function (error) {
+      console.error("クラウドへの保存に失敗しました：", key, error);
     });
 }
 

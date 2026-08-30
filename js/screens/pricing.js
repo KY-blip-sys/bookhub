@@ -10,6 +10,7 @@
 // （?checkout=success/cancel の案内文はjs/screens/auth.jsのhandleCheckoutRedirect参照）。
 
 const pricingCardsEl = document.getElementById("pricing-cards");
+const pricingLoadingEl = document.getElementById("pricing-loading");
 
 let pricingPlansCache = null; // /api/plansの結果（価格・機能は毎回変わらないため、一度取れたら使い回す）
 let currentSubscriptionCache = null; // /api/credits由来のsubscription（status・expiresAt）
@@ -157,7 +158,7 @@ async function handlePlanButtonClick(plan, button) {
     location.href = data.url; // Stripe Checkoutへ遷移する（戻りはjs/screens/auth.jsのhandleCheckoutRedirect参照）
   } catch (error) {
     console.error("[pricing] Checkoutセッションの作成に失敗しました:", error);
-    showToast("通信エラーが発生しました。しばらくしてから再度お試しください。");
+    showToast("通信エラーが発生しました。インターネット接続を確認して、もう一度お試しください。");
     button.disabled = false;
     button.textContent = originalText;
   }
@@ -176,12 +177,15 @@ async function fetchCurrentPlanKey() {
 // 料金プラン画面を開いたときの処理（js/screens/app.jsのgoToNavPageから呼ばれる）
 async function preparePricingScreen() {
   if (!pricingPlansCache) {
+    pricingCardsEl.innerHTML = "";
+    pricingLoadingEl.hidden = false;
     try {
       const response = await fetch("/api/plans");
       const data = await response.json();
       pricingPlansCache = data.plans || [];
     } catch (error) {
       console.error("[pricing] プラン一覧の取得に失敗しました:", error);
+      pricingLoadingEl.hidden = true;
       pricingCardsEl.textContent = "プラン一覧の取得に失敗しました。しばらくしてから再度お試しください。";
       return;
     }
@@ -189,6 +193,7 @@ async function preparePricingScreen() {
 
   const currentPlanKey = await fetchCurrentPlanKey();
 
+  pricingLoadingEl.hidden = true;
   pricingCardsEl.innerHTML = "";
   pricingPlansCache.forEach(function (plan) {
     pricingCardsEl.appendChild(buildPricingCard(plan, currentPlanKey));

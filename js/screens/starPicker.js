@@ -7,6 +7,8 @@
 // onChange(rating): 星をクリックして評価が確定するたびに呼ばれる
 function buildStarPicker(container, initialRating, onChange) {
   container.innerHTML = "";
+  container.setAttribute("role", "radiogroup");
+  container.setAttribute("aria-label", "評価");
 
   let selectedRating = initialRating;
 
@@ -15,6 +17,9 @@ function buildStarPicker(container, initialRating, onChange) {
     starButton.type = "button";
     starButton.className = "star-button";
     starButton.textContent = "★"; // 文字は常に★のまま。色の変化だけで「光っているか」を表す
+    starButton.setAttribute("aria-label", n + "つ星");
+    starButton.setAttribute("role", "radio");
+    starButton.setAttribute("aria-checked", n === initialRating ? "true" : "false");
 
     // マウスを乗せた星までを光らせる（まだ確定はしない）
     starButton.addEventListener("mouseenter", function () {
@@ -41,6 +46,7 @@ function buildStarPicker(container, initialRating, onChange) {
   function highlightStars(count) {
     starButtons.forEach(function (starButton, index) {
       starButton.classList.toggle("star-filled", index < count);
+      starButton.setAttribute("aria-checked", index + 1 === count ? "true" : "false");
     });
   }
 

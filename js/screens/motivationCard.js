@@ -121,7 +121,7 @@ function renderMotivationCarouselFrame() {
 function buildMotivationCardEl(card) {
   const el = document.createElement("div");
   el.className = "motivation-carousel-card";
-  el.addEventListener("click", function () {
+  makeRowClickable(el, function () {
     showDetailScreen(card.book.id);
   });
 

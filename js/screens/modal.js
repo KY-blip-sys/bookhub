@@ -18,3 +18,19 @@ function bindModalDismissal(overlayElement, closeFn) {
     }
   });
 }
+
+// ---------- クリックだけの一覧行をキーボードでも操作できるようにする ----------
+// <li>や<div>にクリックだけを付けた「カード風の行」は、一覧画面のあちこちで同じ形で使われているが、
+// クリックしか付けないとキーボード操作・スクリーンリーダー利用者が選べないため、
+// role="button"・tabindex・Enter/Spaceキーでの操作をここでまとめて付与する。
+function makeRowClickable(element, handler) {
+  element.setAttribute("role", "button");
+  element.tabIndex = 0;
+  element.addEventListener("click", handler);
+  element.addEventListener("keydown", function (event) {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault(); // Spaceキーでページがスクロールしてしまうのを防ぐ
+      handler(event);
+    }
+  });
+}

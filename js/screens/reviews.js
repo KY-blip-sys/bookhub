@@ -171,6 +171,7 @@ function renderBookReview(bookId) {
   const ratingEl = document.createElement("p");
   ratingEl.className = "review-rating";
   ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+  ratingEl.setAttribute("aria-label", "評価5段階中" + review.rating);
   card.appendChild(ratingEl);
 
   if (review.containsSpoiler) {
@@ -258,6 +259,11 @@ function openShareCardModal() {
 
   const review = getReviewForBook(book.id);
   shareCardRating.textContent = review ? "★".repeat(review.rating) + "☆".repeat(5 - review.rating) : "";
+  if (review) {
+    shareCardRating.setAttribute("aria-label", "評価5段階中" + review.rating);
+  } else {
+    shareCardRating.removeAttribute("aria-label");
+  }
 
   // 一言感想：ネタバレ付きのレビューは共有カードに出さない。長い本文は短い引用として区切る
   if (review && review.body && !review.containsSpoiler) {
