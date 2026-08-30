@@ -195,6 +195,11 @@ html.dark-mode .main-content::before {
     padding: 32px 40px;
 }
 
+/* display:flexを直接指定しているぶん、[hidden]属性のデフォルト（display:none）を上書きしてしまうため、明示的に戻す */
+.ad-container[hidden] {
+    display: none;
+}
+
 /* 見出し＋広告カードのひとかたまり。広告そのものではなく、周りのコンテンツと
    同じ「見出し付きのブロック」として並ぶよう、他のセクションと形式を揃える */
 .ad-block {
@@ -1064,7 +1069,11 @@ h1 {
     .ad-container {
         flex-shrink: 1;
         width: 100%;
-        padding: 0 40px 32px;
+        /* 本文の直後に続くと誤タップしやすく境目も分かりにくいため、
+           上に区切り線と余白を入れて「ここから先は広告」と分かるようにする */
+        margin-top: 12px;
+        padding: 28px 40px 32px;
+        border-top: 1px solid var(--color-border);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -1420,6 +1429,11 @@ h1 {
     color: var(--color-text-secondary);
     line-height: 1.6;
     margin-bottom: 16px;
+}
+
+/* バージョン表示のみのカード：下に続く要素が無いので、field-hint共通の下余白は不要 */
+.settings-about-line {
+    margin-bottom: 0 !important;
 }
 
 .settings-row {
@@ -3297,6 +3311,14 @@ html.dark-mode .dashboard-tile::after {
     padding-left: 20px;
 }
 
+/* AI機能についてモーダルは、消費クレジット一覧（.ai-credit-usage-list）をそのまま
+   ここに埋め込んで使う。箇条書きの見た目ではなく、AI画面と同じ「項目名：クレジット数」の
+   一覧として見せたいので、.help-step ulの箇条書きスタイルを打ち消す */
+.help-step .ai-credit-usage-list {
+    list-style: none;
+    padding-left: 0;
+}
+
 .help-step li {
     font-size: 13px;
     line-height: 1.6;
@@ -3304,11 +3326,18 @@ html.dark-mode .dashboard-tile::after {
     margin-bottom: 4px;
 }
 
+.help-step .ai-credit-usage-list li {
+    font-size: var(--font-size-body);
+    color: var(--color-text);
+    margin-bottom: 0;
+}
+
 .help-step li:last-child {
     margin-bottom: 0;
 }
 
-#help-done-button {
+#help-done-button,
+#ai-info-done-button {
     flex-shrink: 0;
     width: 100%;
     background-color: var(--color-accent);
@@ -3316,7 +3345,8 @@ html.dark-mode .dashboard-tile::after {
     border-color: var(--color-accent);
 }
 
-#help-done-button:hover {
+#help-done-button:hover,
+#ai-info-done-button:hover {
     background-color: var(--color-accent-hover);
 }
 
@@ -4200,14 +4230,17 @@ html.dark-mode .dashboard-tile::after {
 
 .quote-card-button-group {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
+/* 読書履歴カード（.history-card-button-group）とタップしやすさの基準を揃える。
+   以前は4px 12px/12pxとかなり小さく、スマホでの誤タップ・反応しない体感の原因になっていた */
 .quote-card-edit-button,
-.quote-card-button-group button {
-    padding: 4px 12px;
-    font-size: 12px;
+.quote-card-button-group button,
+.history-card-button-group button {
+    padding: 8px 14px;
+    font-size: 13px;
     flex-shrink: 0;
 }
 
@@ -4387,13 +4420,7 @@ html.dark-mode .dashboard-tile::after {
 
 .history-card-button-group {
     display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.history-card-button-group button {
-    padding: 4px 12px;
-    font-size: 12px;
+    gap: 8px;
     flex-shrink: 0;
 }
 
@@ -4668,7 +4695,7 @@ html.dark-mode .dashboard-hero-banner {
     }
 
     .ad-container {
-        padding: 0 20px 24px;
+        padding: 24px 20px 24px;
     }
 
     .content-header {
@@ -4694,7 +4721,7 @@ html.dark-mode .dashboard-hero-banner {
     }
 
     .ad-container {
-        padding: 0 16px 18px;
+        padding: 20px 16px 18px;
     }
 
     .content-header {
@@ -5144,6 +5171,33 @@ html.dark-mode .dashboard-hero-banner {
     color: var(--color-danger);
     font-size: var(--font-size-body);
     line-height: 1.6;
+}
+
+/* ---------- AI機能について（js/screens/aiInfo.js）を開くボタン ---------- */
+/* プランに関わらず常に押せるので、主張しすぎない控えめなピル型にする */
+.ai-info-open-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 18px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-meta);
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color var(--transition-fast) var(--ease-standard),
+        color var(--transition-fast) var(--ease-standard),
+        background-color var(--transition-fast) var(--ease-standard);
+}
+
+.ai-info-open-button:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+    background-color: var(--color-accent-soft);
 }
 
 /* ---------- Free・Plusプラン：AI利用不可の案内 ---------- */

@@ -156,6 +156,11 @@ async function onSignedIn(user) {
   authFormSection.hidden = true;
   authLoadingEl.textContent = "データを読み込んでいます…";
 
+  // 現在のプラン・AIクレジット残高をここで一度取得しておく（js/services/planStatus.js）。
+  // 広告表示（js/services/ads.js）はこの結果を待たずに反映され、AI画面・設定画面・料金プラン画面は
+  // 開いたときに改めて最新化されるが、ここで先に取得しておくことで広告の出し分けがログイン直後から効く
+  await fetchPlanStatus();
+
   await pullCloudDataOrMigrate(user.id); // js/services/cloudSync.js
   await initializeBooksFromCloud(user.id); // js/models/booksModel.js：本棚はSupabaseのbooksテーブルから読み込む
   await initializeActionsFromCloud(user.id); // js/models/actionsModel.js：実践・実績はSupabaseのactionsテーブルから読み込む
@@ -173,7 +178,7 @@ async function onSignedIn(user) {
   updateCategorySwitcherUI();
   updateNavVisibility();
 
-  if (!handleCheckoutRedirect()) {
+  if (!handleCheckoutRedirect() && !handlePortalRedirect()) {
     goToNavPage("dashboard");
   }
 
@@ -201,6 +206,25 @@ function handleCheckoutRedirect() {
   } else {
     showToast("決済がキャンセルされました。");
   }
+
+  return true;
+}
+
+// Stripe Customer Portal（サブスクリプション管理）から戻ってきたときの処理
+// （js/screens/settings.jsのsettingsSubscriptionButton参照）。
+// URLの?portal=returnを見て、設定画面へ遷移しつつ案内する。
+// 戻り値：設定画面へ遷移した場合はtrue（呼び出し側でgoToNavPage("dashboard")を省略するため）
+function handlePortalRedirect() {
+  const params = new URLSearchParams(location.search);
+  if (params.get("portal") !== "return") {
+    return false;
+  }
+
+  // 同じURLのままリロードしても再度案内が出ないよう、クエリパラメータだけを取り除く
+  history.replaceState(null, "", location.pathname);
+
+  goToNavPage("settings");
+  showToast("サブスクリプションの管理を終了しました。プランの反映まで少し時間がかかる場合があります。");
 
   return true;
 }

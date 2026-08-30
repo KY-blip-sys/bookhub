@@ -106,11 +106,22 @@ function getPublicFeatureCosts() {
   });
 }
 
+// プランキーから広告表示の要否を返す（Freeプランのみtrue）。
+// 広告表示制御（js/services/ads.js）・料金プラン画面（js/screens/pricing.js）の両方が、
+// このPLAN_CATALOGのadsフィールドを唯一の情報源として使う
+function getPlanAds(planKey) {
+  const plan = PLAN_CATALOG.find(function (p) {
+    return p.key === planKey;
+  });
+  return plan ? plan.ads : true;
+}
+
 module.exports = {
   PLAN_CATALOG,
   MONTHLY_CREDITS,
   AI_ENABLED_PLANS,
   FEATURE_COSTS,
   getFeatureCost,
-  getPublicFeatureCosts
+  getPublicFeatureCosts,
+  getPlanAds
 };

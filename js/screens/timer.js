@@ -340,13 +340,3 @@ timerResetCancelButton.addEventListener("click", function () {
 
 // 最初の表示を整える（ピッカーの項目も、この時点で25分の位置に組み立てておく）
 setTimerDuration(25);
-
-// ▼▼▼ テスト用（あとで削除する）：タイマーを3秒にセットするだけのデバッグボタン ▼▼▼
-document.getElementById("debug-test-timer-button").addEventListener("click", function () {
-  stopTimerInterval();
-  timerTotalSeconds = 3;
-  timerRemainingSeconds = 3;
-  updateTimerDisplay();
-  updateTimerToggleButton();
-});
-// ▲▲▲ テスト用ここまで ▲▲▲

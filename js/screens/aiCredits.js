@@ -11,7 +11,6 @@ const aiCreditCardEl = document.getElementById("ai-credit-card");
 const aiCreditCardPlanEl = document.getElementById("ai-credit-card-plan");
 const aiCreditCardAmountEl = document.getElementById("ai-credit-card-amount");
 const aiCreditProgressBarEl = document.getElementById("ai-credit-progress-bar");
-const aiCreditUsageListEl = document.getElementById("ai-credit-usage-list");
 const aiCreditExplainToggle = document.getElementById("ai-credit-explain-toggle");
 const aiCreditExplainText = document.getElementById("ai-credit-explain-text");
 
@@ -62,20 +61,24 @@ function renderAiCreditCard(status) {
   }
 }
 
+// AI画面のクレジットカード・「AI機能について」モーダルなど、.ai-credit-usage-listクラスを持つ
+// 要素すべてに同じ一覧を描画する（消費クレジットの数値を複数箇所に書き分けない・二重管理しないため）
 function renderAiCreditUsageList(featureCosts) {
-  if (!aiCreditUsageListEl || !featureCosts) {
+  if (!featureCosts) {
     return;
   }
-  aiCreditUsageListEl.innerHTML = "";
-  featureCosts.forEach(function (item) {
-    const li = document.createElement("li");
-    const label = document.createElement("span");
-    label.textContent = item.label;
-    const cost = document.createElement("span");
-    cost.textContent = item.cost + "クレジット";
-    li.appendChild(label);
-    li.appendChild(cost);
-    aiCreditUsageListEl.appendChild(li);
+  document.querySelectorAll(".ai-credit-usage-list").forEach(function (listEl) {
+    listEl.innerHTML = "";
+    featureCosts.forEach(function (item) {
+      const li = document.createElement("li");
+      const label = document.createElement("span");
+      label.textContent = item.label;
+      const cost = document.createElement("span");
+      cost.textContent = item.cost + "クレジット";
+      li.appendChild(label);
+      li.appendChild(cost);
+      listEl.appendChild(li);
+    });
   });
 }
 
@@ -119,31 +122,16 @@ function applyAiAccessState(status) {
 
 // AI画面・本についての質問タブを開いたときなど、最新の状態を取りに行って表示する
 // （消費はしない。/api/credits参照。月替わりのリセットはここで反映される）
+// 実際の取得はjs/services/planStatus.jsの共通窓口（fetchPlanStatus）に任せる
+// （他のAI関連APIと同じく、ここで個別にfetch・トークン取得を行わない）
 async function refreshAiAccessStatus() {
-  if (!window.sb) {
-    return;
-  }
-  const { data: sessionData } = await window.sb.auth.getSession();
-  const accessToken = sessionData.session ? sessionData.session.access_token : null;
-  if (!accessToken) {
-    return;
-  }
-
-  try {
-    const response = await fetch("/api/credits", {
-      headers: { Authorization: "Bearer " + accessToken }
-    });
-    const data = await response.json();
-    if (response.ok && data.credits) {
-      applyAiAccessState(data.credits);
-      renderAiCreditUsageList(data.featureCosts);
-    } else {
-      console.error("[aiCredits] 残高の取得に失敗しました:", data);
-    }
-  } catch (error) {
-    console.error("[aiCredits] 残高の取得中にエラーが発生しました:", error);
-  }
+  const status = await fetchPlanStatus();
+  renderAiCreditUsageList(status.featureCosts);
 }
+
+// アプリのどこでプラン・クレジットが更新されても（ログイン直後・AI利用後・料金プラン画面での確認後など）、
+// AI画面・「AIに質問」タブの表示は自動で最新化する
+onPlanStatusChange(applyAiAccessState);
 
 // 「AIクレジットとは？」の開閉
 if (aiCreditExplainToggle && aiCreditExplainText) {

@@ -21,7 +21,7 @@
 //   POST /api/chat に
 //   { "message": "...", "feature": "chat" }
 //   を、Authorizationヘッダー（"Bearer " + Supabaseのアクセストークン）付きで送ると
-//   { "reply": "...", "credits": { "plan": "premium", "remaining": 995, "monthlyLimit": 1000, "aiEnabled": true } }
+//   { "reply": "...", "credits": { "plan": "premium", "remaining": 995, "monthlyLimit": 1000, "aiEnabled": true, "ads": false } }
 //   のようにOpenAIの返答と最新のクレジット残高が返る。
 //   Free・PlusプランなどAIが使えないプランの場合は403、クレジット残高不足の場合は402が返る
 //   （どちらもOpenAI APIは呼ばれない）。
@@ -36,7 +36,7 @@
 
 const OpenAI = require("openai");
 const { getAuthenticatedUser } = require("./_lib/supabaseUser");
-const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getFeatureCost } = require("./_lib/aiCredits");
+const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getFeatureCost, getPlanAds } = require("./_lib/aiCredits");
 
 let client = null;
 function getClient() {
@@ -105,7 +105,8 @@ module.exports = async function handler(req, res) {
           plan: checkResult.plan,
           remaining: checkResult.remaining,
           monthlyLimit: checkResult.monthlyLimit,
-          aiEnabled: false
+          aiEnabled: false,
+          ads: getPlanAds(checkResult.plan)
         }
       });
       return;
@@ -118,7 +119,8 @@ module.exports = async function handler(req, res) {
           plan: checkResult.plan,
           remaining: checkResult.remaining,
           monthlyLimit: checkResult.monthlyLimit,
-          aiEnabled: true
+          aiEnabled: true,
+          ads: getPlanAds(checkResult.plan)
         }
       });
       return;
@@ -170,7 +172,8 @@ module.exports = async function handler(req, res) {
         plan: checkResult.plan,
         remaining: deductResult && deductResult.ok ? deductResult.remaining : checkResult.remaining,
         monthlyLimit: checkResult.monthlyLimit,
-        aiEnabled: true
+        aiEnabled: true,
+        ads: getPlanAds(checkResult.plan)
       }
     });
   } catch (error) {

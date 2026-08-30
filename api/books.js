@@ -15,6 +15,55 @@
 
 const GOOGLE_BOOKS_ENDPOINT = "https://www.googleapis.com/books/v1/volumes";
 
+// 全角の英数字・スペースを半角に変換する（日本語IMEで検索語を打つと全角になりがちなため、
+// 半角前提のISBN判定・Google Books側の検索一致率の両方を改善する）
+function normalizeQueryText(text) {
+  return text
+    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, function (char) {
+      return String.fromCharCode(char.charCodeAt(0) - 0xfee0);
+    })
+    .replace(/　/g, " ")
+    .trim();
+}
+
+// ISBN検索かどうかを判定する（ハイフン・スペース除去後、10桁または13桁の数字。
+// 末尾のXはISBN-10のチェックデジットとして許容する）
+function extractIsbnDigits(query) {
+  const stripped = query.replace(/[-\s]/g, "");
+  if (/^\d{9}[\dXx]$/.test(stripped) || /^\d{13}$/.test(stripped)) {
+    return stripped.toUpperCase();
+  }
+  return null;
+}
+
+// キーワードをそのまま渡すと、日本語の区切りが原因で0件になることがある。
+// 空白区切りの単語をOR条件にして、どれか1語でも一致すれば拾えるようにした、緩めのクエリを組み立てる
+// （タイトルの一部だけ・うろ覚えの単語での検索に強くするため）
+function buildLooseQuery(query) {
+  const words = query.split(/\s+/).filter(Boolean);
+  if (words.length < 2) {
+    return null;
+  }
+  return words.join(" OR ");
+}
+
+async function fetchGoogleBooksVolumes(q, apiKey) {
+  const url =
+    GOOGLE_BOOKS_ENDPOINT +
+    "?maxResults=24&orderBy=relevance&q=" + encodeURIComponent(q) +
+    "&key=" + encodeURIComponent(apiKey);
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorBody = await response.text();
+    const error = new Error("Google Books APIエラー: " + response.status + " " + errorBody);
+    error.status = response.status;
+    throw error;
+  }
+  const data = await response.json();
+  return data.items || [];
+}
+
 // Google Books APIの生データ1件を、このアプリで使う共通の形に変換する
 function normalizeVolume(item) {
   const info = item.volumeInfo || {};
@@ -61,28 +110,39 @@ module.exports = async function handler(req, res) {
     return;
   }
 
+  const apiKey = process.env.GOOGLE_BOOKS_API_KEY;
+  const normalizedQuery = normalizeQueryText(q);
+  const isbnDigits = extractIsbnDigits(normalizedQuery);
+
   try {
-    const url =
-      GOOGLE_BOOKS_ENDPOINT +
-      "?maxResults=20&q=" + encodeURIComponent(q.trim()) +
-      "&key=" + encodeURIComponent(process.env.GOOGLE_BOOKS_API_KEY);
+    let items;
 
-    const response = await fetch(url);
+    if (isbnDigits) {
+      // ISBNらしき入力は、あいまい検索よりも「その本をピンポイントで当てる」ことを優先する
+      items = await fetchGoogleBooksVolumes("isbn:" + isbnDigits, apiKey);
+    } else {
+      // 通常検索：タイトル・著者名どちらで打っても引っかかるよう、フィールド指定はせず全文検索にする
+      items = await fetchGoogleBooksVolumes(normalizedQuery, apiKey);
 
-    if (!response.ok) {
-      console.error("Google Books APIエラー:", response.status, await response.text());
+      // 0件のときは、単語区切りをOR条件にした緩い検索で再試行する
+      // （複数単語のうち1語だけ違う・うろ覚えのタイトルでも候補を出せるようにするため）
+      if (items.length === 0) {
+        const looseQuery = buildLooseQuery(normalizedQuery);
+        if (looseQuery) {
+          items = await fetchGoogleBooksVolumes(looseQuery, apiKey);
+        }
+      }
+    }
+
+    res.status(200).json({ items: items.map(normalizeVolume) });
+  } catch (error) {
+    console.error("本の検索処理でエラーが発生しました:", error);
+    if (error.status) {
       res.status(502).json({
         error: "Google Books APIとの通信でエラーが発生しました。しばらくしてから再試行してください。"
       });
       return;
     }
-
-    const data = await response.json();
-    const items = (data.items || []).map(normalizeVolume);
-
-    res.status(200).json({ items });
-  } catch (error) {
-    console.error("本の検索処理でエラーが発生しました:", error);
     res.status(500).json({
       error: "本の検索中にエラーが発生しました。しばらくしてから再試行してください。"
     });

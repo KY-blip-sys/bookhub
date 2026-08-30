@@ -64,10 +64,12 @@ async function sendChatMessage(message, options) {
     console.error("[aiChat] レスポンスをJSONとして解析できませんでした:", parseError);
   }
 
-  // 最新のAIクレジット残高・AI利用可否が返ってきていれば（成功時・エラー時のどちらでも）、画面の表示を更新する
-  // （js/screens/aiCredits.js。読み込まれていない画面から呼ばれる可能性もあるため存在確認する）
-  if (data.credits && typeof applyAiAccessState === "function") {
-    applyAiAccessState(data.credits);
+  // 最新のAIクレジット残高・AI利用可否が返ってきていれば（成功時・エラー時のどちらでも）、
+  // アプリ全体で共有している状態（js/services/planStatus.js）に反映する。
+  // AI画面の表示更新（js/screens/aiCredits.js）・広告表示（js/services/ads.js）・設定画面の表示は、
+  // どれもplanStatus.jsのonPlanStatusChangeで自動的に追従する
+  if (data.credits && typeof setPlanStatus === "function") {
+    setPlanStatus(data.credits);
   }
 
   if (!response.ok) {

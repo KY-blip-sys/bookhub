@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=48">
+  <link rel="stylesheet" href="css/style.css?v=49">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -400,7 +400,7 @@
               <!-- 本の検索（Google Books API・/api/books経由）。選ぶと下のフォームへ自動入力される -->
               <div class="book-search-section">
                 <div class="book-search-bar">
-                  <input type="text" id="book-search-input" class="book-search-input" placeholder="タイトル・著者で検索">
+                  <input type="text" id="book-search-input" class="book-search-input" placeholder="タイトル・著者名・ISBNで検索">
                   <button type="button" id="book-search-button" class="book-search-button">検索</button>
                 </div>
 
@@ -410,7 +410,9 @@
                 </div>
 
                 <p class="ai-error-message book-search-error" id="book-search-error" hidden></p>
-                <p class="book-search-empty" id="book-search-empty" hidden>該当する本が見つかりませんでした</p>
+                <p class="book-search-empty" id="book-search-empty" hidden>
+                  該当する本が見つかりませんでした。別のキーワードやISBNで試すか、下から手動で入力できます。
+                </p>
 
                 <ul class="book-search-results" id="book-search-results" hidden></ul>
 
@@ -601,10 +603,6 @@
                   <button type="button" id="timer-toggle-button" class="timer-primary-button">スタート</button>
                   <button type="button" id="timer-reset-button" class="timer-secondary-button">リセット</button>
                 </div>
-
-                <!-- ▼▼▼ テスト用（あとで削除する）：タイマーを3秒にセットするだけのデバッグボタン ▼▼▼ -->
-                <button type="button" id="debug-test-timer-button" class="timer-secondary-button">🧪 3秒テスト</button>
-                <!-- ▲▲▲ テスト用ここまで ▲▲▲ -->
               </div>
             </div>
 
@@ -1139,6 +1137,11 @@
         <!-- AI画面：/api/chat（Vercel Function・共通のOpenAI呼び出しAPI）を使ったAI機能をまとめる。
              機能ごとにタブで切り替える（js/screens/aiTabs.js） -->
         <div id="screen-ai" class="page" hidden>
+          <!-- AI機能全体の説明（js/screens/aiInfo.js）。プランに関わらず、誰でも中身を確認できるようにする -->
+          <button type="button" id="ai-info-open-button" class="ai-info-open-button">
+            ℹ️ AI機能について・AIクレジットとは
+          </button>
+
           <!-- Free・Plusプラン：AI機能は利用不可（js/screens/aiCredits.js） -->
           <div id="ai-locked-notice" class="ai-locked-notice" hidden>
             <p>AI機能はPremiumプラン以上で利用できます。</p>
@@ -1331,6 +1334,21 @@
             <button type="button" id="logout-button" class="danger-button">ログアウト</button>
           </div>
 
+          <!-- プラン：現在のプラン・残りAIクレジット。実際の取得・判定はjs/services/planStatus.jsが行い、
+               js/screens/settings.jsは表示するだけ -->
+          <div class="settings-card">
+            <h3>プラン</h3>
+            <p class="field-hint" id="settings-plan-name"></p>
+            <p class="field-hint" id="settings-plan-credits" hidden></p>
+            <!-- 毎月1日にAIクレジットが付与される仕様（supabase/ai_credits.sql参照）に基づき、
+                 js/screens/settings.jsが「次の1日」の日付を計算して表示するだけ（サーバー通信はしない） -->
+            <p class="field-hint" id="settings-plan-next-credit" hidden></p>
+            <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
+            <!-- 契約中のみ表示。押すとStripe Customer Portalへ遷移し、解約・支払い方法変更・
+                 プラン変更ができる（js/screens/settings.js参照） -->
+            <button type="button" id="settings-subscription-button" class="dashed-add-button" hidden>サブスクリプション管理</button>
+          </div>
+
           <div class="settings-card">
             <h3>1日の読書目標時間</h3>
             <p class="field-hint">
@@ -1341,6 +1359,12 @@
               <button type="button" id="save-daily-goal-minutes-button">保存</button>
             </div>
             <p id="daily-goal-minutes-saved-note" class="field-hint" hidden>保存しました。</p>
+          </div>
+
+          <!-- このアプリについて：バージョン表示のみ（更新時はこことpackage.jsonのversionを合わせて直す） -->
+          <div class="settings-card">
+            <h3>このアプリについて</h3>
+            <p class="field-hint settings-about-line">BookHub <span id="app-version-text"></span></p>
           </div>
         </div>
 
@@ -1535,7 +1559,76 @@
         </section>
       </div>
 
-      <button type="button" id="help-done-button">わかった！</button>
+      <button type="button" id="help-done-button">閉じる</button>
+    </div>
+  </div>
+
+  <!-- AI機能について・AIクレジットの説明モーダル（js/screens/aiInfo.js）。
+       help-modal-card・help-stepなど使い方モーダルと同じクラスを使い、見た目を揃える -->
+  <div id="ai-info-modal" class="modal-overlay" hidden>
+    <div class="modal-card help-modal-card">
+      <div class="help-modal-header">
+        <h3>🤖 AI機能について</h3>
+        <button type="button" id="ai-info-close-button" class="modal-close-button" aria-label="閉じる">×</button>
+      </div>
+
+      <div class="help-modal-body">
+        <section class="help-step">
+          <h4>💬 AIチャット</h4>
+          <ul>
+            <li>読みたい本の相談、感想の言語化、読書の悩みなど、AIと自由に会話できます。</li>
+            <li>これまでの読書記録をもとに、あなたに合わせた返答をします。</li>
+          </ul>
+        </section>
+
+        <section class="help-step">
+          <h4>✨ AI本推薦</h4>
+          <ul>
+            <li>これまでの読書傾向から、次に読むとよさそうな本をAIが提案します。</li>
+            <li>「実用書が続いたので小説も」のように、バランスを見た提案もします。</li>
+          </ul>
+        </section>
+
+        <section class="help-step">
+          <h4>🧾 AI要約</h4>
+          <ul>
+            <li>読書メモや感想をもとに、3行要約・学んだこと・明日から実践できることをAIがまとめます。</li>
+            <li>読み返す時間がないときや、内容を人に説明したいときに便利です。</li>
+          </ul>
+        </section>
+
+        <section class="help-step">
+          <h4>📝 AIクイズ・🧭 学習コーチ</h4>
+          <ul>
+            <li>AIクイズは、読んだ本の内容が身についているかを、AIが作る問題で確認できます。</li>
+            <li>学習コーチは、最近読んだジャンルの傾向や偏りを分析し、次のおすすめジャンルや学習アドバイスを提案します。</li>
+          </ul>
+        </section>
+
+        <section class="help-step">
+          <h4>🪙 AIクレジットとは</h4>
+          <ul>
+            <li>AI機能を1回使うたびに、機能ごとに決まった数の「AIクレジット」を消費します。</li>
+            <li>プランに応じた上限まで、毎月1日に自動で満タンに付与し直されます（付与月をまたいで繰り越すことはできません）。</li>
+            <li>残高が足りない状態でAI機能を使おうとすると、その回は実行されず、不足の案内とプランアップグレードへの案内が表示されます（消費は成功した回だけ行われます）。</li>
+          </ul>
+        </section>
+
+        <section class="help-step">
+          <h4>📊 機能ごとの消費クレジット</h4>
+          <ul class="ai-credit-usage-list"></ul>
+        </section>
+
+        <section class="help-step">
+          <h4>Premium と Pro の違い</h4>
+          <ul>
+            <li>使えるAI機能そのものはPremium・Proで同じです。</li>
+            <li>違いはAIクレジットの月間上限だけです（Premiumは1,000、Proは3,000）。AIをたくさん使いたい方はProがおすすめです。</li>
+          </ul>
+        </section>
+      </div>
+
+      <button type="button" id="ai-info-done-button">閉じる</button>
     </div>
   </div>
 
@@ -1580,6 +1673,12 @@
 
   <!-- Supabase（ログイン・クラウド保存）のクライアントライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <!-- planStatus.jsは、現在のプラン・AIクレジット残高をアプリ全体で共有するための唯一の取得窓口。
+       ads.js・aiChat.js（このあと）を含め、他のどのファイルよりも先に読み込む -->
+  <script src="js/services/planStatus.js?v=1"></script>
+  <!-- ads.jsは、planStatus.jsが取得した状態を見て広告エリアの表示・非表示を切り替えるだけの
+       共通処理。#ad-containerはこのタグより前のbody内に存在する -->
+  <script src="js/services/ads.js?v=1"></script>
   <script src="js/services/cloudSync.js?v=7"></script>
   <script src="js/services/aiChat.js?v=5"></script>
   <script src="js/services/googleBooks.js?v=1"></script>
@@ -1609,7 +1708,7 @@
   <script src="js/screens/books.js?v=32"></script>
   <script src="js/screens/bookSearch.js?v=1"></script>
   <script src="js/screens/progress.js?v=24"></script>
-  <script src="js/screens/timer.js?v=25"></script>
+  <script src="js/screens/timer.js?v=26"></script>
   <script src="js/screens/records.js?v=26"></script>
   <script src="js/screens/allRecords.js?v=24"></script>
   <script src="js/screens/stats.js?v=26"></script>
@@ -1618,8 +1717,9 @@
   <script src="js/screens/reviewSummary.js?v=24"></script>
   <script src="js/screens/quotes.js?v=25"></script>
   <script src="js/screens/motivationCard.js?v=24"></script>
-  <script src="js/screens/settings.js?v=24"></script>
+  <script src="js/screens/settings.js?v=25"></script>
   <script src="js/screens/help.js?v=24"></script>
+  <script src="js/screens/aiInfo.js?v=1"></script>
   <script src="js/screens/aiChat.js?v=3"></script>
   <script src="js/screens/aiRecommend.js?v=3"></script>
   <script src="js/screens/aiQuiz.js?v=3"></script>
@@ -1634,13 +1734,13 @@
   <!-- bookQuestion.jsは、本の詳細画面「AIに質問」タブの処理。aiContext.js・booksModel.jsを使うため、
        それらより後に読み込む -->
   <script src="js/screens/bookQuestion.js?v=2"></script>
-  <script src="js/screens/app.js?v=31"></script>
+  <script src="js/screens/app.js?v=32"></script>
   <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
        goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
   <script src="js/screens/categorySelect.js?v=28"></script>
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
-  <script src="js/screens/auth.js?v=7"></script>
+  <script src="js/screens/auth.js?v=8"></script>
 </body>
 
 </html>

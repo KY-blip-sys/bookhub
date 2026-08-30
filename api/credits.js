@@ -14,13 +14,13 @@
 // 呼び出し方：
 //   GET /api/credits を、Authorizationヘッダー（"Bearer " + Supabaseのアクセストークン）付きで送ると
 //   {
-//     "credits": { "plan": "premium", "remaining": 820, "monthlyLimit": 1000, "aiEnabled": true },
+//     "credits": { "plan": "premium", "remaining": 820, "monthlyLimit": 1000, "aiEnabled": true, "ads": false },
 //     "featureCosts": [{ "feature": "chat", "label": "AIチャット", "cost": 5 }, ...],
 //     "subscription": { "status": "active", "expiresAt": "2026-09-30T00:00:00.000Z" } // 未契約ならnull
 //   } のような残高・消費クレジット一覧・契約状況が返る。
 
 const { getAuthenticatedUser } = require("./_lib/supabaseUser");
-const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getPublicFeatureCosts } = require("./_lib/aiCredits");
+const { MONTHLY_CREDITS, AI_ENABLED_PLANS, getPublicFeatureCosts, getPlanAds } = require("./_lib/aiCredits");
 
 module.exports = async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
@@ -58,7 +58,8 @@ module.exports = async function handler(req, res) {
       plan: data.plan,
       remaining: data.remaining,
       monthlyLimit: data.monthlyLimit,
-      aiEnabled: data.aiEnabled
+      aiEnabled: data.aiEnabled,
+      ads: getPlanAds(data.plan)
     },
     featureCosts: getPublicFeatureCosts(),
     subscription: subscriptionRow

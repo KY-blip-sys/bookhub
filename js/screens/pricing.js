@@ -164,33 +164,13 @@ async function handlePlanButtonClick(plan, button) {
 }
 
 // 今ログインしているユーザーの現在のプランを取得する（未取得・未ログイン時は"free"扱い）。
-// 合わせてcurrentSubscriptionCache（次回更新日・解約予定の表示用）も更新する
+// 合わせてcurrentSubscriptionCache（次回更新日・解約予定の表示用）も更新する。
+// 実際の取得はjs/services/planStatus.jsの共通窓口（fetchPlanStatus）に任せる
+// （他の画面と同じく、ここで個別にfetch・トークン取得を行わない）
 async function fetchCurrentPlanKey() {
-  currentSubscriptionCache = null;
-
-  if (!window.sb) {
-    return "free";
-  }
-  const { data: sessionData } = await window.sb.auth.getSession();
-  const accessToken = sessionData.session ? sessionData.session.access_token : null;
-  if (!accessToken) {
-    return "free";
-  }
-
-  try {
-    const response = await fetch("/api/credits", {
-      headers: { Authorization: "Bearer " + accessToken }
-    });
-    const data = await response.json();
-    if (!response.ok || !data.credits) {
-      return "free";
-    }
-    currentSubscriptionCache = data.subscription || null;
-    return data.credits.plan;
-  } catch (error) {
-    console.error("[pricing] 現在のプランの取得に失敗しました:", error);
-    return "free";
-  }
+  const status = await fetchPlanStatus();
+  currentSubscriptionCache = status.subscription || null;
+  return status.plan;
 }
 
 // 料金プラン画面を開いたときの処理（js/screens/app.jsのgoToNavPageから呼ばれる）

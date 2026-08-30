@@ -103,6 +103,14 @@ function showDetailTab(tabName) {
     detailTabPanels[key].hidden = key !== tabName;
   });
 
+  // 「記録・タイマー」タブから離れるときは、記録フォーム（js/screens/records.js）を閉じておく。
+  // 閉じないと、パネル自体はhiddenで隠れていてもフォーム自身のhiddenは変わらないままなので、
+  // 他のタブを見てから「記録・タイマー」タブに戻ったときに、タイマー終了時のフォームが
+  // 勝手に再表示されてしまう（本を開き直したときのhideRecordForm()と同じ扱いに揃える）
+  if (tabName !== "record") {
+    hideRecordForm();
+  }
+
   if (tabName === "aiQuestion") {
     prepareBookQuestionTab(currentBookId); // js/screens/bookQuestion.js
   }
@@ -397,6 +405,9 @@ function goToNavPage(navKey) {
   }
   if (navKey === "pricing") {
     preparePricingScreen(); // pricing.js
+  }
+  if (navKey === "settings") {
+    prepareSettingsScreen(); // settings.js
   }
 }
 
