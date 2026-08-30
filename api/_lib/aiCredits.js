@@ -108,8 +108,13 @@ function getPublicFeatureCosts() {
 
 // プランキーから広告表示の要否を返す（Freeプランのみtrue）。
 // 広告表示制御（js/services/ads.js）・料金プラン画面（js/screens/pricing.js）の両方が、
-// このPLAN_CATALOGのadsフィールドを唯一の情報源として使う
+// このPLAN_CATALOGのadsフィールドを唯一の情報源として使う。
+// 'developer'（supabase/developer_mode.sqlのget_ai_credit_status・check_ai_creditが返すplan）は
+// PLAN_CATALOGに存在しないプラン外の特別扱いのため、ここで明示的に「広告なし」として扱う
 function getPlanAds(planKey) {
+  if (planKey === "developer") {
+    return false;
+  }
   const plan = PLAN_CATALOG.find(function (p) {
     return p.key === planKey;
   });

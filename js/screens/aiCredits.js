@@ -20,7 +20,9 @@ const aiCreditInsufficientBannerEl = document.getElementById("ai-credit-insuffic
 // 本の詳細画面「AIに質問」タブ
 const bookQuestionLockedNoticeEl = document.getElementById("book-question-locked-notice");
 
-const PLAN_DISPLAY_LABELS = { free: "Free", plus: "Plus", premium: "Premium", pro: "Pro" };
+// developerはsupabase/developer_mode.sqlのget_ai_credit_status・check_ai_creditが返す特別なplan値
+// （実際のprofiles.planではない。開発者アカウント＝profiles.is_developer=trueのユーザー用の表示ラベル）
+const PLAN_DISPLAY_LABELS = { free: "Free", plus: "Plus", premium: "Premium", pro: "Pro", developer: "Developer" };
 
 function formatPlanLabel(planKey) {
   return PLAN_DISPLAY_LABELS[planKey] || planKey;
