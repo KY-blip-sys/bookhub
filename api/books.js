@@ -5,6 +5,11 @@
 // フロントエンドはGoogle Books APIへ直接アクセスせず、必ずこのエンドポイント経由で検索する
 // （js/services/googleBooks.jsのsearchGoogleBooks参照）。
 //
+// Google Books APIが503（backendError）を返し続ける場合に備えて、
+// 指数バックオフでのリトライ→Open Library APIへのフォールバック→
+// それでも失敗したら0件の検索結果を返す、という3段構えにしている
+// （ユーザーには常に「検索結果」を返し、サーバーエラーを見せない）。
+//
 // 必要なVercelの環境変数：
 //   GOOGLE_BOOKS_API_KEY … Google Books APIのAPIキー
 //
@@ -14,6 +19,22 @@
 //   のような検索結果が返る。
 
 const GOOGLE_BOOKS_ENDPOINT = "https://www.googleapis.com/books/v1/volumes";
+const OPEN_LIBRARY_ENDPOINT = "https://openlibrary.org/search.json";
+
+// country省略時、Google側はリクエスト元IPから国を自動判定するが、Vercelのサーバーレス関数が使う
+// クラウドIPはこの自動判定に失敗しやすく、503 backendError（Googleのバックエンド内部エラー）の
+// 原因になることが確認されている。country を明示指定してIPベース判定を回避する
+const GOOGLE_BOOKS_COUNTRY = "JP";
+
+// Google Books APIが503を返したときのリトライ回数・待ち時間（指数バックオフ）
+const GOOGLE_BOOKS_MAX_RETRIES = 3;
+const GOOGLE_BOOKS_RETRY_BASE_DELAY_MS = 300;
+
+function sleep(ms) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, ms);
+  });
+}
 
 // 全角の英数字・スペースを半角に変換する（日本語IMEで検索語を打つと全角になりがちなため、
 // 半角前提のISBN判定・Google Books側の検索一致率の両方を改善する）
@@ -47,11 +68,8 @@ function buildLooseQuery(query) {
   return words.join(" OR ");
 }
 
-// country省略時、Google側はリクエスト元IPから国を自動判定するが、Vercelのサーバーレス関数が使う
-// クラウドIPはこの自動判定に失敗しやすく、503 backendError（Googleのバックエンド内部エラー）の
-// 原因になることが確認されている。country を明示指定してIPベース判定を回避する
-const GOOGLE_BOOKS_COUNTRY = "JP";
-
+// Google Books APIを1回呼ぶ。503（backendError）のときだけ、指数バックオフしながら
+// 最大GOOGLE_BOOKS_MAX_RETRIES回リトライする（503以外のエラーは即座に投げる）
 async function fetchGoogleBooksVolumes(q, apiKey) {
   const url =
     GOOGLE_BOOKS_ENDPOINT +
@@ -59,15 +77,28 @@ async function fetchGoogleBooksVolumes(q, apiKey) {
     "&country=" + encodeURIComponent(GOOGLE_BOOKS_COUNTRY) +
     "&key=" + encodeURIComponent(apiKey);
 
-  const response = await fetch(url);
-  if (!response.ok) {
+  for (let attempt = 0; attempt <= GOOGLE_BOOKS_MAX_RETRIES; attempt++) {
+    const response = await fetch(url);
+
+    if (response.ok) {
+      const data = await response.json();
+      return data.items || [];
+    }
+
     const errorBody = await response.text();
     const error = new Error("Google Books APIエラー: " + response.status + " " + errorBody);
     error.status = response.status;
-    throw error;
+
+    const canRetry = response.status === 503 && attempt < GOOGLE_BOOKS_MAX_RETRIES;
+    if (!canRetry) {
+      throw error;
+    }
+
+    await sleep(GOOGLE_BOOKS_RETRY_BASE_DELAY_MS * Math.pow(2, attempt));
   }
-  const data = await response.json();
-  return data.items || [];
+
+  // ここには到達しない（ループ内で必ずreturnかthrowする）
+  throw new Error("Google Books APIへのリクエストに失敗しました。");
 }
 
 // Google Books APIの生データ1件を、このアプリで使う共通の形に変換する
@@ -93,6 +124,86 @@ function normalizeVolume(item) {
     coverImage: thumbnail ? thumbnail.replace("http://", "https://") : null,
     isbn: (isbn13 || isbn10 || {}).identifier || ""
   };
+}
+
+// Google Books APIでの検索本体：ISBN検索 or 通常検索（0件なら緩いOR検索で再試行）
+async function searchGoogleBooks(normalizedQuery, isbnDigits, apiKey) {
+  let items;
+
+  if (isbnDigits) {
+    // ISBNらしき入力は、あいまい検索よりも「その本をピンポイントで当てる」ことを優先する
+    items = await fetchGoogleBooksVolumes("isbn:" + isbnDigits, apiKey);
+  } else {
+    // 通常検索：タイトル・著者名どちらで打っても引っかかるよう、フィールド指定はせず全文検索にする
+    items = await fetchGoogleBooksVolumes(normalizedQuery, apiKey);
+
+    // 0件のときは、単語区切りをOR条件にした緩い検索で再試行する
+    // （複数単語のうち1語だけ違う・うろ覚えのタイトルでも候補を出せるようにするため）
+    if (items.length === 0) {
+      const looseQuery = buildLooseQuery(normalizedQuery);
+      if (looseQuery) {
+        items = await fetchGoogleBooksVolumes(looseQuery, apiKey);
+      }
+    }
+  }
+
+  return items.map(normalizeVolume);
+}
+
+// Open Library Search APIを1回呼ぶ（Google Books APIが失敗したときのフォールバック用）
+async function fetchOpenLibraryDocs(q) {
+  const url = OPEN_LIBRARY_ENDPOINT + "?limit=24&q=" + encodeURIComponent(q);
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    const errorBody = await response.text();
+    const error = new Error("Open Library APIエラー: " + response.status + " " + errorBody);
+    error.status = response.status;
+    throw error;
+  }
+  const data = await response.json();
+  return data.docs || [];
+}
+
+// Open Library APIの生データ1件を、Google Books版と同じ形に変換する
+function normalizeOpenLibraryDoc(doc) {
+  const isbnList = doc.isbn || [];
+  const isbn13 = isbnList.find(function (code) {
+    return code.length === 13;
+  });
+  const isbn10 = isbnList.find(function (code) {
+    return code.length === 10;
+  });
+
+  return {
+    id: doc.key || "",
+    title: doc.title || "",
+    author: (doc.author_name || []).join("、"),
+    publisher: (doc.publisher || [])[0] || "",
+    publishedDate: doc.first_publish_year ? String(doc.first_publish_year) : "",
+    pageCount: doc.number_of_pages_median || null,
+    coverImage: doc.cover_i ? "https://covers.openlibrary.org/b/id/" + doc.cover_i + "-L.jpg" : null,
+    isbn: isbn13 || isbn10 || ""
+  };
+}
+
+// Open Library APIでの検索本体：Google Books版と同じ順序（ISBN検索 or 通常検索→0件なら緩いOR検索）
+async function searchOpenLibrary(normalizedQuery, isbnDigits) {
+  let docs;
+
+  if (isbnDigits) {
+    docs = await fetchOpenLibraryDocs("isbn:" + isbnDigits);
+  } else {
+    docs = await fetchOpenLibraryDocs(normalizedQuery);
+    if (docs.length === 0) {
+      const looseQuery = buildLooseQuery(normalizedQuery);
+      if (looseQuery) {
+        docs = await fetchOpenLibraryDocs(looseQuery);
+      }
+    }
+  }
+
+  return docs.map(normalizeOpenLibraryDoc);
 }
 
 module.exports = async function handler(req, res) {
@@ -121,36 +232,23 @@ module.exports = async function handler(req, res) {
   const isbnDigits = extractIsbnDigits(normalizedQuery);
 
   try {
-    let items;
+    const items = await searchGoogleBooks(normalizedQuery, isbnDigits, apiKey);
+    res.status(200).json({ items: items });
+    return;
+  } catch (googleError) {
+    console.error(
+      "Google Books APIでの検索に失敗したため、Open Library APIへフォールバックします:",
+      googleError
+    );
+  }
 
-    if (isbnDigits) {
-      // ISBNらしき入力は、あいまい検索よりも「その本をピンポイントで当てる」ことを優先する
-      items = await fetchGoogleBooksVolumes("isbn:" + isbnDigits, apiKey);
-    } else {
-      // 通常検索：タイトル・著者名どちらで打っても引っかかるよう、フィールド指定はせず全文検索にする
-      items = await fetchGoogleBooksVolumes(normalizedQuery, apiKey);
-
-      // 0件のときは、単語区切りをOR条件にした緩い検索で再試行する
-      // （複数単語のうち1語だけ違う・うろ覚えのタイトルでも候補を出せるようにするため）
-      if (items.length === 0) {
-        const looseQuery = buildLooseQuery(normalizedQuery);
-        if (looseQuery) {
-          items = await fetchGoogleBooksVolumes(looseQuery, apiKey);
-        }
-      }
-    }
-
-    res.status(200).json({ items: items.map(normalizeVolume) });
-  } catch (error) {
-    console.error("本の検索処理でエラーが発生しました:", error);
-    if (error.status) {
-      res.status(502).json({
-        error: "Google Books APIとの通信でエラーが発生しました。しばらくしてから再試行してください。"
-      });
-      return;
-    }
-    res.status(500).json({
-      error: "本の検索中にエラーが発生しました。しばらくしてから再試行してください。"
-    });
+  try {
+    const fallbackItems = await searchOpenLibrary(normalizedQuery, isbnDigits);
+    res.status(200).json({ items: fallbackItems });
+  } catch (fallbackError) {
+    console.error("Open Library APIへのフォールバックにも失敗しました:", fallbackError);
+    // Google・Open Libraryの両方が失敗した場合も、ユーザーにはエラーを見せず
+    // 「0件の検索結果」として返す（フロント側は通常の0件表示になる）
+    res.status(200).json({ items: [] });
   }
 };
