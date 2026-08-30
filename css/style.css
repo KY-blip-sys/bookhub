@@ -3106,13 +3106,18 @@ html.dark-mode .dashboard-tile::after {
     color: var(--color-accent);
 }
 
-/* ---------- 本一覧：タイトル横の三点メニュー ---------- */
-.book-card-menu {
+/* ---------- タイトル横・カード内の三点メニュー ----------
+   本一覧のカード（.book-card-menu）で使っていたものを、読書履歴・好きな言葉・学んだことの
+   カード（.card-menu）でも共通で使えるよう、クラス名を汎用化して共有している（js/screens/modal.jsのbuildCardMenu）。
+   スマホでは「編集」「削除」のボタンがカードの中に並ぶと指で押しにくかったため、1つのメニューにまとめて操作しやすくした。 */
+.book-card-menu,
+.card-menu {
     position: relative;
     flex-shrink: 0;
 }
 
-.book-card-menu-button {
+.book-card-menu-button,
+.card-menu-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -3128,12 +3133,14 @@ html.dark-mode .dashboard-tile::after {
     cursor: pointer;
 }
 
-.book-card-menu-button:hover {
+.book-card-menu-button:hover,
+.card-menu-button:hover {
     background-color: var(--color-border);
     color: var(--color-text);
 }
 
-.book-card-menu-dropdown {
+.book-card-menu-dropdown,
+.card-menu-dropdown {
     position: absolute;
     top: calc(100% + 4px);
     right: 0;
@@ -3146,7 +3153,8 @@ html.dark-mode .dashboard-tile::after {
     box-shadow: var(--shadow-md);
 }
 
-.book-card-menu-dropdown button {
+.book-card-menu-dropdown button,
+.card-menu-dropdown button {
     display: block;
     width: 100%;
     padding: 8px 10px;
@@ -3160,11 +3168,13 @@ html.dark-mode .dashboard-tile::after {
     cursor: pointer;
 }
 
-.book-card-menu-dropdown button:hover {
+.book-card-menu-dropdown button:hover,
+.card-menu-dropdown button:hover {
     background-color: var(--color-bg-secondary);
 }
 
-.book-card-menu-dropdown button.danger-button {
+.book-card-menu-dropdown button.danger-button,
+.card-menu-dropdown button.danger-button {
     color: var(--color-danger);
     border: none;
 }
@@ -4258,11 +4268,10 @@ html.dark-mode .dashboard-tile::after {
     flex-shrink: 0;
 }
 
-/* 読書履歴カード（.history-card-button-group）とタップしやすさの基準を揃える。
+/* レビューサマリー（読書中の感想）の「編集」ボタンなど、.quote-card-button-groupがまだ使われている箇所のタップしやすさの基準。
    以前は4px 12px/12pxとかなり小さく、スマホでの誤タップ・反応しない体感の原因になっていた */
 .quote-card-edit-button,
-.quote-card-button-group button,
-.history-card-button-group button {
+.quote-card-button-group button {
     padding: 8px 14px;
     font-size: 13px;
     flex-shrink: 0;
@@ -4430,6 +4439,13 @@ html.dark-mode .dashboard-tile::after {
     color: var(--color-text-secondary);
 }
 
+.history-card-quote {
+    margin: 0 0 8px;
+    font-size: 13px;
+    color: var(--color-accent);
+    overflow-wrap: break-word;
+}
+
 .history-card-meta-row {
     display: flex;
     align-items: center;
@@ -4440,12 +4456,6 @@ html.dark-mode .dashboard-tile::after {
 .history-card-date {
     font-size: 12px;
     color: var(--color-text-secondary);
-}
-
-.history-card-button-group {
-    display: flex;
-    gap: 8px;
-    flex-shrink: 0;
 }
 
 /* ---------- 危険な操作のボタン（削除など） ---------- */

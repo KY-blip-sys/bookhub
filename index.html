@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=50">
+  <link rel="stylesheet" href="css/style.css?v=51">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -606,65 +606,6 @@
               </div>
             </div>
 
-            <!-- 読書記録の入力（タイマー終了後・記録の編集時に、ふわっと浮かび上がるモーダルとして表示される。
-               実用書・小説でフィールドが切り替わる） -->
-            <div id="record-form-section" class="modal-overlay floating-modal" hidden>
-              <div class="modal-card floating-modal-card">
-                <div class="floating-modal-header">
-                  <h3>読書記録を入力</h3>
-                  <button type="button" id="record-form-close-button" class="modal-close-button"
-                    aria-label="閉じる">×</button>
-                </div>
-                <form id="record-form">
-                  <p class="field-hint">ページ数とひとことメモだけでも保存できます。他の項目は任意です。</p>
-                  <label>
-                    今日読んだページ
-                    <input type="text" inputmode="numeric" id="record-pages">
-                  </label>
-
-                  <!-- 実用書のときだけ表示 -->
-                  <div id="record-fields-practical">
-                    <label>
-                      今日学んだこと（任意）
-                      <textarea id="record-learning" rows="3"></textarea>
-                    </label>
-                    <details id="record-details-practical">
-                      <summary>詳しく記録する（任意）</summary>
-                      <label>
-                        名言・印象に残った言葉（任意）
-                        <input type="text" id="record-quote">
-                      </label>
-                    </details>
-                  </div>
-
-                  <!-- 小説のときだけ表示 -->
-                  <div id="record-fields-novel" hidden>
-                    <label>
-                      今日の感想（任意）
-                      <textarea id="record-impression" rows="3"></textarea>
-                    </label>
-                    <details id="record-details-novel">
-                      <summary>詳しく記録する（任意）</summary>
-                      <label>
-                        印象に残ったセリフ（任意）
-                        <input type="text" id="record-memorable-quote">
-                      </label>
-                      <label>
-                        好きな登場人物（任意）
-                        <input type="text" id="record-favorite-character">
-                      </label>
-                      <label>
-                        考察メモ（任意）
-                        <textarea id="record-notes" rows="3"></textarea>
-                      </label>
-                    </details>
-                  </div>
-
-                  <button type="submit" id="record-save-button">保存</button>
-                </form>
-              </div>
-            </div>
-
             <!-- 実践の入力（読書記録を保存した直後に表示される） -->
             <div id="action-form-section" hidden>
               <h3>この学びから何を実践しますか？</h3>
@@ -829,6 +770,69 @@
 
           <!-- 本の削除：頻度が低い操作のため、タブの外・画面の一番下に控えめに置く -->
           <button id="delete-book-button" type="button" class="danger-button detail-delete-button">この本を削除</button>
+        </div>
+
+        <!-- 読書記録の入力（タイマー終了後・記録の編集時に、ふわっと浮かび上がるモーダルとして表示される。
+           実用書・小説でフィールドが切り替わる）。
+           以前は#detail-record-panel（「記録・タイマー」タブ）の中にあったが、「読書履歴」タブなど
+           他のタブを見ているときは#detail-record-panelごと非表示になるため、そこから編集を開こうとしても
+           親ごと隠れたままで実質何も起きず、「記録・タイマー」タブに切り替えて初めて表示されてしまっていた。
+           他の共有モーダル（action-add-panelなど）と同じくタブの外に出す。 -->
+        <div id="record-form-section" class="modal-overlay floating-modal" hidden>
+          <div class="modal-card floating-modal-card">
+            <div class="floating-modal-header">
+              <h3>読書記録を入力</h3>
+              <button type="button" id="record-form-close-button" class="modal-close-button"
+                aria-label="閉じる">×</button>
+            </div>
+            <form id="record-form">
+              <p class="field-hint">ページ数とひとことメモだけでも保存できます。他の項目は任意です。</p>
+              <label>
+                今日読んだページ
+                <input type="text" inputmode="numeric" id="record-pages">
+              </label>
+
+              <!-- 実用書のときだけ表示 -->
+              <div id="record-fields-practical">
+                <label>
+                  今日学んだこと（任意）
+                  <textarea id="record-learning" rows="3"></textarea>
+                </label>
+                <details id="record-details-practical">
+                  <summary>詳しく記録する（任意）</summary>
+                  <label>
+                    名言・印象に残った言葉（任意）
+                    <input type="text" id="record-quote">
+                  </label>
+                </details>
+              </div>
+
+              <!-- 小説のときだけ表示 -->
+              <div id="record-fields-novel" hidden>
+                <label>
+                  今日の感想（任意）
+                  <textarea id="record-impression" rows="3"></textarea>
+                </label>
+                <details id="record-details-novel">
+                  <summary>詳しく記録する（任意）</summary>
+                  <label>
+                    印象に残ったセリフ（任意）
+                    <input type="text" id="record-memorable-quote">
+                  </label>
+                  <label>
+                    好きな登場人物（任意）
+                    <input type="text" id="record-favorite-character">
+                  </label>
+                  <label>
+                    考察メモ（任意）
+                    <textarea id="record-notes" rows="3"></textarea>
+                  </label>
+                </details>
+              </div>
+
+              <button type="submit" id="record-save-button">保存</button>
+            </form>
+          </div>
         </div>
 
         <!-- 実践リストを表示する画面：「実践中」「実績」をページ内タブで切り替える（旧・実績ページを統合） -->
@@ -1702,7 +1706,7 @@
   <script src="js/services/aiContext.js?v=1"></script>
 
   <!-- ---------- 画面層（描画・イベント処理） ---------- -->
-  <script src="js/screens/modal.js?v=25"></script>
+  <script src="js/screens/modal.js?v=26"></script>
   <!-- aiCredits.jsは、AIクレジットの残高表示・プレミアム案内モーダルの開閉を担う。
        bindModalDismissal（modal.js）を使うため、modal.jsより後に読み込む -->
   <script src="js/screens/aiCredits.js?v=2"></script>
@@ -1713,13 +1717,13 @@
   <script src="js/screens/bookSearch.js?v=2"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/timer.js?v=27"></script>
-  <script src="js/screens/records.js?v=26"></script>
+  <script src="js/screens/records.js?v=27"></script>
   <script src="js/screens/allRecords.js?v=25"></script>
   <script src="js/screens/stats.js?v=26"></script>
   <script src="js/screens/actions.js?v=27"></script>
   <script src="js/screens/reviews.js?v=25"></script>
   <script src="js/screens/reviewSummary.js?v=25"></script>
-  <script src="js/screens/quotes.js?v=26"></script>
+  <script src="js/screens/quotes.js?v=27"></script>
   <script src="js/screens/motivationCard.js?v=25"></script>
   <script src="js/screens/settings.js?v=26"></script>
   <script src="js/screens/help.js?v=24"></script>

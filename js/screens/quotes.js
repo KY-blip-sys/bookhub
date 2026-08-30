@@ -281,34 +281,29 @@ function buildQuoteCard(quote) {
   metaEl.textContent = quote.bookTitle ? quote.bookTitle + "・" + quote.date : quote.date;
   metaRow.appendChild(metaEl);
 
-  const buttonGroup = document.createElement("span");
-  buttonGroup.className = "quote-card-button-group";
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "quote-card-edit-button";
-  editButton.textContent = "編集";
-  editButton.addEventListener("click", function (event) {
-    event.stopPropagation(); // カード全体のクリック（本の詳細への遷移）に伝わらないようにする
-    editingQuoteKey = quoteKey(quote);
-    refreshAllQuoteViews();
-  });
-  buttonGroup.appendChild(editButton);
+  // 「編集」「削除」を並べて置くとスマホでは押しにくいため、本一覧のカードと同じ「⋮」メニューにまとめる（js/screens/modal.js）
+  const menuActions = [
+    {
+      label: "編集",
+      onClick: function () {
+        editingQuoteKey = quoteKey(quote);
+        refreshAllQuoteViews();
+      }
+    }
+  ];
 
   // 直接追加した好きな言葉だけ、削除できるようにする（読書記録由来のものは記録の編集から扱う）
   if (quote.source === "manual") {
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "danger-button";
-    deleteButton.textContent = "削除";
-    deleteButton.addEventListener("click", function (event) {
-      event.stopPropagation();
-      deleteQuote(quote);
+    menuActions.push({
+      label: "削除",
+      danger: true,
+      onClick: function () {
+        deleteQuote(quote);
+      }
     });
-    buttonGroup.appendChild(deleteButton);
   }
 
-  metaRow.appendChild(buttonGroup);
+  metaRow.appendChild(buildCardMenu(menuActions));
   li.appendChild(metaRow);
 
   return li;

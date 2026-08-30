@@ -133,6 +133,7 @@ function deleteRecord(index) {
   renderBookStats();
   renderReadingProgress(); // 記録の合計ページ数が変わるので、進捗表示も更新する
   renderReadingRing(); // 削除した記録が今日の分だった場合に備えて、サイドバーのリングも更新する
+  renderBookQuotesTab(book.id); // 削除した記録に名言が入っていた場合、タブに残ったままにならないようにする
 
   // 削除によって読了状態が変わることがあるため、記録保存時と同じくヘッダー表示も最新化する
   const statusInfo = getBookStatusInfo(book);
@@ -161,6 +162,17 @@ function buildHistoryCard(record, index) {
 
   li.appendChild(mainRow);
 
+  // 実用書は「名言・印象に残った言葉」、小説は「印象に残ったセリフ」。
+  // どちらもこの記録に書かれていれば、この場でも振り返れるように表示する
+  // （好きな言葉／名言タブにも自動で集まるが、記録がここに何件も並ぶとどれに書いたか分かりにくいため）
+  const quoteText = record.quote || record.memorableQuote;
+  if (quoteText) {
+    const quoteEl = document.createElement("p");
+    quoteEl.className = "history-card-quote";
+    quoteEl.textContent = "💬 " + quoteText;
+    li.appendChild(quoteEl);
+  }
+
   const metaRow = document.createElement("div");
   metaRow.className = "history-card-meta-row";
 
@@ -169,27 +181,22 @@ function buildHistoryCard(record, index) {
   dateEl.textContent = record.date;
   metaRow.appendChild(dateEl);
 
-  const buttonGroup = document.createElement("span");
-  buttonGroup.className = "history-card-button-group";
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.textContent = "編集";
-  editButton.addEventListener("click", function () {
-    startEditingRecord(index);
-  });
-  buttonGroup.appendChild(editButton);
-
-  const deleteButton = document.createElement("button");
-  deleteButton.type = "button";
-  deleteButton.textContent = "削除";
-  deleteButton.classList.add("danger-button");
-  deleteButton.addEventListener("click", function () {
-    deleteRecord(index);
-  });
-  buttonGroup.appendChild(deleteButton);
-
-  metaRow.appendChild(buttonGroup);
+  // 「編集」「削除」を並べて置くとスマホでは押しにくいため、本一覧のカードと同じ「⋮」メニューにまとめる（js/screens/modal.js）
+  metaRow.appendChild(buildCardMenu([
+    {
+      label: "編集",
+      onClick: function () {
+        startEditingRecord(index);
+      }
+    },
+    {
+      label: "削除",
+      danger: true,
+      onClick: function () {
+        deleteRecord(index);
+      }
+    }
+  ]));
   li.appendChild(metaRow);
 
   return li;
@@ -386,37 +393,34 @@ function buildLearningCard(learning) {
   metaEl.textContent = learning.date;
   metaRow.appendChild(metaEl);
 
-  const buttonGroup = document.createElement("span");
-  buttonGroup.className = "quote-card-button-group";
-
-  const editButton = document.createElement("button");
-  editButton.type = "button";
-  editButton.className = "quote-card-edit-button";
-  editButton.textContent = "編集";
-  editButton.addEventListener("click", function () {
-    editingLearningKey = learningKey(learning);
-    renderLearningList(findCurrentBook());
-  });
-  buttonGroup.appendChild(editButton);
+  // 「編集」「削除」を並べて置くとスマホでは押しにくいため、本一覧のカードと同じ「⋮」メニューにまとめる（js/screens/modal.js）
+  const menuActions = [
+    {
+      label: "編集",
+      onClick: function () {
+        editingLearningKey = learningKey(learning);
+        renderLearningList(findCurrentBook());
+      }
+    }
+  ];
 
   // 直接追加した学んだことだけ、削除できるようにする（読書記録由来のものは記録の編集から扱う）
   if (learning.source === "manual") {
-    const deleteButton = document.createElement("button");
-    deleteButton.type = "button";
-    deleteButton.className = "danger-button";
-    deleteButton.textContent = "削除";
-    deleteButton.addEventListener("click", function () {
-      const confirmed = confirm("この「学んだこと」を削除しますか？");
-      if (!confirmed) {
-        return;
+    menuActions.push({
+      label: "削除",
+      danger: true,
+      onClick: function () {
+        const confirmed = confirm("この「学んだこと」を削除しますか？");
+        if (!confirmed) {
+          return;
+        }
+        deleteFavoriteLearning(learning.id);
+        renderLearningList(findCurrentBook());
       }
-      deleteFavoriteLearning(learning.id);
-      renderLearningList(findCurrentBook());
     });
-    buttonGroup.appendChild(deleteButton);
   }
 
-  metaRow.appendChild(buttonGroup);
+  metaRow.appendChild(buildCardMenu(menuActions));
   li.appendChild(metaRow);
 
   return li;
@@ -542,6 +546,10 @@ recordForm.addEventListener("submit", function (event) {
   renderBookStats();
   renderReadingProgress(); // 記録の合計ページ数が変わるので、進捗表示も更新する
   renderReadingRing(); // 今日の読書時間が変わるので、サイドバーのリングも更新する
+  // 「名言・印象に残った言葉」欄に書いた内容は「好きな言葉／名言」タブに自動で集まる仕組みだが、
+  // ここで更新しないと、その本の詳細画面を開き直すまでタブの中身が古いままになってしまう
+  // （名言集など他の画面は開くたびに作り直されるため気づきにくいが、同じ本を開いたまま名言タブを見ると反映されていなかった）
+  renderBookQuotesTab(book.id);
 
   // ページ数の合計が変わって読了状態が切り替わることがあるため、
   // 詳細画面ヘッダーのステータスバッジと「読了カードを見る」の表示もこの場で最新化する
