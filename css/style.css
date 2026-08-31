@@ -5561,6 +5561,9 @@ html.dark-mode .dashboard-hero-banner {
 }
 
 .ai-recommend-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     min-width: 0;
     padding: 20px;
     border: 1px solid var(--color-border);
@@ -5602,7 +5605,9 @@ html.dark-mode .dashboard-hero-banner {
     display: flex;
     flex-wrap: wrap;
     gap: 16px;
-    margin-top: 14px;
+    /* 文章の長さでカードごとに高さが変わっても、おすすめ度などは常にカード下端に揃える。
+       文章が短くてできる余白はここに吸収させる */
+    margin-top: auto;
     padding-top: 14px;
     border-top: 1px solid var(--color-border);
     font-size: var(--font-size-meta);
