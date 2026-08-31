@@ -37,8 +37,8 @@ const PLAN_CATALOG = [
     highlight: false
   },
   {
-    key: "premium",
-    label: "Premium",
+    key: "pro",
+    label: "Pro",
     priceYen: 980,
     monthlyCredits: 1000,
     aiEnabled: true,
@@ -47,13 +47,13 @@ const PLAN_CATALOG = [
     highlight: true
   },
   {
-    key: "pro",
-    label: "Pro",
+    key: "premium",
+    label: "Premium",
     priceYen: 1980,
     monthlyCredits: 3000,
     aiEnabled: true,
     ads: false,
-    features: ["Premiumの全機能", "AIクレジット増量"],
+    features: ["Proの全機能", "AIクレジット増量"],
     highlight: false
   }
 ];
