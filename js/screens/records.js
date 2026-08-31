@@ -310,20 +310,23 @@ learningAddForm.addEventListener("submit", function (event) {
 // 今、編集中の学んだことのキー（learningKey関数が返す文字列。編集していなければnull）
 let editingLearningKey = null;
 
-// 学んだこと1件を一意に表す文字列を作る（読書記録由来／直接追加のどちらにも対応する。quotes.jsのquoteKeyと同じ考え方）
+// 学んだこと1件を一意に表す文字列を作る（読書記録由来／直接追加のどちらにも対応する。quotes.jsのquoteKeyと同じ考え方。
+// 読書記録由来はrecordIndex（配列内の順番）ではなくrecord.id（記録固有のid）で特定する。
+// indexだと、編集フォームを開いたまま別の記録が削除されて後続のindexがズレたときに、
+// 別の記録を編集中と誤認してしまう（保存すると別の記録を上書きしてしまう）ため）
 function learningKey(learning) {
-  return learning.source === "manual" ? "manual-" + learning.id : "record-" + learning.recordIndex;
+  return learning.source === "manual" ? "manual-" + learning.id : "record-" + learning.recordId;
 }
 
 // 今開いている本の「学んだこと」を、読書記録由来＋直接追加した分を合わせて、新しいものが先頭にくるように並べて返す
 function getCombinedLearnings(book) {
   let learnings = [];
 
-  book.records.forEach(function (record, recordIndex) {
+  book.records.forEach(function (record) {
     if (record.learning) {
       learnings.push({
         source: "record",
-        recordIndex: recordIndex,
+        recordId: record.id,
         date: record.date,
         timestamp: record.timestamp || 0,
         text: record.learning
@@ -469,8 +472,11 @@ function buildLearningEditForm(learning) {
       const book = books.find(function (b) {
         return b.id === currentBookId;
       });
-      if (book && book.records[learning.recordIndex]) {
-        book.records[learning.recordIndex].learning = newText;
+      const record = book && book.records.find(function (r) {
+        return r.id === learning.recordId;
+      });
+      if (record) {
+        record.learning = newText;
         saveBooks(books);
       }
     }

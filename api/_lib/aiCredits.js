@@ -43,7 +43,7 @@ const PLAN_CATALOG = [
     monthlyCredits: 1000,
     aiEnabled: true,
     ads: false,
-    features: ["AIチャット", "AI本推薦", "AI要約", "AIへの質問", "Plusの全機能（広告なし）"],
+    features: ["AIチャット", "AI本推薦", "AI要約", "AIへの質問"],
     highlight: true
   },
   {

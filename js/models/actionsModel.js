@@ -317,3 +317,16 @@ function getActionsByActiveCategory() {
 function getAchievementsByActiveCategory() {
   return filterItemsByBookCategory(loadAchievements(), loadBooks(), loadActiveCategory());
 }
+
+// 指定した本に紐づく実践・実績をまとめて削除する（本を削除したときに呼ぶ）。
+// Supabase側のactions.book_idは（本を削除したときに実践・実績まで消えてしまわないよう）
+// on delete set nullになっており本を消しても行自体は残るが、アプリ側は「実践・実績には
+// 必ず本が紐づいている」前提でbook_idの一致する本が無い項目を一覧から除外するため、
+// 何もしないとその実践・実績はデータベースには残ったまま、二度と画面に出せなくなってしまう。
+// それを防ぐため、本を削除するときはここで実践・実績側も明示的に削除する
+function deleteActionsForBook(bookId) {
+  const remaining = cachedActions.filter(function (action) {
+    return action.bookId !== bookId;
+  });
+  persistActions(remaining);
+}

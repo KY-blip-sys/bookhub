@@ -66,9 +66,12 @@ bindModalDismissal(quoteAddPanel, closeQuoteAddPanel);
 // 今、編集中の「好きな言葉」のキー（quoteKey関数が返す文字列。編集していなければnull）
 let editingQuoteKey = null;
 
-// 好きな言葉1件を一意に表す文字列を作る（読書記録由来／直接追加のどちらにも対応する）
+// 好きな言葉1件を一意に表す文字列を作る（読書記録由来／直接追加のどちらにも対応する。
+// 読書記録由来はrecordIndex（配列内の順番）ではなくrecord.id（記録固有のid）で特定する。
+// indexだと、編集フォームを開いたまま別の記録が削除されて後続のindexがズレたときに、
+// 別の記録を編集中と誤認してしまう（保存すると別の記録を上書きしてしまう）ため）
 function quoteKey(quote) {
-  return quote.source === "manual" ? "manual-" + quote.id : "record-" + quote.bookId + "-" + quote.recordIndex;
+  return quote.source === "manual" ? "manual-" + quote.id : "record-" + quote.bookId + "-" + quote.recordId;
 }
 
 // 読書記録の「印象に残ったセリフ」（小説）・「名言・印象に残った言葉」（実用書）と、
@@ -80,12 +83,12 @@ function getCombinedQuotes(category) {
   let quotes = [];
 
   books.forEach(function (book) {
-    book.records.forEach(function (record, recordIndex) {
+    book.records.forEach(function (record) {
       if (record[recordFieldName]) {
         quotes.push({
           source: "record",
           bookId: book.id,
-          recordIndex: recordIndex,
+          recordId: record.id,
           bookTitle: book.title,
           date: record.date,
           timestamp: record.timestamp || 0,
@@ -354,7 +357,7 @@ function buildQuoteEditForm(quote) {
       editingQuoteKey = null;
       refreshAllQuoteViews();
     } else {
-      saveQuoteEdit(quote.bookId, quote.recordIndex, newQuoteText);
+      saveQuoteEdit(quote.bookId, quote.recordId, newQuoteText);
     }
   });
 
@@ -364,7 +367,7 @@ function buildQuoteEditForm(quote) {
 }
 
 // 好きな言葉（小説の「印象に残ったセリフ」／実用書の「名言・印象に残った言葉」）を更新する
-function saveQuoteEdit(bookId, recordIndex, newQuoteText) {
+function saveQuoteEdit(bookId, recordId, newQuoteText) {
   const books = loadBooks();
   const book = books.find(function (b) {
     return b.id === bookId;
@@ -373,7 +376,9 @@ function saveQuoteEdit(bookId, recordIndex, newQuoteText) {
     return;
   }
 
-  const record = book.records[recordIndex];
+  const record = book.records.find(function (r) {
+    return r.id === recordId;
+  });
   if (!record) {
     return;
   }

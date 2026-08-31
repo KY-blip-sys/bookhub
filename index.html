@@ -700,20 +700,6 @@
             <!-- 実用書のときだけ表示：読書記録とは別に、学んだことを直接追加できる -->
             <button type="button" id="learning-add-trigger-button" class="dashed-add-button" hidden>＋ 学んだことを追加</button>
 
-            <div id="learning-add-panel" class="modal-overlay floating-modal" hidden>
-              <div class="modal-card floating-modal-card">
-                <div class="floating-modal-header">
-                  <h3>💡 学んだことを追加</h3>
-                  <button type="button" id="learning-add-close-button" class="modal-close-button"
-                    aria-label="閉じる">×</button>
-                </div>
-                <form id="learning-add-form" class="quote-add-form">
-                  <textarea id="learning-add-text" rows="3" placeholder="学んだことを入力" required></textarea>
-                  <button type="submit">追加</button>
-                </form>
-              </div>
-            </div>
-
             <ul id="learning-list"></ul>
           </div>
 
@@ -770,6 +756,24 @@
 
           <!-- 本の削除：頻度が低い操作のため、タブの外・画面の一番下に控えめに置く -->
           <button id="delete-book-button" type="button" class="danger-button detail-delete-button">この本を削除</button>
+        </div>
+
+        <!-- 「学んだことを追加」モーダル。
+           以前は#detail-learning-panel（「学んだこと」タブ）の中にあったが、他のタブを見ているときは
+           #detail-learning-panelごと非表示になるため、そこから開こうとしても親ごと隠れたままで実質何も起きず、
+           「学んだこと」タブに切り替えて初めて表示されてしまっていた（record-form-sectionと同じ理由でタブの外に出す）。 -->
+        <div id="learning-add-panel" class="modal-overlay floating-modal" hidden>
+          <div class="modal-card floating-modal-card">
+            <div class="floating-modal-header">
+              <h3>💡 学んだことを追加</h3>
+              <button type="button" id="learning-add-close-button" class="modal-close-button"
+                aria-label="閉じる">×</button>
+            </div>
+            <form id="learning-add-form" class="quote-add-form">
+              <textarea id="learning-add-text" rows="3" placeholder="学んだことを入力" required></textarea>
+              <button type="submit">追加</button>
+            </form>
+          </div>
         </div>
 
         <!-- 読書記録の入力（タイマー終了後・記録の編集時に、ふわっと浮かび上がるモーダルとして表示される。

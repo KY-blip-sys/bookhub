@@ -440,6 +440,7 @@ function deleteBookById(bookId) {
     return b.id !== bookId;
   });
   saveBooks(remainingBooks);
+  deleteActionsForBook(bookId); // js/models/actionsModel.js（本を消しても実践・実績が孤立して残らないようにする）
 
   return true;
 }
