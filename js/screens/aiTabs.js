@@ -21,6 +21,9 @@ function showAiTab(tabName) {
   if (tabName === "chat") {
     prepareAiChatScreen(); // aiChat.js
   }
+  if (tabName === "quiz") {
+    prepareAiQuizTab(); // aiQuiz.js：本の選択肢を今の登録状況で作り直す
+  }
 }
 
 aiTabButtons.forEach(function (button) {

@@ -1,8 +1,8 @@
 // ---------- AIクレジット・AI利用可否の表示 ----------
 // AI利用可否・クレジットの判定はすべてサーバー側（/api/chat, /api/credits）で行う。
 // ここは「サーバーから返ってきた最新の状態を画面に反映する」表示専用の処理で、
-// AI画面（js/screens/aiTabs.js）・本の詳細画面「AIに質問」タブ（js/screens/bookQuestion.js）の
-// どちらからも共通で使う。
+// AI画面（js/screens/aiTabs.js）・本の詳細画面「AIに質問」タブ（js/screens/bookQuestion.js）・
+// 「クイズ」タブ（js/screens/bookQuiz.js）のどれからも共通で使う。
 
 // ---------- AI画面：AIクレジットカード（Premium/Proのとき）／ロック案内（Free/Plusのとき） ----------
 
@@ -19,6 +19,9 @@ const aiCreditInsufficientBannerEl = document.getElementById("ai-credit-insuffic
 
 // 本の詳細画面「AIに質問」タブ
 const bookQuestionLockedNoticeEl = document.getElementById("book-question-locked-notice");
+
+// 本の詳細画面「クイズ」タブ
+const bookQuizLockedNoticeEl = document.getElementById("detail-quiz-locked-notice");
 
 // developerはsupabase/developer_mode.sqlのget_ai_credit_status・check_ai_creditが返す特別なplan値
 // （実際のprofiles.planではない。開発者アカウント＝profiles.is_developer=trueのユーザー用の表示ラベル）
@@ -39,7 +42,8 @@ function setAiControlsLocked(isLocked) {
     "ai-summary-generate-button",
     "ai-coach-generate-button",
     "book-question-input",
-    "book-question-send-button"
+    "book-question-send-button",
+    "detail-quiz-start-button"
   ].forEach(function (id) {
     const el = document.getElementById(id);
     if (el) {
@@ -102,8 +106,12 @@ function applyAiAccessState(status) {
   if (bookQuestionLockedNoticeEl) {
     bookQuestionLockedNoticeEl.hidden = !!status.aiEnabled;
   }
+  if (bookQuizLockedNoticeEl) {
+    bookQuizLockedNoticeEl.hidden = !!status.aiEnabled;
+  }
 
   const bookQuestionBannerEl = document.getElementById("book-question-credit-banner");
+  const bookQuizBannerEl = document.getElementById("detail-quiz-credit-banner");
 
   if (status.aiEnabled) {
     renderAiCreditCard(status);
@@ -111,14 +119,17 @@ function applyAiAccessState(status) {
     if (status.remaining <= 0) {
       showInsufficientCreditBanner(aiCreditInsufficientBannerEl);
       showInsufficientCreditBanner(bookQuestionBannerEl);
+      showInsufficientCreditBanner(bookQuizBannerEl);
     } else {
       hideInsufficientCreditBanner(aiCreditInsufficientBannerEl);
       hideInsufficientCreditBanner(bookQuestionBannerEl);
+      hideInsufficientCreditBanner(bookQuizBannerEl);
     }
   } else {
     // AI自体が使えないプランのときは、残高不足バナーの出番はない
     hideInsufficientCreditBanner(aiCreditInsufficientBannerEl);
     hideInsufficientCreditBanner(bookQuestionBannerEl);
+    hideInsufficientCreditBanner(bookQuizBannerEl);
   }
 }
 

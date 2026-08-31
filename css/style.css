@@ -5614,6 +5614,20 @@ html.dark-mode .dashboard-hero-banner {
 }
 
 /* ---------- クイズ ---------- */
+/* AI画面「クイズ」タブ：出題する本を選ぶセレクト（「すべての本」or 1冊を選んで出題） */
+.ai-quiz-book-select-label {
+    display: block;
+    margin: 14px 0;
+    font-size: var(--font-size-meta);
+    color: var(--color-text-secondary);
+}
+
+.ai-quiz-book-select-label select {
+    display: block;
+    width: 100%;
+    margin-top: 6px;
+}
+
 .ai-quiz-question-section,
 .ai-quiz-result-section {
     margin-top: 20px;

@@ -91,6 +91,7 @@ const detailTabPanels = {
   learning: document.getElementById("detail-learning-panel"),
   quotes: document.getElementById("detail-quotes-panel"),
   aiQuestion: document.getElementById("detail-ai-question-panel"),
+  quiz: document.getElementById("detail-quiz-panel"),
   actions: document.getElementById("detail-actions-panel")
 };
 
@@ -113,6 +114,9 @@ function showDetailTab(tabName) {
 
   if (tabName === "aiQuestion") {
     prepareBookQuestionTab(currentBookId); // js/screens/bookQuestion.js
+  }
+  if (tabName === "quiz") {
+    prepareBookQuizTab(currentBookId); // js/screens/bookQuiz.js
   }
 }
 
