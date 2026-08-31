@@ -203,7 +203,10 @@ function computeTrendAxisMax(maxMinutes) {
   }
 
   const roughStep = maxMinutes / (TREND_AXIS_TICK_COUNT - 1);
-  const magnitude = Math.pow(10, Math.floor(Math.log10(roughStep)));
+  // 目盛りは常に「分」の整数で表示するため、間隔（niceStep）が1分未満にならないようにする。
+  // ここをMath.floorのままにすると、読書時間が短いとき（例：最大2分）に間隔が0.5分などの端数になり、
+  // 整数に丸めた際に「1分・1分・2分・2分」のように同じ表記が連続するバグになる
+  const magnitude = Math.pow(10, Math.max(0, Math.floor(Math.log10(roughStep))));
   const normalized = roughStep / magnitude;
 
   let niceStep;

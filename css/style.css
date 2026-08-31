@@ -3269,7 +3269,7 @@ html.dark-mode .dashboard-tile::after {
 
 /* ---------- 使い方モーダル ---------- */
 .help-modal-card {
-    max-width: 440px;
+    max-width: 480px;
     max-height: 85vh;
     display: flex;
     flex-direction: column;
@@ -3286,7 +3286,7 @@ html.dark-mode .dashboard-tile::after {
 
 .help-modal-header h3 {
     margin: 0;
-    font-size: 17px;
+    font-size: 18px;
 }
 
 .modal-close-button {
@@ -3326,7 +3326,7 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .help-step {
-    margin-bottom: 18px;
+    margin-bottom: 22px;
 }
 
 .help-step:last-child {
@@ -3335,8 +3335,9 @@ html.dark-mode .dashboard-tile::after {
 
 .help-step h4 {
     margin-top: 0;
-    margin-bottom: 6px;
-    font-size: 14px;
+    margin-bottom: 8px;
+    font-size: 15px;
+    line-height: 1.4;
     color: var(--color-text);
 }
 
@@ -3354,10 +3355,10 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .help-step li {
-    font-size: 13px;
-    line-height: 1.6;
+    font-size: 14px;
+    line-height: 1.7;
     color: var(--color-text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 6px;
 }
 
 .help-step .ai-credit-usage-list li {

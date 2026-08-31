@@ -10,7 +10,7 @@ const AI_RECOMMEND_SCHEMA = {
       recommendations: {
         type: "array",
         minItems: 3,
-        maxItems: 5,
+        maxItems: 3,
         items: {
           type: "object",
           properties: {
@@ -107,7 +107,7 @@ aiRecommendGenerateButton.addEventListener("click", async function () {
     const contextText = formatAiReadingContext(buildAiReadingContext());
     const message =
       "以下はユーザーのこれまでの読書記録です。\n\n" + contextText +
-      "\n\n上記を踏まえて、次に読むのにおすすめの本を3〜5冊、提案してください。";
+      "\n\n上記を踏まえて、次に読むのにおすすめの本をちょうど3冊、提案してください。";
 
     const data = await sendChatMessage(message, {
       feature: "recommend",
