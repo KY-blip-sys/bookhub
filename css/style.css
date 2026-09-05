@@ -32,6 +32,11 @@
     --color-accent-soft: rgba(193, 95, 60, 0.12);
     --color-glass: rgba(255, 255, 255, 0.72);
 
+    /* PWAのインストール導線・更新通知ボタン専用。白文字での十分なコントラスト比(4.5:1以上)を
+       ライト・ダーク両方で保証するため、通常のアクセント色より濃くし、テーマで変えない固定値にしている */
+    --pwa-accent: #8f3f26;
+    --pwa-accent-hover: #74331e;
+
     /* 状態を表す色：迷ったらこの4色のどれかを使う（通常の文字色・境界線は上のグレー系を使う） */
     --color-success: #4c8c5c;
     --color-success-soft: rgba(76, 140, 92, 0.12);
@@ -4931,6 +4936,129 @@ html.dark-mode .dashboard-hero-banner {
 .toast.toast-visible {
     opacity: 1;
     transform: translate(-50%, 0);
+}
+
+/* ---------- PWA：インストール導線・オフライン表示・更新通知（js/services/pwa.js） ---------- */
+.pwa-banner-stack {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 70;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 0 20px calc(20px + env(safe-area-inset-bottom, 0px));
+    pointer-events: none;
+}
+
+.pwa-banner-stack>* {
+    pointer-events: auto;
+}
+
+.pwa-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    max-width: 420px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    background-color: var(--color-surface);
+    color: var(--color-text);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--color-border);
+}
+
+.pwa-banner-icon {
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    color: var(--pwa-accent);
+}
+
+.pwa-banner-text {
+    flex: 1;
+    margin: 0;
+    font-size: var(--font-size-body);
+    line-height: 1.5;
+}
+
+.pwa-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.pwa-banner-primary-button {
+    padding: 8px 14px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background-color: var(--pwa-accent);
+    color: #fff;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pwa-banner-primary-button:hover {
+    background-color: var(--pwa-accent-hover);
+}
+
+.pwa-banner-text-button {
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.pwa-banner-close {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border: none;
+    border-radius: 50%;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.pwa-banner-close:hover {
+    background-color: var(--color-bg-secondary);
+}
+
+.pwa-install-button {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 420px;
+    padding: 14px 18px;
+    border: none;
+    border-radius: var(--radius-lg);
+    background-color: var(--pwa-accent);
+    color: #fff;
+    font-size: var(--font-size-body);
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    cursor: pointer;
+}
+
+.pwa-install-button:hover {
+    background-color: var(--pwa-accent-hover);
+}
+
+.pwa-install-button svg {
+    flex-shrink: 0;
+    width: 20px;
+    height: 20px;
 }
 
 /* ---------- ログイン・新規登録画面 ---------- */

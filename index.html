@@ -5,11 +5,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>読書記録アプリ</title>
+  <meta name="description" content="読書をもっと楽しくする読書管理アプリ">
+
+  <!-- PWA：ホーム画面への追加・スタンドアロン起動に必要な設定（manifest.json / js/services/pwa.js） -->
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#2563eb">
+
+  <!-- favicon・各種アイコン（assets/icons/、js/services/pwa.jsと同じ本の形のロゴから生成） -->
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/icons/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/assets/icons/favicon-16.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+
+  <!-- iOS（Safari）でホーム画面に追加してスタンドアロン起動したときの見た目 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="BookHub">
+  <meta name="mobile-web-app-capable" content="yes">
+  <!-- 電話番号・住所等をiOSが勝手にリンク化しないようにする -->
+  <meta name="format-detection" content="telephone=no,address=no,email=no">
+
   <!-- 見出し・本文用のフォント（読み込めない場合は、システムフォントに自動で切り替わります） -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=52">
+  <link rel="stylesheet" href="css/style.css?v=53">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -1760,6 +1780,48 @@
   <!-- 保存完了などを知らせる、画面下に浮かぶ小さな通知 -->
   <div id="toast" class="toast" hidden></div>
 
+  <!-- PWA関連の通知・案内を画面下にまとめて積み上げて表示する（js/services/pwa.js） -->
+  <div id="pwa-banner-stack" class="pwa-banner-stack">
+    <!-- オフライン時だけ表示 -->
+    <div id="pwa-offline-banner" class="pwa-banner pwa-banner-offline" hidden>
+      <p class="pwa-banner-text">オフラインです。接続すると同期されます。</p>
+    </div>
+
+    <!-- 新しいService Workerが待機しているときだけ表示 -->
+    <div id="pwa-update-banner" class="pwa-banner pwa-banner-update" hidden>
+      <p class="pwa-banner-text">新しいバージョンがあります</p>
+      <div class="pwa-banner-actions">
+        <button type="button" id="pwa-update-button" class="pwa-banner-primary-button">更新</button>
+        <button type="button" id="pwa-update-dismiss-button" class="pwa-banner-text-button">後で</button>
+      </div>
+    </div>
+
+    <!-- iPhone（Safari）向け：beforeinstallpromptが使えないため、初回だけ手動追加の案内を表示 -->
+    <div id="pwa-ios-hint" class="pwa-banner pwa-banner-ios-hint" hidden>
+      <svg class="pwa-banner-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v12" />
+        <path d="m7 8 5-5 5 5" />
+        <path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6" />
+      </svg>
+      <p class="pwa-banner-text">
+        <strong>BookHub</strong>をホーム画面に追加できます。共有ボタンから「ホーム画面に追加」を選んでください。
+      </p>
+      <button type="button" id="pwa-ios-hint-close" class="pwa-banner-close" aria-label="閉じる">×</button>
+    </div>
+
+    <!-- ブラウザがインストール可能と判定した（beforeinstallpromptが発火した）ときだけ表示 -->
+    <button type="button" id="pwa-install-button" class="pwa-install-button" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M12 3v12" />
+        <path d="m7 10 5 5 5-5" />
+        <path d="M5 19h14" />
+      </svg>
+      <span>BookHubをホーム画面へ追加</span>
+    </button>
+  </div>
+
   <!-- Supabase（ログイン・クラウド保存）のクライアントライブラリ -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <!-- planStatus.jsは、現在のプラン・AIクレジット残高をアプリ全体で共有するための唯一の取得窓口。
@@ -1833,6 +1895,10 @@
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
   <script src="js/screens/auth.js?v=9"></script>
+
+  <!-- PWA対応（Service Worker登録・ホーム画面への追加導線・更新通知・オフライン表示）。
+       他の画面の初期化とは独立しているため、一番最後に読み込めば十分 -->
+  <script src="js/services/pwa.js?v=1"></script>
 </body>
 
 </html>

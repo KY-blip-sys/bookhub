@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#2563eb">
+  <title>オフライン - BookHub</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background-color: #ffffff;
+      color: #2a241e;
+      font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Yu Gothic", sans-serif;
+      text-align: center;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #16120e;
+        color: #f4ece0;
+      }
+    }
+
+    .offline-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 88px;
+      height: 88px;
+      margin: 0 auto 20px;
+      border-radius: 24px;
+      background-color: #2563eb;
+    }
+
+    .offline-logo svg {
+      width: 44px;
+      height: 44px;
+    }
+
+    h1 {
+      font-size: 20px;
+      margin: 0 0 8px;
+    }
+
+    p {
+      font-size: 14px;
+      color: inherit;
+      opacity: 0.7;
+      margin: 4px 0;
+    }
+  </style>
+</head>
+
+<body>
+  <div>
+    <div class="offline-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
+        <path d="M12 6v14" />
+      </svg>
+    </div>
+    <h1>BookHub</h1>
+    <p>オフラインです</p>
+    <p>接続すると同期されます</p>
+  </div>
+  <script>
+    // 接続が復帰したら自動でアプリに戻る
+    window.addEventListener("online", function () {
+      location.reload();
+    });
+  </script>
+</body>
+
+</html>
