@@ -333,6 +333,22 @@ function setHeaderTitle(text) {
   headerSidebarBrandNameEl.textContent = text;
 }
 
+// スマホのトップバー：ホーム画面だけ「BookHubロゴ＋検索」の行を見せ、それ以外の画面は
+// 従来通り「ページ名＋使い方」の行を見せる（index.htmlの.mobile-topbar-home-row／-page-row）
+const mobileTopbarHomeRow = document.getElementById("mobile-topbar-home-row");
+const mobileTopbarPageRow = document.getElementById("mobile-topbar-page-row");
+
+function updateMobileTopbarRow(navKey) {
+  const isHome = navKey === "dashboard";
+  mobileTopbarHomeRow.hidden = !isHome;
+  mobileTopbarPageRow.hidden = isHome;
+}
+
+// ホーム画面右上の検索ボタン：今はまだ検索欄そのものは無いので、本棚に移動して探せるようにする
+document.getElementById("mobile-topbar-search-button").addEventListener("click", function () {
+  goToNavPage("books");
+});
+
 // 今開いているページ（サイドバーのnav属性の値）を覚えておく。
 let currentNavKey = "dashboard";
 
@@ -342,6 +358,7 @@ function goToNavPage(navKey) {
 
   showPage("screen-" + navKey);
   setHeaderTitle(NAV_LABELS[navKey] || "");
+  updateMobileTopbarRow(navKey);
   headerBackButton.hidden = true; // 本の詳細から出たら、戻るボタンは隠す
 
   // ページを開くたびに、その中身を最新の状態にしておく

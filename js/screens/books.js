@@ -205,6 +205,7 @@ function renderBookList() {
 
   renderDashboard(books);
   renderCurrentlyReading(books);
+  renderRecentlyRead(books);
   renderMotivationCarousel(books); // motivationCard.js
 
   if (celebratedCardEl) {
@@ -290,6 +291,66 @@ function buildCurrentlyReadingCard(book, staggerIndex) {
     authorEl.textContent = book.author;
     li.appendChild(authorEl);
   }
+
+  return li;
+}
+
+// ---------- ダッシュボード：最近読んだ本 ----------
+
+const recentlyReadSection = document.getElementById("recently-read-section");
+const recentlyReadList = document.getElementById("recently-read-list");
+const RECENTLY_READ_MAX_CARDS = 10;
+
+// 感想（★評価）を書いた本を、書いた順が新しい順に並べて表示する
+function renderRecentlyRead(books) {
+  const reviewed = books
+    .map(function (book) {
+      return { book: book, review: getReviewForBook(book.id) }; // reviewsModel.js
+    })
+    .filter(function (entry) {
+      return !!entry.review;
+    })
+    .sort(function (a, b) {
+      return (b.review.createdAt || 0) - (a.review.createdAt || 0);
+    });
+
+  recentlyReadSection.hidden = reviewed.length === 0;
+
+  recentlyReadList.innerHTML = "";
+  reviewed.slice(0, RECENTLY_READ_MAX_CARDS).forEach(function (entry) {
+    recentlyReadList.appendChild(buildRecentlyReadCard(entry.book, entry.review));
+  });
+}
+
+// 「最近読んだ本」1冊ぶんのカード（表紙・タイトル・著者・★評価）を組み立てる
+function buildRecentlyReadCard(book, review) {
+  const li = document.createElement("li");
+  li.className = "recently-read-card";
+  makeRowClickable(li, function () {
+    showDetailScreen(book.id);
+  });
+
+  const cover = document.createElement("div");
+  cover.className = "recently-read-cover " + getBookCoverHueClass(book);
+  cover.appendChild(buildBookCoverContent(book, "recently-read-cover-initial"));
+  li.appendChild(cover);
+
+  const titleEl = document.createElement("p");
+  titleEl.className = "recently-read-title";
+  titleEl.textContent = book.title;
+  li.appendChild(titleEl);
+
+  if (book.author) {
+    const authorEl = document.createElement("p");
+    authorEl.className = "recently-read-author";
+    authorEl.textContent = book.author;
+    li.appendChild(authorEl);
+  }
+
+  const ratingEl = document.createElement("p");
+  ratingEl.className = "recently-read-rating";
+  ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+  li.appendChild(ratingEl);
 
   return li;
 }

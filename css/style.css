@@ -306,7 +306,8 @@ html.dark-mode .main-content::before {
     height: 15px;
 }
 
-.header-help-button {
+.header-help-button,
+.mobile-topbar-icon-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -324,7 +325,8 @@ html.dark-mode .main-content::before {
 }
 
 .header-back-button:hover,
-.header-help-button:hover {
+.header-help-button:hover,
+.mobile-topbar-icon-button:hover {
     background-color: var(--color-accent-soft);
     color: var(--color-accent);
 }
@@ -960,33 +962,31 @@ h1 {
 }
 
 /* ---------- ダッシュボード見出し（スローガン） ---------- */
-/* ページタイトルはヘッダー中央に一本化したため、ここは合言葉のような一言だけ残す */
 .dashboard-slogan {
-    font-size: 32px;
+    font-size: 26px;
     font-weight: 700;
+    line-height: 1.35;
     letter-spacing: -0.02em;
-    margin-bottom: 6px;
+    color: var(--color-text);
 }
 
 /* ---------- ダッシュボード：見出しをそのまま「本一覧へ」のヒーローバナーにする ---------- */
-/* 背景はアクセントカラーのグラデーションを薄く重ねた上に写真を敷き、白文字の可読性を保つ
-   （main-content::beforeの写真背景と同じ考え方）。ダークモードでは写真の明るい色味と噛み合わないため、
-   下の html.dark-mode 側の指定で元のグラデーションだけに戻す */
+/* 写真ではなく、暖色のグラデーションカード＋線画イラストの軽量な組み合わせにする
+   （どのテーマ色・ダークモードでも自然に馴染み、読み込みも一瞬で終わる） */
 .dashboard-hero-banner {
-    display: block;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     width: 100%;
+    overflow: hidden;
     margin-bottom: 28px;
-    padding: 40px 32px;
+    padding: 28px 24px;
     border: none;
     border-radius: var(--radius-lg);
-    background:
-        linear-gradient(135deg, rgba(163, 76, 46, 0.22), rgba(163, 76, 46, 0.4)),
-        url("images/dashboard-hero-bg.jpg");
-    background-size: cover;
-    background-position: center;
-    /* 写真込みで彩度を約8%落とし、高級感と落ち着きを出す */
-    filter: saturate(92%);
-    text-align: center;
+    background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-accent-soft));
+    text-align: left;
     cursor: pointer;
     transition: transform var(--transition-fast) var(--ease-standard),
         box-shadow var(--transition-fast) var(--ease-standard);
@@ -997,25 +997,124 @@ h1 {
     box-shadow: var(--shadow-md);
 }
 
-.dashboard-hero-banner .dashboard-slogan {
-    color: #ffffff;
-    text-shadow: 0 1px 12px rgba(74, 34, 18, 0.45);
+.dashboard-hero-illustration {
+    width: 108px;
+    height: 82px;
+    flex-shrink: 0;
 }
 
-.dashboard-hero-banner .page-subtitle {
-    color: rgba(255, 255, 255, 0.9);
-    margin-bottom: 22px;
-    text-shadow: 0 1px 10px rgba(74, 34, 18, 0.4);
+/* ---------- ダッシュボード：最近読んだ本（横スクロール） ---------- */
+.recently-read-section {
+    margin-bottom: 8px;
 }
 
-.dashboard-hero-cta {
-    display: inline-block;
-    padding: 11px 24px;
-    border-radius: 999px;
-    background-color: #ffffff;
+.recently-read-section[hidden] {
+    display: none;
+}
+
+.section-more-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 2px;
+    border: none;
+    background: none;
+    color: var(--color-text-secondary);
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.section-more-link:hover {
     color: var(--color-accent);
-    font-size: var(--font-size-body);
+}
+
+.section-more-link svg {
+    width: 16px;
+    height: 16px;
+}
+
+.recently-read-list {
+    list-style: none;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.recently-read-list::-webkit-scrollbar {
+    display: none;
+}
+
+.recently-read-card {
+    flex: 0 0 118px;
+    min-width: 0;
+    scroll-snap-align: start;
+    cursor: pointer;
+}
+
+.recently-read-cover {
+    position: relative;
+    aspect-ratio: 2 / 3;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+    margin-bottom: 8px;
+    transition: transform var(--transition-fast) var(--ease-standard);
+}
+
+.recently-read-card:hover .recently-read-cover {
+    transform: translateY(-4px);
+}
+
+.recently-read-cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.recently-read-cover-initial {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
     font-weight: 700;
+    color: var(--color-accent);
+}
+
+.recently-read-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--color-text);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.recently-read-author {
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.recently-read-rating {
+    margin-top: 3px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--color-accent-2);
 }
 
 /* ---------- ダッシュボード：AI機能への導線カード ---------- */
@@ -2648,6 +2747,7 @@ html.dark-mode .dashboard-tile::after {
 
 [class*="cover-hue-"] .book-cover-initial,
 [class*="cover-hue-"] .currently-reading-cover-initial,
+[class*="cover-hue-"] .recently-read-cover-initial,
 [class*="cover-hue-"] .detail-header-cover-initial,
 [class*="cover-hue-"] .book-search-result-cover-initial,
 [class*="cover-hue-"] .review-celebration-cover-initial {
@@ -3692,11 +3792,6 @@ html.dark-mode .icon-teal {
     background-image: linear-gradient(135deg, rgba(90, 191, 173, 0.28), rgba(90, 191, 173, 0.1));
 }
 
-/* ダッシュボードのヒーローバナーも、他の写真背景と同じく暗い色味と噛み合わないため、写真を消して元のグラデーションに戻す */
-html.dark-mode .dashboard-hero-banner {
-    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
-}
-
 /* ---------- モバイル用トップバー（☰メニュー＋アプリ名。PC幅では使わないので常に非表示） ---------- */
 .mobile-topbar {
     display: none;
@@ -3817,6 +3912,49 @@ html.dark-mode .dashboard-hero-banner {
 
     .pwa-banner-stack {
         padding-bottom: calc(var(--bottom-nav-height) + 14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ホーム画面用の行・それ以外の画面用の行、どちらもバーの幅いっぱいに広げ、
+       左右の要素を両端に振り分ける（js/screens/app.jsが表示中の画面に応じて出し分ける） */
+    .mobile-topbar-home-row,
+    .mobile-topbar-page-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    /* 左上固定の「≡」ボタン（#sidebar-toggle-tab）と文字が重ならないよう、
+       その分の幅をあらかじめ空けておく（.mobile-topbar-spacerと同じ考え方） */
+    .mobile-topbar-home-row {
+        padding-left: 34px;
+    }
+
+    .mobile-topbar-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        color: var(--color-text);
+    }
+
+    .mobile-topbar-brand-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 28px;
+        height: 28px;
+        flex-shrink: 0;
+        border-radius: 9px;
+        background-color: var(--color-accent);
+        color: #ffffff;
+    }
+
+    .mobile-topbar-brand-icon svg {
+        width: 15px;
+        height: 15px;
     }
 
     /* アプリ名／ページ名をヘッダー中央に表示するだけの見出し。押しても何も起きない
