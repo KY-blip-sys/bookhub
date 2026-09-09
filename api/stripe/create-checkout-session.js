@@ -1,19 +1,20 @@
 // BookHub: Stripe Checkoutセッションを作成するサーバー関数（Vercelが自動で動かす）。
 //
-// 料金プラン画面（js/screens/pricing.js）で「Plusにアップグレード」「Premiumにアップグレード」を押すと、
-// ログイン中のユーザーの代わりにこのAPIがStripe Checkoutセッションを作り、その決済ページURLを返す。
-// ブラウザはそのURLへ遷移するだけなので、カード情報がBookHub側のサーバーやブラウザを通ることは一切ない。
+// 料金プラン画面（js/screens/pricing.js）で「Plusにアップグレード」「Proにアップグレード」
+// 「Premiumにアップグレード」を押すと、ログイン中のユーザーの代わりにこのAPIがStripe Checkoutセッションを
+// 作り、その決済ページURLを返す。ブラウザはそのURLへ遷移するだけなので、カード情報がBookHub側の
+// サーバーやブラウザを通ることは一切ない。
 //
 // 支払いが成功したかどうか（プランの反映）はここでは扱わない。実際の反映はapi/stripe/webhook.jsが
 // StripeからのWebhookイベントを受けて行う（Checkoutページからの遷移だけでは「まだ確定していない」ため）。
 //
 // 必要なVercelの環境変数：
 //   STRIPE_SECRET_KEY … Stripeのシークレットキー（絶対にブラウザへは渡さない）
-//   STRIPE_PLUS_PRICE_ID / STRIPE_PREMIUM_PRICE_ID … 各プランのStripe Price ID
+//   STRIPE_PLUS_PRICE_ID / STRIPE_PRO_PRICE_ID / STRIPE_PREMIUM_PRICE_ID … 各プランのStripe Price ID
 //   SUPABASE_URL / SUPABASE_ANON_KEY … api/config.jsと共通（ログイン確認・既存Stripe顧客IDの参照に使う）
 //
 // 呼び出し方：
-//   POST /api/stripe/create-checkout-session に { "plan": "plus" | "premium" } を、
+//   POST /api/stripe/create-checkout-session に { "plan": "plus" | "pro" | "premium" } を、
 //   Authorizationヘッダー（"Bearer " + Supabaseのアクセストークン）付きで送ると
 //   { "url": "https://checkout.stripe.com/..." } が返るので、ブラウザをそのURLへ遷移させる
 //   （js/screens/pricing.jsのhandlePlanButtonClick参照）。
@@ -40,7 +41,7 @@ module.exports = async function handler(req, res) {
   const { plan } = req.body || {};
   const priceEnvName = PLAN_PRICE_ENV[plan];
   if (!priceEnvName) {
-    res.status(400).json({ error: "planには'plus'または'premium'を指定してください。" });
+    res.status(400).json({ error: "planには'plus'・'pro'・'premium'のいずれかを指定してください。" });
     return;
   }
 

@@ -10,7 +10,7 @@
 // 必要なVercelの環境変数：
 //   STRIPE_SECRET_KEY … api/stripe/create-checkout-session.jsと共通
 //   STRIPE_WEBHOOK_SECRET … Stripe Dashboardでこのエンドポイントを登録したときに発行される署名シークレット
-//   STRIPE_PLUS_PRICE_ID / STRIPE_PREMIUM_PRICE_ID … api/_lib/stripePlans.js（Price ID→プラン判定）と共通
+//   STRIPE_PLUS_PRICE_ID / STRIPE_PRO_PRICE_ID / STRIPE_PREMIUM_PRICE_ID … api/_lib/stripePlans.js（Price ID→プラン判定）と共通
 //   SUPABASE_URL … api/config.jsと共通
 //   SUPABASE_SERVICE_ROLE_KEY … Supabaseプロジェクトのservice role key（絶対にブラウザへは渡さない）
 //
@@ -42,7 +42,7 @@ function toTimestamptz(unixSeconds) {
   return typeof unixSeconds === "number" ? new Date(unixSeconds * 1000).toISOString() : null;
 }
 
-// StripeのSubscriptionオブジェクトの現在の価格から、BookHubのプランキー（plus/premium）を判定する
+// StripeのSubscriptionオブジェクトの現在の価格から、BookHubのプランキー（plus/pro/premium）を判定する
 function resolvePlanKeyFromSubscription(subscription) {
   const item = subscription.items && subscription.items.data && subscription.items.data[0];
   const priceId = item && item.price ? item.price.id : null;

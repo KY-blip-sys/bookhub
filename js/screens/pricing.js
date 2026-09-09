@@ -2,7 +2,7 @@
 // /api/plans（プラン一覧。api/_lib/aiCredits.jsのPLAN_CATALOGが唯一の情報源）と、
 // /api/credits（今ログインしているユーザーの現在のプラン・契約状況）を取得してカードを描画する。
 //
-// 「Plusにアップグレード」「Premiumにアップグレード」ボタンは、api/stripe/create-checkout-session.js を
+// 「Plusにアップグレード」「Proにアップグレード」「Premiumにアップグレード」ボタンは、api/stripe/create-checkout-session.js を
 // 呼んでStripe Checkoutの決済ページURLを受け取り、そこへブラウザごと遷移させる
 // （プランごとのStripe Price IDはサーバー側の環境変数にのみ置いてあり、ここでは扱わない）。
 // 決済が成功したかどうかの反映（プランの更新）は、Stripe Webhook（api/stripe/webhook.js）が行うため、
@@ -109,12 +109,12 @@ function buildPricingCard(plan, currentPlanKey) {
   return card;
 }
 
-// Stripe Checkoutに接続済みのプラン（Plus・Premium）のキー一覧
-const STRIPE_CHECKOUT_PLAN_KEYS = ["plus", "premium"];
+// Stripe Checkoutに接続済みのプラン（Plus・Pro・Premium）のキー一覧
+const STRIPE_CHECKOUT_PLAN_KEYS = ["plus", "pro", "premium"];
 
 // 各プランのボタンを押したときの処理。
-// Plus・Premiumなら api/stripe/create-checkout-session.js を呼び、返ってきたStripe Checkoutの
-// 決済ページへ遷移する。それ以外（Free・Pro）は決済処理が未対応のため案内のみ表示する
+// Plus・Pro・Premiumなら api/stripe/create-checkout-session.js を呼び、返ってきたStripe Checkoutの
+// 決済ページへ遷移する。それ以外（Free）は決済処理が不要のため案内のみ表示する
 async function handlePlanButtonClick(plan, button) {
   if (STRIPE_CHECKOUT_PLAN_KEYS.indexOf(plan.key) === -1) {
     showToast(plan.label + "への変更は、現在準備中です。");
