@@ -406,12 +406,22 @@ html.dark-mode .main-content::before {
 }
 
 /* ---------- サイドバー：ロゴ部分 ---------- */
+/* ロゴ（.sidebar-brand）と使い方ボタン（.sidebar-help-button）を横に並べる行。
+   常時固定表示のサイドバーの中に置くことで、使い方ボタンもスクロールに流れず常に見えるようにする */
+.sidebar-brand-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    margin-bottom: 14px;
+}
+
 .sidebar-brand {
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 100%;
-    margin-bottom: 14px;
+    flex: 1;
+    min-width: 0;
     padding: 6px;
     border: none;
     border-radius: var(--radius-sm);
@@ -4556,8 +4566,9 @@ html.dark-mode .dashboard-hero-banner {
         z-index: 11;
     }
 
-    /* アプリ名はヘッダー中央に固定表示（開閉は#sidebar-toggle-tabが担うため、トップバーには
-       ボタン用の横幅を確保せず、タイトルがそのまま全幅を使う）。
+    /* アプリ名／ページ名はヘッダー中央に固定表示（開閉は#sidebar-toggle-tabが担うため、
+       左側に別途ボタン用の横幅は確保しない）。右の使い方ボタンと同じ幅の空白（.mobile-topbar-spacer）を
+       左に置くことで、タイトルの中央寄せがヘッダー全体の真ん中に来るようにする。
        押すと最初のカテゴリ選択画面に戻るボタンなので、ボタンとしての見た目はリセットしておく */
     .mobile-topbar-title {
         flex: 1;
@@ -4579,6 +4590,15 @@ html.dark-mode .dashboard-hero-banner {
 
     .mobile-topbar-title:hover {
         background-color: var(--color-border);
+    }
+
+    .mobile-topbar-spacer {
+        width: 34px;
+        flex-shrink: 0;
+    }
+
+    .mobile-topbar-help-button {
+        flex-shrink: 0;
     }
 
     /* サイドバーの中身（ロゴ・カテゴリ切り替え・ナビ・今日の一言・読書時間リング・ダークモード）は
@@ -4691,9 +4711,10 @@ html.dark-mode .dashboard-hero-banner {
             visibility 0s linear var(--transition-standard);
     }
 
-    /* 「最初の画面に戻る」ロゴは、ヘッダー中央の「BookHub」ボタン（#mobile-topbar-title-button）が
-       同じ役割を持つため、ドロワーの中では重複させない。空いた分はナビ項目を大きくする余白にする */
-    .sidebar-brand {
+    /* 「最初の画面に戻る」ロゴ・使い方ボタンは、どちらもヘッダー中央の固定トップバー
+       （#mobile-topbar-title-button・.mobile-topbar-help-button）が同じ役割を持つため、
+       ドロワーの中では重複させない。空いた分はナビ項目を大きくする余白にする */
+    .sidebar-brand-row {
         display: none;
     }
 

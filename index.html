@@ -46,10 +46,25 @@
          このバー自体をCSSで非表示にする）。開くのは左上固定の「≡」ボタン（#sidebar-toggle-tab）が
          担うため、ここにはボタン用の横幅を確保せず、タイトルがそのまま全幅を使う -->
     <header class="mobile-topbar">
+      <!-- 右の使い方ボタンと同じ幅の空白。中央のタイトルが（見た目上の）真ん中に来るようにするための
+           バランス調整用で、押せる要素ではない -->
+      <span class="mobile-topbar-spacer" aria-hidden="true"></span>
+
       <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すとホームに戻る。
            ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
       <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button"
         aria-label="ホームに戻る">BookHub</button>
+
+      <!-- 使い方（説明）ボタン。以前は.content-header側にあったが、スクロールで流れず
+           常に見える位置に置きたいため、固定表示のこのヘッダーに移した -->
+      <button type="button" class="header-help-button mobile-topbar-help-button" aria-label="使い方">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.5" />
+          <path d="M12 17.5h.01" />
+        </svg>
+      </button>
     </header>
 
     <!-- スマホ・タブレット幅でサイドバーをドロワー表示にしたとき、裏のメイン画面を暗くして
@@ -58,17 +73,30 @@
 
     <!-- 左側に常時表示するサイドバー（スマホ・タブレット幅では、普段は画面外に隠れたドロワーになる） -->
     <aside class="sidebar">
-      <!-- 押すとホームに戻る -->
-      <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="ホームに戻る">
-        <span class="sidebar-brand-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-            stroke-linejoin="round">
-            <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
-            <path d="M12 6v14" />
+      <!-- ロゴ（押すとホームに戻る）と使い方ボタンを横に並べる行 -->
+      <div class="sidebar-brand-row">
+        <button type="button" class="sidebar-brand" id="sidebar-brand-button" aria-label="ホームに戻る">
+          <span class="sidebar-brand-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
+              <path d="M12 6v14" />
+            </svg>
+          </span>
+          <span class="sidebar-brand-name">BookHub</span>
+        </button>
+
+        <!-- 使い方（説明）ボタン。以前は.content-header側にあったが、スクロールで流れず
+             常に見える位置に置きたいため、常時固定表示のサイドバーに移した -->
+        <button type="button" class="header-help-button sidebar-help-button" aria-label="使い方">
+          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.5" />
+            <path d="M12 17.5h.01" />
           </svg>
-        </span>
-        <span class="sidebar-brand-name">BookHub</span>
-      </button>
+        </button>
+      </div>
 
       <!-- 実用書・小説の切り替え（アプリを開いたまま、いつでも切り替えられる） -->
       <div class="category-switcher" role="group" aria-label="カテゴリの切り替え">
@@ -265,7 +293,8 @@
       <!-- 右側のメイン画面（サイドバーのボタンで、下の1ページだけを表示する） -->
       <main class="main-content">
 
-        <!-- 常に上に表示されるヘッダー：戻るボタン（本の詳細のときだけ）／中央のページタイトル／使い方・今日の日付 -->
+        <!-- 常に上に表示されるヘッダー：戻るボタン（本の詳細のときだけ）／今日の日付。
+             使い方ボタンは常時固定表示のヘッダー（.mobile-topbar／.sidebar-brand-row）に移した -->
         <header class="content-header">
           <div class="content-header-side content-header-side-start">
             <button type="button" id="header-back-button" class="header-back-button" hidden aria-label="本一覧に戻る">
@@ -279,14 +308,6 @@
 
           <div class="content-header-side content-header-side-end">
             <p id="today-date" class="today-date"></p>
-            <button type="button" id="header-help-button" class="header-help-button" aria-label="使い方">
-              <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="9" />
-                <path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.5" />
-                <path d="M12 17.5h.01" />
-              </svg>
-            </button>
           </div>
         </header>
 
