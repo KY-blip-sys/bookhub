@@ -5061,42 +5061,7 @@ html.dark-mode .dashboard-hero-banner {
     height: 20px;
 }
 
-/* ---------- ログイン・新規登録画面 ---------- */
-/* アプリ本体（.app-shell）より前に表示する、全画面の認証画面。
-   ログイン状態が確認できるまでは常にこちらだけを表示し、確認できたら隠す（js/screens/auth.js） */
-#auth-screen {
-    position: fixed;
-    inset: 0;
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 24px;
-    background-color: var(--color-bg);
-    overflow-y: auto;
-}
-
-.auth-card {
-    width: 100%;
-    max-width: 360px;
-    padding: 32px 28px;
-    border-radius: var(--radius-lg);
-    background-color: var(--color-surface);
-    box-shadow: var(--shadow-md);
-    text-align: center;
-}
-
-.auth-card-icon {
-    font-size: 32px;
-}
-
-.auth-card h1 {
-    margin: 8px 0 4px;
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--color-text);
-}
-
+/* ---------- ログイン・新規登録フォーム（設定画面のアカウント欄、js/screens/auth.js） ---------- */
 .auth-card-subtitle {
     margin: 0 0 24px;
     font-size: var(--font-size-meta);

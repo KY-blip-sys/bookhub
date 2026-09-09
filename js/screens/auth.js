@@ -1,13 +1,14 @@
 // ---------- ログイン・新規登録・ログアウト ----------
-// BookHubの起動時、まずここでSupabaseへの接続とログイン状態の確認を行う。
-// ・ログイン済みなら、クラウドのデータを読み込んでからアプリ本体（.app-shell）を表示する
-// ・未ログインなら、ログイン・新規登録画面（#auth-screen）を表示したままにする
-// アプリ本体の他のスクリプト（js/models・js/screens/*）は、このファイルより先に読み込まれ、
-// 通常通りページを組み立てているが、#auth-screenの裏に隠れているだけなので問題ない。
+// BookHubはログインしなくても、そのままlocalStorageだけで使える（js/services/cloudSync.js参照）。
+// ログインは必須の入口ではなく、設定画面の「アカウント」欄から任意で行う機能という位置づけにしている。
+// 起動時はここで裏側でSupabaseへの接続とログイン状態の確認だけを行い（アプリ本体の表示は待たせない）、
+// 既にログイン済みのセッションが見つかった場合だけ、設定画面のアカウント欄をログイン済み表示に切り替え、
+// クラウドのデータを読み込む。
 
-const authScreen = document.getElementById("auth-screen");
-const authLoadingEl = document.getElementById("auth-loading");
-const authFormSection = document.getElementById("auth-form-section");
+const accountStatusLoadingEl = document.getElementById("account-status-loading");
+const accountLoggedInSection = document.getElementById("account-logged-in-section");
+const accountLoggedOutSection = document.getElementById("account-logged-out-section");
+
 const authForm = document.getElementById("auth-form");
 const authEmailInput = document.getElementById("auth-email");
 const authPasswordInput = document.getElementById("auth-password");
@@ -93,6 +94,11 @@ authForm.addEventListener("submit", async function (event) {
   event.preventDefault();
   clearAuthMessage();
 
+  if (!window.sb) {
+    showAuthMessage("ログイン機能を利用できませんでした。時間をおいて再度お試しください。", "error");
+    return;
+  }
+
   const email = authEmailInput.value.trim();
   const password = authPasswordInput.value;
 
@@ -149,14 +155,25 @@ logoutButton.addEventListener("click", async function () {
   location.reload(); // 一番確実にログイン前の状態へ戻すため、そのまま再読み込みする
 });
 
+// 設定画面のアカウント欄を、ログイン済み表示に切り替える
+function showLoggedInAccountUI(user) {
+  accountStatusLoadingEl.hidden = true;
+  accountLoggedOutSection.hidden = true;
+  accountEmailEl.textContent = user.email;
+  accountLoggedInSection.hidden = false;
+}
+
+// 設定画面のアカウント欄を、未ログイン表示（ログイン・新規登録フォーム）に切り替える
+function showLoggedOutAccountUI() {
+  accountStatusLoadingEl.hidden = true;
+  accountLoggedInSection.hidden = true;
+  accountLoggedOutSection.hidden = false;
+}
+
 // ログインが確認できたときの共通処理（ログインフォームからの成功時／起動時のセッション確認、どちらからも呼ぶ）
 async function onSignedIn(user) {
   setCurrentUserId(user.id); // js/services/cloudSync.js：以後の保存を自動でクラウドにも反映する
-  accountEmailEl.textContent = user.email;
-
-  authLoadingEl.hidden = false;
-  authFormSection.hidden = true;
-  authLoadingEl.textContent = "データを読み込んでいます…";
+  showLoggedInAccountUI(user);
 
   // 現在のプラン・AIクレジット残高をここで一度取得しておく（js/services/planStatus.js）。
   // 広告表示（js/services/ads.js）はこの結果を待たずに反映され、AI画面・設定画面・料金プラン画面は
@@ -171,7 +188,7 @@ async function onSignedIn(user) {
   await initializeFavoriteLearningsFromCloud(user.id); // js/models/favoriteLearningsModel.js：学んだことはSupabaseのfavorite_learningsテーブルから読み込む
 
   // クラウドから読み込んだ最新のデータで、画面を描画し直す
-  // （ここまでの初期表示は、ログイン確認前のlocalStorageの内容で行われていたため）
+  // （ここまでの表示は、ログイン確認前のlocalStorageの内容で行われていたため）
   document.documentElement.classList.toggle("dark-mode", loadDarkModePreference());
   darkModeToggle.checked = loadDarkModePreference(); // app.jsで定義済みのグローバル変数
   if (!loadActiveCategory()) {
@@ -180,17 +197,12 @@ async function onSignedIn(user) {
   updateCategorySwitcherUI();
   updateNavVisibility();
 
-  if (!handleCheckoutRedirect() && !handlePortalRedirect()) {
-    goToNavPage("dashboard");
-  }
-
-  authScreen.hidden = true;
-  document.querySelector(".app-shell").hidden = false;
+  // ログイン中に既に開いていた画面を、最新のデータで開き直す（別の画面へ移動させない）
+  goToNavPage(currentNavKey);
 }
 
 // Stripe Checkoutの決済ページから戻ってきたときの処理（js/screens/pricing.jsのhandlePlanButtonClick参照）。
 // URLの?checkout=success/cancelを見て、料金プラン画面へ遷移しつつ結果を案内する。
-// 戻り値：料金プラン画面へ遷移した場合はtrue（呼び出し側でgoToNavPage("dashboard")を省略するため）
 function handleCheckoutRedirect() {
   const params = new URLSearchParams(location.search);
   const checkoutResult = params.get("checkout");
@@ -215,7 +227,6 @@ function handleCheckoutRedirect() {
 // Stripe Customer Portal（サブスクリプション管理）から戻ってきたときの処理
 // （js/screens/settings.jsのsettingsSubscriptionButton参照）。
 // URLの?portal=returnを見て、設定画面へ遷移しつつ案内する。
-// 戻り値：設定画面へ遷移した場合はtrue（呼び出し側でgoToNavPage("dashboard")を省略するため）
 function handlePortalRedirect() {
   const params = new URLSearchParams(location.search);
   if (params.get("portal") !== "return") {
@@ -232,6 +243,8 @@ function handlePortalRedirect() {
 }
 
 // ---------- 起動時の処理 ----------
+// アプリ本体（.app-shell）は最初から表示されており、ここでの処理を待たずに（localStorageの内容で）
+// 使い始められる。ここでは裏側でログイン状態だけを確認し、結果を設定画面のアカウント欄に反映する。
 async function initAuth() {
   let config;
   try {
@@ -241,10 +254,8 @@ async function initAuth() {
       throw new Error(config.error || "設定の取得に失敗しました。");
     }
   } catch (e) {
-    authLoadingEl.hidden = false;
-    authFormSection.hidden = true;
-    authLoadingEl.textContent =
-      "Supabaseの接続設定を読み込めませんでした。Vercelの環境変数（SUPABASE_URL / SUPABASE_ANON_KEY）を確認してください。";
+    accountStatusLoadingEl.textContent =
+      "ログイン機能を利用できませんでした（Supabaseの接続設定を読み込めませんでした）。ログインなしでそのままお使いいただけます。";
     return;
   }
 
@@ -255,9 +266,10 @@ async function initAuth() {
     await onSignedIn(data.session.user);
   } else {
     setAuthMode("login");
-    authLoadingEl.hidden = true;
-    authFormSection.hidden = false;
+    showLoggedOutAccountUI();
   }
+
+  handleCheckoutRedirect() || handlePortalRedirect();
 }
 
 initAuth();

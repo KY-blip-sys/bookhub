@@ -40,45 +40,7 @@
 
 <body>
 
-  <!-- ログイン・新規登録画面：ログイン状態が確認できるまでは、常にこちらだけを表示する（js/screens/auth.js） -->
-  <div id="auth-screen">
-    <div class="auth-card">
-      <p class="auth-card-icon">📖</p>
-      <h1>BookHub</h1>
-      <p class="auth-card-subtitle" id="auth-subtitle">読み込んでいます…</p>
-
-      <p id="auth-loading" class="auth-loading-text">少々お待ちください…</p>
-
-      <div id="auth-form-section" hidden>
-        <p id="auth-message" class="auth-message" hidden></p>
-        <form id="auth-form" class="auth-form">
-          <label for="auth-email">メールアドレス</label>
-          <input type="email" id="auth-email" autocomplete="email" required>
-
-          <label for="auth-password">パスワード</label>
-          <input type="password" id="auth-password" autocomplete="current-password" required minlength="6">
-
-          <div id="auth-password-confirm-field" hidden>
-            <label for="auth-password-confirm">パスワード（確認用）</label>
-            <input type="password" id="auth-password-confirm" autocomplete="new-password" minlength="6">
-          </div>
-
-          <button type="submit" id="auth-submit-button" class="auth-submit-button">ログイン</button>
-        </form>
-
-        <p class="auth-switch-row" id="auth-switch-row-signup">
-          アカウントをお持ちでない方は
-          <button type="button" id="auth-switch-to-signup" class="auth-switch-button">新規登録</button>
-        </p>
-        <p class="auth-switch-row" id="auth-switch-row-login" hidden>
-          すでにアカウントをお持ちの方は
-          <button type="button" id="auth-switch-to-login" class="auth-switch-button">ログイン</button>
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <div class="app-shell" hidden>
+  <div class="app-shell">
 
     <!-- スマホ・タブレット幅だけに表示するトップバー（PC幅では常時表示のサイドバーがあるため、
          このバー自体をCSSで非表示にする）。開くのは左上固定の「≡」ボタン（#sidebar-toggle-tab）が
@@ -1413,10 +1375,49 @@
         <!-- 設定画面 -->
         <div id="screen-settings" class="page" hidden>
 
+          <!-- アカウント：ログイン状態に応じて、以下の3つのうち1つだけを表示する（js/screens/auth.js）。
+               ・確認中：起動直後、ログイン状態がまだ確認できていない間だけ一瞬表示する
+               ・ログイン済み：メールアドレスとログアウトボタン
+               ・未ログイン：ログイン・新規登録フォーム（ログインしなくても、このままアプリは使える） -->
           <div class="settings-card">
             <h3>アカウント</h3>
-            <p class="account-email" id="account-email"></p>
-            <button type="button" id="logout-button" class="danger-button">ログアウト</button>
+
+            <p id="account-status-loading" class="auth-loading-text">ログイン状況を確認しています…</p>
+
+            <div id="account-logged-in-section" hidden>
+              <p class="account-email" id="account-email"></p>
+              <button type="button" id="logout-button" class="danger-button">ログアウト</button>
+            </div>
+
+            <div id="account-logged-out-section" hidden>
+              <p class="field-hint">ログインすると、複数の端末で同じデータを使えるようになります。（ログインしなくても、このままお使いいただけます）</p>
+
+              <p class="auth-card-subtitle" id="auth-subtitle">ログイン：メールアドレスとパスワードを入力してください</p>
+              <p id="auth-message" class="auth-message" hidden></p>
+              <form id="auth-form" class="auth-form">
+                <label for="auth-email">メールアドレス</label>
+                <input type="email" id="auth-email" autocomplete="email" required>
+
+                <label for="auth-password">パスワード</label>
+                <input type="password" id="auth-password" autocomplete="current-password" required minlength="6">
+
+                <div id="auth-password-confirm-field" hidden>
+                  <label for="auth-password-confirm">パスワード（確認用）</label>
+                  <input type="password" id="auth-password-confirm" autocomplete="new-password" minlength="6">
+                </div>
+
+                <button type="submit" id="auth-submit-button" class="auth-submit-button">ログイン</button>
+              </form>
+
+              <p class="auth-switch-row" id="auth-switch-row-signup">
+                アカウントをお持ちでない方は
+                <button type="button" id="auth-switch-to-signup" class="auth-switch-button">新規登録</button>
+              </p>
+              <p class="auth-switch-row" id="auth-switch-row-login" hidden>
+                すでにアカウントをお持ちの方は
+                <button type="button" id="auth-switch-to-login" class="auth-switch-button">ログイン</button>
+              </p>
+            </div>
           </div>
 
           <!-- プラン：現在のプラン・残りAIクレジット。実際の取得・判定はjs/services/planStatus.jsが行い、
