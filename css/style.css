@@ -19,21 +19,20 @@
    個別の部品を作るときは、なるべく色を直接書かず、この変数を使います。
    こうしておくと、後から配色を変えたいときにここだけ直せばよくなります。 */
 :root {
-    /* 「紙とインク」をイメージした、あたたかみのある配色（本を読むアプリらしい落ち着いた色に）。
-       アクセントは、よくあるSaaS的な青ではなく、装丁の革やインクを思わせるテラコッタに
-       （参考にした画像と同じ、彩度を上げすぎない落ち着いたオレンジ寄りの色に合わせている）。
-       2026年リニューアルで、クリームの背景に対して白いカードが浮き上がるコントラストを強め、
-       角丸・影も一段階大きくして「アプリらしい」柔らかさと高級感を出している。 */
-    --color-bg: #faf3ea;
-    --color-bg-secondary: #f2e4d2;
+    /* 2026-09-09 追加のリファレンス（BookHub Japanese Reading App UI Mockup）に合わせた配色。
+       Apple／Notion／Kindle／無印良品のような「シンプル・上質・温かみ」を狙い、
+       色数を増やさずクリーム背景＋白カード＋テラコッタ1色のアクセントに絞っている。 */
+    --color-bg: #faf7f2;
+    --color-bg-secondary: #f2ece2;
     --color-surface: #ffffff;
-    --color-text: #241c15;
-    --color-text-secondary: #8b7d6e;
-    --color-border: rgba(36, 28, 21, 0.08);
-    --color-accent: #c15f3c;
-    --color-accent-hover: #a94e2f;
-    --color-accent-soft: rgba(193, 95, 60, 0.14);
-    --color-accent-2: #f2a93b;
+    --color-text: #2c2c2c;
+    --color-text-secondary: #555555;
+    --color-text-tertiary: #8a8a8a;
+    --color-border: #ececec;
+    --color-accent: #d67a45;
+    --color-accent-hover: #b8632f;
+    --color-accent-soft: rgba(214, 122, 69, 0.14);
+    --color-accent-2: #f5c39b;
     --color-glass: rgba(255, 255, 255, 0.75);
 
     /* PWAのインストール導線・更新通知ボタン専用。白文字での十分なコントラスト比(4.5:1以上)を
@@ -47,16 +46,20 @@
     --color-danger: #af3b32;
     --color-danger-soft: rgba(175, 59, 50, 0.12);
 
-    --radius-lg: 28px;
+    --radius-lg: 24px;
     --radius-md: 18px;
     --radius-sm: 12px;
+    /* ボタン専用の完全な丸角（カードのradius-lgとは独立させ、ピル型ボタンにだけ使う） */
+    --radius-pill: 999px;
 
     /* スマホ・タブレット幅の下部タブバー（.bottom-nav）の高さ。トースト・PWAバナーが
        バーに隠れないよう、この値を基準に浮かせる位置を計算する */
     --bottom-nav-height: 62px;
 
-    --shadow-sm: 0 2px 8px rgba(36, 28, 21, 0.06);
-    --shadow-md: 0 4px 12px rgba(36, 28, 21, 0.05), 0 18px 34px rgba(36, 28, 21, 0.1);
+    /* カードの影は「ほぼ気づかないくらい弱く」がリファレンスの指定。sm/mdどちらも同じ弱さを基本にし、
+       hover時のmdだけごくわずかに強める程度に留める */
+    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.06);
 
     --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
     /* カードの登場・達成演出など、少し弾む「気持ちよさ」を出したい場面専用のイージング */
@@ -64,11 +67,14 @@
     --transition-fast: 0.2s;
     --transition-standard: 0.3s;
 
-    /* 文字の大きさの階層：セクション見出し→本文→補足→メタ情報 */
-    --font-size-heading: 20px;
+    /* 文字の大きさの階層：アプリ名など最大の見出し→画面タイトル→カード見出し→本文→補足→メタ情報。
+       リファレンスの「文字を小さくしないこと」指定に合わせ、captionの下限も14pxにしている */
+    --font-size-display: 31px;
+    --font-size-page-title: 27px;
+    --font-size-heading: 21px;
     --font-size-body: 16px;
     --font-size-meta: 14px;
-    --font-size-caption: 13px;
+    --font-size-caption: 14px;
 
     /* ページ背景に敷く、ぼかした写真（main-contentで使う）。
        白オーバーレイは薄めにして、写真の色味がちゃんと見えるようにする */
@@ -83,12 +89,13 @@ html.dark-mode {
     --color-bg-secondary: #221c16;
     --color-surface: #221c16;
     --color-text: #f4ece0;
-    --color-text-secondary: #a89c8c;
+    --color-text-secondary: #cfc4b6;
+    --color-text-tertiary: #a89c8c;
     --color-border: rgba(255, 245, 230, 0.09);
     --color-accent: #e08355;
     --color-accent-hover: #eda274;
     --color-accent-soft: rgba(224, 131, 85, 0.18);
-    --color-accent-2: #f2b855;
+    --color-accent-2: #f2c9a0;
     --color-glass: rgba(34, 28, 22, 0.72);
 
     --color-success: #6fb37e;
@@ -116,7 +123,7 @@ html.dark-mode {
 
 /* ---------- 基本スタイル ---------- */
 body {
-    font-family: "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: "Noto Sans JP", "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
     background-color: var(--color-bg);
     color: var(--color-text);
     line-height: 1.6;
@@ -964,7 +971,7 @@ h1 {
 
 /* ---------- ダッシュボード見出し（スローガン） ---------- */
 .dashboard-slogan {
-    font-size: 26px;
+    font-size: 30px;
     font-weight: 700;
     line-height: 1.35;
     letter-spacing: -0.02em;
@@ -981,12 +988,14 @@ h1 {
     justify-content: space-between;
     gap: 12px;
     width: 100%;
+    /* リファレンス指定の220〜240pxに合わせる */
+    min-height: 228px;
     overflow: hidden;
     margin-bottom: 28px;
     padding: 28px 24px;
     border: none;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--color-bg-secondary), rgba(193, 95, 60, 0.24));
+    background: linear-gradient(135deg, var(--color-bg-secondary), rgba(214, 122, 69, 0.24));
     text-align: left;
     cursor: pointer;
     transition: transform var(--transition-fast) var(--ease-standard),
@@ -1003,8 +1012,8 @@ html.dark-mode .dashboard-hero-banner {
 }
 
 .dashboard-hero-illustration {
-    width: 108px;
-    height: 82px;
+    width: 148px;
+    height: 112px;
     flex-shrink: 0;
 }
 
@@ -1119,7 +1128,7 @@ html.dark-mode .dashboard-hero-banner {
     margin-top: 3px;
     font-size: 12px;
     letter-spacing: 1px;
-    color: var(--color-accent-2);
+    color: var(--color-accent);
 }
 
 /* ---------- ダッシュボード：AI機能への導線カード ---------- */
@@ -1452,11 +1461,11 @@ select:hover {
 button {
     padding: 11px 18px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     background-color: var(--color-surface);
     color: var(--color-text);
     font-size: var(--font-size-body);
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     transition: background-color var(--transition-fast) var(--ease-standard),
@@ -1469,9 +1478,9 @@ button:hover {
     background-color: var(--color-bg-secondary);
 }
 
-/* タップ・クリック時に少し縮めて、押した手応えを全ボタン共通で出す */
+/* タップ・クリック時に少し縮めて、押した手応えを全ボタン共通で出す（95%まで縮小） */
 button:active {
-    transform: scale(0.97);
+    transform: scale(0.95);
 }
 
 button:focus-visible,
@@ -1484,38 +1493,41 @@ a:focus-visible,
     outline-offset: 2px;
 }
 
-/* 送信・保存ボタンや主要な操作ボタンは、アクセントカラーの丸い大きめピルにして「ここを押せばいい」を明確にする */
+/* 送信・保存ボタンや主要な操作ボタンは、アクセントカラーの丸い大きめピルにして「ここを押せばいい」を明確にする。
+   影は付けず（リファレンス指定）、56px前後の高さでタップしやすい大きさを確保する */
 button[type="submit"] {
-    padding: 13px 22px;
+    min-height: 56px;
+    padding: 13px 28px;
     background-color: var(--color-accent);
     color: #ffffff;
     border-color: var(--color-accent);
-    box-shadow: 0 10px 20px -8px rgba(193, 95, 60, 0.45);
+    box-shadow: none;
 }
 
 button[type="submit"]:hover {
     background-color: var(--color-accent-hover);
-    box-shadow: 0 12px 24px -8px rgba(193, 95, 60, 0.5);
+    box-shadow: none;
 }
 
 /* 「＋ ○○を追加」のように、モーダルを開く起点になるボタン（本一覧の追加カードと揃えた見た目） */
 .add-item-button {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
-    padding: 11px 20px;
+    min-height: 56px;
+    padding: 11px 28px;
     margin-bottom: 20px;
     border: none;
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     background-color: var(--color-accent);
     color: #ffffff;
     font-size: var(--font-size-body);
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    box-shadow: 0 10px 20px -8px rgba(193, 95, 60, 0.45);
-    transition: background-color var(--transition-fast) var(--ease-standard),
-        box-shadow var(--transition-fast) var(--ease-standard);
+    box-shadow: none;
+    transition: background-color var(--transition-fast) var(--ease-standard);
 }
 
 .add-item-button:hover {
@@ -1535,12 +1547,12 @@ button[type="submit"]:hover {
     gap: 6px;
     padding: 10px 18px;
     margin-bottom: 20px;
-    border: 2px dashed var(--color-border);
-    border-radius: var(--radius-lg);
+    border: 2px dashed rgba(44, 44, 44, 0.18);
+    border-radius: var(--radius-pill);
     background-color: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     font-size: var(--font-size-body);
-    font-weight: 600;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     transition: border-color var(--transition-fast) var(--ease-standard),
@@ -2478,7 +2490,7 @@ html.dark-mode .dashboard-tile::after {
     margin-top: 8px;
     font-size: 14px;
     letter-spacing: 1px;
-    color: var(--color-accent-2);
+    color: var(--color-accent);
 }
 
 .achievement-card-hint {
@@ -2665,8 +2677,8 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .star-button.star-filled {
-    color: var(--color-accent-2);
-    /* 光っているときの、金色に近い濃い色 */
+    color: var(--color-accent);
+    /* 光っているときの色（メインカラーのオレンジ） */
 }
 
 .star-button:hover {
@@ -2747,7 +2759,7 @@ html.dark-mode .dashboard-tile::after {
 }
 
 .cover-hue-5 {
-    background: linear-gradient(160deg, #ea8f63, #c15f3c) !important;
+    background: linear-gradient(160deg, #ea8f63, #d67a45) !important;
 }
 
 [class*="cover-hue-"] .book-cover-initial,
@@ -2790,7 +2802,7 @@ html.dark-mode .dashboard-tile::after {
     margin-top: 4px;
     font-size: 13px;
     letter-spacing: 1px;
-    color: var(--color-accent-2);
+    color: var(--color-accent);
 }
 
 /* 実践中のときだけ表示する、控えめなチップ */
@@ -3469,7 +3481,7 @@ html.dark-mode .dashboard-tile::after {
 .review-rating {
     font-size: 18px;
     letter-spacing: 1px;
-    color: var(--color-accent-2);
+    color: var(--color-accent);
     margin-bottom: 6px;
 }
 
@@ -3722,7 +3734,7 @@ html.dark-mode .dashboard-tile::after {
 
 .share-card-rating {
     margin-top: 12px;
-    color: var(--color-accent-2);
+    color: var(--color-accent);
     font-size: 17px;
     letter-spacing: 3px;
 }
@@ -4120,7 +4132,7 @@ html.dark-mode .icon-teal {
 
     .main-content {
         max-width: 100%;
-        padding: 24px 20px;
+        padding: 32px 24px;
     }
 
     .ad-container {
@@ -4139,7 +4151,8 @@ html.dark-mode .icon-teal {
 /* ---------- レスポンシブ対応（スマホ） ---------- */
 @media (max-width: 600px) {
     .main-content {
-        padding: 18px 16px;
+        /* リファレンス指定：画面左右24px・上下32pxの余白 */
+        padding: 32px 24px;
     }
 
     .ad-container {
@@ -4593,11 +4606,11 @@ html.dark-mode .icon-teal {
 .ai-suggestion-chip {
     padding: 9px 16px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
+    border-radius: var(--radius-pill);
     background-color: var(--color-surface);
     color: var(--color-accent);
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     transition: background-color var(--transition-fast) var(--ease-standard),
@@ -4612,7 +4625,7 @@ html.dark-mode .icon-teal {
 .ai-chat-message {
     max-width: 82%;
     padding: 10px 14px;
-    border-radius: var(--radius-md);
+    border-radius: 20px;
     font-size: var(--font-size-body);
     line-height: 1.6;
     white-space: pre-wrap;
@@ -5158,7 +5171,7 @@ html.dark-mode .icon-teal {
 }
 
 .ai-recommend-stars {
-    color: var(--color-accent-2);
+    color: var(--color-accent);
     letter-spacing: 1px;
 }
 
