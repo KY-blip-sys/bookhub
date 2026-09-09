@@ -253,16 +253,38 @@
           <button type="button" class="dashboard-header dashboard-hero-banner" data-nav-target="books">
             <p class="dashboard-slogan">本があると<br>人生はもっと豊かになる</p>
 
-            <!-- 本の積み重ねと観葉植物の簡単なイラスト（写真ではなく線画で、軽量かつどのテーマ色でも馴染むようにする） -->
-            <svg class="dashboard-hero-illustration" viewBox="0 0 160 120" fill="none" aria-hidden="true">
-              <rect x="18" y="86" width="86" height="14" rx="3" fill="var(--color-accent)" opacity="0.85" />
-              <rect x="26" y="70" width="70" height="14" rx="3" fill="var(--color-accent-2)" opacity="0.9" />
-              <rect x="34" y="54" width="54" height="14" rx="3" fill="var(--color-accent)" opacity="0.7" />
-              <path d="M118 100V66c0-10 8-18 18-18" stroke="var(--color-text)" stroke-width="3" stroke-linecap="round"
-                opacity="0.35" />
-              <circle cx="136" cy="46" r="14" fill="var(--color-success)" opacity="0.35" />
-              <circle cx="122" cy="40" r="10" fill="var(--color-success)" opacity="0.45" />
-              <circle cx="140" cy="30" r="9" fill="var(--color-success)" opacity="0.5" />
+            <!-- 積み重ねた本と観葉植物のイラスト（写真は使わず、本の装丁らしいアースカラーの
+                 線画イラストにすることで、軽量かつどのテーマ色でも馴染むようにする） -->
+            <svg class="dashboard-hero-illustration" viewBox="0 0 160 120" aria-hidden="true">
+              <!-- 地面の影 -->
+              <ellipse cx="76" cy="111" rx="60" ry="6" fill="#000000" opacity="0.08" />
+
+              <!-- 本の積み重ね（下から3冊、少しずつ角度をつけて自然な山にする） -->
+              <g>
+                <rect x="12" y="88" width="94" height="17" rx="4" fill="#B5502F" />
+                <rect x="93" y="90" width="7" height="13" rx="1.5" fill="#F3E9D6" opacity="0.9" />
+              </g>
+              <g transform="rotate(-2 60 80)">
+                <rect x="20" y="72" width="78" height="16" rx="4" fill="#7C8B69" />
+                <rect x="84" y="74" width="7" height="12" rx="1.5" fill="#F3E9D6" opacity="0.9" />
+              </g>
+              <g transform="rotate(3 55 65)">
+                <rect x="28" y="57" width="58" height="16" rx="4" fill="#DCA753" />
+                <rect x="72" y="59" width="7" height="12" rx="1.5" fill="#F3E9D6" opacity="0.9" />
+              </g>
+
+              <!-- 観葉植物：鉢＋葉 -->
+              <path d="M126 100c0-15 5-27 16-31" stroke="#8B6A4F" stroke-width="3" stroke-linecap="round"
+                fill="none" />
+              <path d="M117 95c9 4 15 1 19-4" stroke="#8B6A4F" stroke-width="2.5" stroke-linecap="round"
+                fill="none" />
+              <path d="M129 88c-2 6-1 11 3 15" stroke="#8B6A4F" stroke-width="2.5" stroke-linecap="round"
+                fill="none" />
+              <ellipse cx="112" cy="93" rx="10" ry="14" fill="#4F7549" transform="rotate(-25 112 93)" />
+              <ellipse cx="121" cy="82" rx="9" ry="13" fill="#6B9163" transform="rotate(8 121 82)" />
+              <ellipse cx="140" cy="86" rx="9" ry="13" fill="#5C8557" transform="rotate(30 140 86)" />
+              <path d="M110 96h30l-3 14a4 4 0 0 1-4 3.5h-16a4 4 0 0 1-4-3.5Z" fill="#A9663F" />
+              <rect x="108" y="92" width="34" height="7" rx="2.5" fill="#B5502F" />
             </svg>
           </button>
 

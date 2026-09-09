@@ -20,7 +20,8 @@
    こうしておくと、後から配色を変えたいときにここだけ直せばよくなります。 */
 :root {
     /* 「紙とインク」をイメージした、あたたかみのある配色（本を読むアプリらしい落ち着いた色に）。
-       アクセントは、よくあるSaaS的な青ではなく、装丁の革やインクを思わせるコーラルオレンジに。
+       アクセントは、よくあるSaaS的な青ではなく、装丁の革やインクを思わせるテラコッタに
+       （参考にした画像と同じ、彩度を上げすぎない落ち着いたオレンジ寄りの色に合わせている）。
        2026年リニューアルで、クリームの背景に対して白いカードが浮き上がるコントラストを強め、
        角丸・影も一段階大きくして「アプリらしい」柔らかさと高級感を出している。 */
     --color-bg: #faf3ea;
@@ -29,9 +30,9 @@
     --color-text: #241c15;
     --color-text-secondary: #8b7d6e;
     --color-border: rgba(36, 28, 21, 0.08);
-    --color-accent: #e8734a;
-    --color-accent-hover: #d3603a;
-    --color-accent-soft: rgba(232, 115, 74, 0.14);
+    --color-accent: #c15f3c;
+    --color-accent-hover: #a94e2f;
+    --color-accent-soft: rgba(193, 95, 60, 0.14);
     --color-accent-2: #f2a93b;
     --color-glass: rgba(255, 255, 255, 0.75);
 
@@ -84,9 +85,9 @@ html.dark-mode {
     --color-text: #f4ece0;
     --color-text-secondary: #a89c8c;
     --color-border: rgba(255, 245, 230, 0.09);
-    --color-accent: #f0875a;
-    --color-accent-hover: #f5a17c;
-    --color-accent-soft: rgba(240, 135, 90, 0.18);
+    --color-accent: #e08355;
+    --color-accent-hover: #eda274;
+    --color-accent-soft: rgba(224, 131, 85, 0.18);
     --color-accent-2: #f2b855;
     --color-glass: rgba(34, 28, 22, 0.72);
 
@@ -985,11 +986,15 @@ h1 {
     padding: 28px 24px;
     border: none;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--color-bg-secondary), var(--color-accent-soft));
+    background: linear-gradient(135deg, var(--color-bg-secondary), rgba(193, 95, 60, 0.24));
     text-align: left;
     cursor: pointer;
     transition: transform var(--transition-fast) var(--ease-standard),
         box-shadow var(--transition-fast) var(--ease-standard);
+}
+
+html.dark-mode .dashboard-hero-banner {
+    background: linear-gradient(135deg, var(--color-bg-secondary), rgba(224, 131, 85, 0.3));
 }
 
 .dashboard-hero-banner:hover {
@@ -1485,12 +1490,12 @@ button[type="submit"] {
     background-color: var(--color-accent);
     color: #ffffff;
     border-color: var(--color-accent);
-    box-shadow: 0 10px 20px -8px rgba(232, 115, 74, 0.55);
+    box-shadow: 0 10px 20px -8px rgba(193, 95, 60, 0.45);
 }
 
 button[type="submit"]:hover {
     background-color: var(--color-accent-hover);
-    box-shadow: 0 12px 24px -8px rgba(232, 115, 74, 0.6);
+    box-shadow: 0 12px 24px -8px rgba(193, 95, 60, 0.5);
 }
 
 /* 「＋ ○○を追加」のように、モーダルを開く起点になるボタン（本一覧の追加カードと揃えた見た目） */
@@ -1508,7 +1513,7 @@ button[type="submit"]:hover {
     font-weight: 700;
     font-family: inherit;
     cursor: pointer;
-    box-shadow: 0 10px 20px -8px rgba(232, 115, 74, 0.55);
+    box-shadow: 0 10px 20px -8px rgba(193, 95, 60, 0.45);
     transition: background-color var(--transition-fast) var(--ease-standard),
         box-shadow var(--transition-fast) var(--ease-standard);
 }
