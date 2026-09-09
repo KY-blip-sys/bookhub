@@ -7,7 +7,9 @@
 // 解約はStripeの既定動作（期間終了時に解約）に従う。解約してもStripeのsubscription.statusは
 // 期間終了までactiveのままのため、api/stripe/webhook.jsが反映するsubscriptions.statusもactiveのまま
 // →supabase/stripe_subscriptions.sqlの同期トリガーによりprofiles.planも有効のまま維持される
-// （＝契約終了日まで現在のプランを使える。追加の状態管理は不要）。
+// （＝契約終了日まで現在のプランを使える）。「解約予約中」であること自体は
+// subscriptions.cancel_at_period_end（api/stripe/webhook.jsが同期）で判定し、
+// 料金プラン画面・設定画面に表示する（js/screens/pricing.js・js/screens/settings.js参照）。
 //
 // 必要なVercelの環境変数：api/stripe/create-checkout-session.jsと共通
 //   STRIPE_SECRET_KEY / SUPABASE_URL / SUPABASE_ANON_KEY

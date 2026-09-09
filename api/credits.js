@@ -6,8 +6,9 @@
 //
 // プラン自体（profiles.plan）は、Stripe Webhook（api/stripe/webhook.js）がsubscriptionsテーブルを
 // 更新するたびに自動で同期されるため、ここでは読み取るだけでよい（Stripe側の状態には触れない）。
-// 料金プラン画面（js/screens/pricing.js）で「次回更新日」「解約予定」を表示できるよう、
-// subscriptionsテーブルのstatus・expires_atも合わせて返す。
+// 料金プラン画面（js/screens/pricing.js）・設定画面（js/screens/settings.js）で
+// 「次回更新日」「解約予約中」を表示できるよう、subscriptionsテーブルの
+// status・expires_at・cancel_at_period_endも合わせて返す。
 //
 // 必要なVercelの環境変数：api/chat.jsと共通（SUPABASE_URL / SUPABASE_ANON_KEY）
 //
@@ -16,7 +17,9 @@
 //   {
 //     "credits": { "plan": "premium", "remaining": 820, "monthlyLimit": 1000, "aiEnabled": true, "ads": false },
 //     "featureCosts": [{ "feature": "chat", "label": "AIチャット", "cost": 5 }, ...],
-//     "subscription": { "status": "active", "expiresAt": "2026-09-30T00:00:00.000Z" } // 未契約ならnull
+//     "subscription": {
+//       "status": "active", "expiresAt": "2026-09-30T00:00:00.000Z", "cancelAtPeriodEnd": false
+//     } // 未契約ならnull。cancelAtPeriodEndがtrueなら「期間終了時に解約予定」（expiresAtまでは利用できる）
 //   } のような残高・消費クレジット一覧・契約状況が返る。
 
 const { getAuthenticatedUser } = require("./_lib/supabaseUser");
@@ -49,7 +52,7 @@ module.exports = async function handler(req, res) {
 
   const { data: subscriptionRow } = await auth.supabase
     .from("subscriptions")
-    .select("status, expires_at")
+    .select("status, expires_at, cancel_at_period_end")
     .eq("user_id", auth.user.id)
     .maybeSingle();
 
@@ -63,7 +66,12 @@ module.exports = async function handler(req, res) {
     },
     featureCosts: getPublicFeatureCosts(),
     subscription: subscriptionRow
-      ? { status: subscriptionRow.status, expiresAt: subscriptionRow.expires_at }
+      ? {
+          status: subscriptionRow.status,
+          expiresAt: subscriptionRow.expires_at,
+          // trueなら「期間終了時に解約予定」。falseならプラン変更なく契約継続中
+          cancelAtPeriodEnd: subscriptionRow.cancel_at_period_end
+        }
       : null
   });
 };

@@ -6,6 +6,11 @@
 // 月替わりを待たずにAIクレジットもその場で付与する（supabase/stripe_subscriptions.sqlの
 // grant_plan_credits関数参照）。
 //
+// 解約（期間終了時に解約する設定＝cancel_at_period_end=true）は、customer.subscription.updated
+// イベントとしてstatus=activeのまま届く。statusがactive/trialingである限りprofiles.planは
+// 維持される＝AI機能は契約終了日まで使える。実際にプランをfreeへ戻す・AI機能を無効化するのは、
+// 期間終了時に届くcustomer.subscription.deletedイベントのみ（下のswitch文参照）。
+//
 // ここだけはログインユーザーのアクセストークンを持たない（Stripeサーバーからの直接呼び出しのため）ので、
 // service role key（RLSを迂回できる鍵）を使って書き込む。この鍵はここ以外では使わない。
 //
@@ -109,6 +114,9 @@ async function upsertSubscription(supabaseAdmin, userId, subscription, planKeyHi
       stripe_subscription_id: subscription.id,
       started_at: toTimestamptz(subscription.start_date),
       expires_at: toTimestamptz(subscription.current_period_end),
+      // trueの間は「期間終了時に解約予定」＝statusはactiveのままなので現在のプラン・AI機能は
+      // 維持されるが、料金プラン画面・設定画面ではこれを見て「解約予約中」の案内を出す
+      cancel_at_period_end: !!subscription.cancel_at_period_end,
       updated_at: new Date().toISOString()
     },
     { onConflict: "user_id" }
@@ -248,10 +256,14 @@ module.exports = async function handler(req, res) {
       }
 
       case "customer.subscription.deleted": {
+        // 期間終了により契約が本当に終わったタイミング（cancel_at_period_end=trueで
+        // 予約されていた解約が実行された瞬間、または即時解約）。ここで初めてstatusを
+        // active/trialing以外にし、supabase/stripe_subscriptions.sqlの同期トリガーにより
+        // profiles.planがfreeへ戻る＝AI機能が無効化される
         const subscription = event.data.object;
         const { error } = await supabaseAdmin
           .from("subscriptions")
-          .update({ status: "canceled", updated_at: new Date().toISOString() })
+          .update({ status: "canceled", cancel_at_period_end: false, updated_at: new Date().toISOString() })
           .eq("stripe_subscription_id", subscription.id);
         if (error) {
           console.error(
@@ -259,7 +271,7 @@ module.exports = async function handler(req, res) {
             error
           );
         } else {
-          console.log("[stripe-webhook] 解約を反映しました。subscription=" + subscription.id);
+          console.log("[stripe-webhook] 解約を反映しました（profiles.planはトリガー経由でfreeへ戻ります）。subscription=" + subscription.id);
         }
         break;
       }

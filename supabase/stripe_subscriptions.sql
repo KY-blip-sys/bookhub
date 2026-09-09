@@ -27,6 +27,12 @@ create table if not exists public.subscriptions (
   updated_at timestamptz not null default now()
 );
 
+-- 解約予約中（期間終了時に解約する設定になっている）かどうか。Stripeのsubscription.cancel_at_period_end
+-- をそのまま保存する。statusはこの間もactiveのままなのでprofiles.planは維持されるが、
+-- 「解約予約中であること」自体はこの列がないと画面側で判別できないため追加する
+-- （このファイルを既に実行済みの環境向けに、ADD COLUMN IF NOT EXISTSで追加する）。
+alter table public.subscriptions add column if not exists cancel_at_period_end boolean not null default false;
+
 alter table public.subscriptions enable row level security;
 
 -- 自分の行だけ読める（現在のプラン・更新日・解約予定の表示用）

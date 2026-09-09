@@ -72,18 +72,23 @@ function buildPricingCard(plan, currentPlanKey) {
   adsLine.textContent = "広告：" + (plan.ads ? "あり" : "なし");
   card.appendChild(adsLine);
 
+  // 解約予約中（cancelAtPeriodEnd=true）の間もStripe上のstatusはactive/trialingのままで、
+  // プラン自体もこのカードのままなので、statusではなくcancelAtPeriodEndを見て案内を出し分ける
+  // （statusが'canceled'になるのは契約が本当に終わった後＝この時点ではもうplan=freeなので
+  //   pro/premiumのカードが「現在のプラン」として表示されることはない）
   if (plan.key === currentPlanKey && currentSubscriptionCache) {
-    const statusNote = document.createElement("p");
-    statusNote.className = "pricing-card-status";
-    if (currentSubscriptionCache.status === "canceled") {
+    const isCurrentlyUsable =
+      currentSubscriptionCache.status === "active" || currentSubscriptionCache.status === "trialing";
+    if (isCurrentlyUsable) {
+      const statusNote = document.createElement("p");
+      statusNote.className = "pricing-card-status";
       const expiresAtJa = formatDateJa(currentSubscriptionCache.expiresAt);
-      statusNote.textContent = expiresAtJa
-        ? "解約手続き済み（" + expiresAtJa + "まで利用できます）"
-        : "解約手続き済みです。";
-      card.appendChild(statusNote);
-    } else if (currentSubscriptionCache.status === "active") {
-      const expiresAtJa = formatDateJa(currentSubscriptionCache.expiresAt);
-      if (expiresAtJa) {
+      if (currentSubscriptionCache.cancelAtPeriodEnd) {
+        statusNote.textContent = expiresAtJa
+          ? "解約予約中（" + expiresAtJa + "まで利用できます）"
+          : "解約予約中です。";
+        card.appendChild(statusNote);
+      } else if (expiresAtJa) {
         statusNote.textContent = "次回更新日：" + expiresAtJa;
         card.appendChild(statusNote);
       }

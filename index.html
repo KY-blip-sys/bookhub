@@ -1429,6 +1429,9 @@
             <!-- 毎月1日にAIクレジットが付与される仕様（supabase/ai_credits.sql参照）に基づき、
                  js/screens/settings.jsが「次の1日」の日付を計算して表示するだけ（サーバー通信はしない） -->
             <p class="field-hint" id="settings-plan-next-credit" hidden></p>
+            <!-- 契約中のみ表示。解約予約中なら「解約予約中（契約終了日）」、そうでなければ
+                 「次回更新日」を表示する（js/screens/settings.js参照） -->
+            <p class="field-hint" id="settings-subscription-status" hidden></p>
             <button type="button" class="dashed-add-button" data-nav-target="pricing">料金プランを見る</button>
             <!-- 契約中のみ表示。押すとStripe Customer Portalへ遷移し、解約・支払い方法変更・
                  プラン変更ができる（js/screens/settings.js参照） -->

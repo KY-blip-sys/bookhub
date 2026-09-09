@@ -8,7 +8,21 @@
 const settingsPlanNameEl = document.getElementById("settings-plan-name");
 const settingsPlanCreditsEl = document.getElementById("settings-plan-credits");
 const settingsPlanNextCreditEl = document.getElementById("settings-plan-next-credit");
+const settingsSubscriptionStatusEl = document.getElementById("settings-subscription-status");
 const settingsSubscriptionButton = document.getElementById("settings-subscription-button");
+
+// 契約終了日・次回更新日の表示用（js/screens/pricing.jsのformatDateJaと同じ整形。
+// 読み込み順の都合でファイルをまたいで共有せず、ここでも同じ内容を持つ）
+function formatSubscriptionDateJa(isoString) {
+  if (!isoString) {
+    return null;
+  }
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toLocaleDateString("ja-JP", { year: "numeric", month: "long", day: "numeric" });
+}
 
 // AIクレジットは「月が変わったとき」に付与し直す仕様（supabase/ai_credits.sqlのcredit_reset_date判定）。
 // サーバーに問い合わせなくても分かる情報なので、ここでは単純に「来月1日」を計算して表示する
@@ -35,8 +49,28 @@ function renderSettingsPlanStatus(status) {
       settingsPlanNextCreditEl.textContent = "次回のAIクレジット付与日：" + formatNextCreditGrantDate();
     }
   }
+  // 契約が有効（active・trialing）な間だけ、解約予約中かどうかに応じて案内を出し分ける。
+  // 解約予約中（cancelAtPeriodEnd=true）でもstatusはactive/trialingのまま＝プラン・AI機能は
+  // 契約終了日まで維持されるため、ここでは「使えなくなる」ではなく「その日まで使える」と伝える
+  if (settingsSubscriptionStatusEl) {
+    const subscription = status.subscription;
+    const isUsable = subscription && (subscription.status === "active" || subscription.status === "trialing");
+    settingsSubscriptionStatusEl.hidden = !isUsable;
+    if (isUsable) {
+      const expiresAtJa = formatSubscriptionDateJa(subscription.expiresAt);
+      if (subscription.cancelAtPeriodEnd) {
+        settingsSubscriptionStatusEl.textContent = expiresAtJa
+          ? "解約予約中（" + expiresAtJa + "まで利用できます）"
+          : "解約予約中です。";
+      } else if (expiresAtJa) {
+        settingsSubscriptionStatusEl.textContent = "次回更新日：" + expiresAtJa;
+      } else {
+        settingsSubscriptionStatusEl.hidden = true;
+      }
+    }
+  }
   // 一度も契約したことがないユーザーはStripe顧客情報を持たずポータルを開けないため、
-  // 契約中（解約手続き済みで契約終了日を待っている状態を含む）のときだけボタンを出す
+  // 契約中（解約予約中で契約終了日を待っている状態を含む）のときだけボタンを出す
   if (settingsSubscriptionButton) {
     settingsSubscriptionButton.hidden = !status.subscription;
   }
