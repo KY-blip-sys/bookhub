@@ -66,6 +66,7 @@ function saveReview(bookId, category, data) {
   if (existing) {
     existing.rating = data.rating;
     existing.body = data.body;
+    existing.favoriteQuote = data.favoriteQuote || "";
     existing.containsSpoiler = data.containsSpoiler;
   } else {
     reviews.push({
@@ -74,6 +75,7 @@ function saveReview(bookId, category, data) {
       category: category,
       rating: data.rating,
       body: data.body,
+      favoriteQuote: data.favoriteQuote || "",
       containsSpoiler: data.containsSpoiler,
       createdAt: Date.now()
     });
@@ -96,6 +98,7 @@ function reviewSnapshot(review) {
     category: review.category,
     rating: review.rating,
     body: review.body || "",
+    favoriteQuote: review.favoriteQuote || "",
     containsSpoiler: !!review.containsSpoiler,
     createdAt: review.createdAt || 0
   });
@@ -110,6 +113,7 @@ function reviewToSupabaseRow(review) {
     category: review.category,
     rating: review.rating,
     body: review.body || null,
+    favorite_quote: review.favoriteQuote || null,
     contains_spoiler: !!review.containsSpoiler,
     created_at: review.createdAt ? new Date(review.createdAt).toISOString() : new Date().toISOString()
   };
@@ -123,6 +127,7 @@ function supabaseRowToReview(row) {
     category: row.category,
     rating: row.rating,
     body: row.body || "",
+    favoriteQuote: row.favorite_quote || "",
     containsSpoiler: !!row.contains_spoiler,
     createdAt: new Date(row.created_at).getTime()
   };
@@ -222,6 +227,7 @@ async function migrateLegacyReviewsToCloud(userId) {
       category: legacy.category,
       rating: legacy.rating,
       body: legacy.body || "",
+      favoriteQuote: legacy.favoriteQuote || "",
       containsSpoiler: !!legacy.containsSpoiler,
       createdAt: legacy.createdAt || Date.now()
     };

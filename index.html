@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=53">
+  <link rel="stylesheet" href="css/style.css?v=54">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -97,12 +97,6 @@
         </button>
       </div>
 
-      <!-- 実用書・小説の切り替え（アプリを開いたまま、いつでも切り替えられる） -->
-      <div class="category-switcher" role="group" aria-label="カテゴリの切り替え">
-        <button type="button" class="category-switcher-button" data-category="practical">📖 実用書</button>
-        <button type="button" class="category-switcher-button" data-category="novel">📕 小説</button>
-      </div>
-
       <nav class="sidebar-nav">
         <!-- 選択中の項目へ滑らかに追従する背景（js/screens/app.jsのupdateNavIndicator()が位置を制御する） -->
         <div class="nav-active-indicator" id="nav-active-indicator" aria-hidden="true"></div>
@@ -120,53 +114,15 @@
             <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
             <path d="M12 6v14" />
           </svg>
-          <span>本一覧</span>
+          <span>本棚</span>
         </button>
-        <button class="nav-item nav-item-practical" type="button" data-nav="actions">
+        <button class="nav-item" type="button" data-nav="actions">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
             <rect x="4" y="4" width="16" height="16" rx="4" />
             <path d="m8.5 12.5 2.5 2.5 5-5" />
           </svg>
           <span>実践リスト</span>
-        </button>
-        <!-- 実用書カテゴリのときだけ表示：名言集は実践リストとは別ページで管理する -->
-        <button class="nav-item nav-item-practical" type="button" data-nav="practicalQuotes">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V5Z" />
-            <line x1="8" y1="8" x2="16" y2="8" />
-            <line x1="8" y1="12" x2="13" y2="12" />
-          </svg>
-          <span>名言集</span>
-        </button>
-        <!-- 小説カテゴリのときだけ表示（実践リストの代わり）：読んだ本の感想まとめ -->
-        <button class="nav-item nav-item-novel" type="button" data-nav="reviewSummary">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H9l-5 4V5Z" />
-            <line x1="8" y1="8" x2="16" y2="8" />
-            <line x1="8" y1="12" x2="13" y2="12" />
-          </svg>
-          <span>感想</span>
-        </button>
-        <!-- 小説カテゴリのときだけ表示：好きな言葉は感想まとめとは別ページで管理する -->
-        <button class="nav-item nav-item-novel" type="button" data-nav="novelQuotes">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path
-              d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-          </svg>
-          <span>好きな言葉</span>
-        </button>
-        <button class="nav-item" type="button" data-nav="records">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M7 3h7l4 4v13a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Z" />
-            <path d="M14 3v4h4" />
-            <path d="M9 12h6M9 15.5h6M9 8.5h2" />
-          </svg>
-          <span>記録</span>
         </button>
         <button class="nav-item" type="button" data-nav="stats">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -183,15 +139,6 @@
           </svg>
           <span>AI</span>
         </button>
-        <button class="nav-item" type="button" data-nav="pricing">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 15.5c0 1.1 1.1 2 2.5 2s2.5-.8 2.5-2-1-1.6-2.5-2-2.5-.9-2.5-2 1.1-2 2.5-2 2.5.8 2.5 2" />
-            <path d="M12 7.5v1M12 15.5v1" />
-          </svg>
-          <span>料金プラン</span>
-        </button>
         <button class="nav-item" type="button" data-nav="settings">
           <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round">
@@ -207,28 +154,6 @@
           <span>設定</span>
         </button>
       </nav>
-
-      <!-- 小説カテゴリのときは、自分で保存した「好きな言葉」からランダムに1つ表示する -->
-      <div class="sidebar-quote" id="sidebar-quote">
-        <p class="sidebar-quote-label">今日の一言</p>
-        <p class="sidebar-quote-text" id="sidebar-quote-text">読むことは、未来の自分への最高の投資。</p>
-        <p class="sidebar-quote-author" id="sidebar-quote-author">— ジム・ローン</p>
-      </div>
-
-      <!-- 今日の読書時間をリングで表示（押すと設定画面で1日の目標時間を変更できる） -->
-      <div class="sidebar-reading-ring-card">
-        <p class="sidebar-quote-label">今日の読書時間</p>
-        <button type="button" class="sidebar-reading-ring" data-nav-target="settings" aria-label="1日の目標時間を設定する">
-          <svg class="reading-ring-svg" viewBox="0 0 100 100">
-            <circle class="reading-ring-track" cx="50" cy="50" r="42" />
-            <circle class="reading-ring-progress" id="reading-ring-progress" cx="50" cy="50" r="42" />
-          </svg>
-          <span class="reading-ring-center">
-            <span class="reading-ring-value" id="reading-ring-value">0分</span>
-            <span class="reading-ring-goal" id="reading-ring-goal">目標 30分</span>
-          </span>
-        </button>
-      </div>
 
       <!-- ダークモードの切り替え -->
       <label class="sidebar-theme-toggle">
@@ -316,39 +241,28 @@
           </div>
           <div id="dashboard">
             <div class="dashboard-tile dashboard-tile-primary">
-              <span class="dashboard-icon icon-blue">🕐</span>
-              <p class="dashboard-value" id="dashboard-total-minutes">0</p>
-              <p class="dashboard-label">読書時間（分）</p>
-            </div>
-            <div class="dashboard-tile dashboard-tile-primary">
               <span class="dashboard-icon icon-green">📖</span>
               <p class="dashboard-value" id="dashboard-book-count">0</p>
               <p class="dashboard-label">読んだ本</p>
             </div>
-            <div class="dashboard-tile">
-              <span class="dashboard-icon icon-rose">📝</span>
-              <p class="dashboard-value" id="dashboard-session-count">0</p>
-              <p class="dashboard-label">記録回数</p>
-            </div>
-            <div class="dashboard-tile">
-              <span class="dashboard-icon icon-purple" id="dashboard-learning-icon">💡</span>
+            <div class="dashboard-tile dashboard-tile-primary">
+              <span class="dashboard-icon icon-purple">💡</span>
               <p class="dashboard-value" id="dashboard-learning-count">0</p>
-              <p class="dashboard-label" id="dashboard-learning-label">学んだこと</p>
+              <p class="dashboard-label">学んだこと</p>
             </div>
-            <!-- 実用書のときだけ表示（実践の状況） -->
-            <div class="dashboard-tile dashboard-tile-practical">
+            <div class="dashboard-tile">
               <span class="dashboard-icon icon-yellow">🎯</span>
               <p class="dashboard-value" id="dashboard-in-progress-count">0</p>
               <p class="dashboard-label">実践中</p>
             </div>
-            <div class="dashboard-tile dashboard-tile-practical">
+            <div class="dashboard-tile">
               <span class="dashboard-icon icon-teal">✅</span>
               <p class="dashboard-value" id="dashboard-done-count">0</p>
               <p class="dashboard-label">完了した実践</p>
             </div>
           </div>
 
-          <!-- モチベーションカード：自分が登録した好きな言葉／今日の一歩を
+          <!-- モチベーションカード：感想に書いた「好きだった文章」／実践の次の一歩を
              本ごとにスライドで見せる。半日〜1日単位で表示内容が変わり、リロードのたびには変わらない。
              「今読んでいる本」が無ければ丸ごと隠す -->
           <section id="motivation-carousel" class="motivation-carousel" hidden>
@@ -489,7 +403,7 @@
           </ul>
         </div>
 
-        <!-- 本の詳細（タイマー・記録）を表示する画面 -->
+        <!-- 本の詳細（感想・AI・実践リスト）を表示する画面 -->
         <div id="screen-detail" class="page" hidden>
           <!-- 基本情報：表紙・タイトル・著者・ステータス・読書目的（常に表示） -->
           <div class="detail-header">
@@ -558,137 +472,23 @@
             </div>
           </div>
 
-          <!-- タブ切り替え：能動的な「記録する」と、振り返り系の情報を分ける -->
+          <!-- タブ切り替え：迷わず使えるよう「感想」「AI」「実践」の3系統に絞る -->
           <div class="pill-tabs" id="detail-tab-switcher" role="group" aria-label="本の詳細の表示切り替え">
-            <button type="button" class="pill-tab active" data-detail-tab="record">記録・タイマー</button>
-            <button type="button" class="pill-tab" data-detail-tab="history">読書履歴</button>
-            <button type="button" class="pill-tab" data-detail-tab="learning">学んだこと</button>
-            <button type="button" class="pill-tab" data-detail-tab="quotes">好きな言葉</button>
+            <button type="button" class="pill-tab active" data-detail-tab="review">感想</button>
             <button type="button" class="pill-tab" data-detail-tab="aiQuestion">AIに質問</button>
             <button type="button" class="pill-tab" data-detail-tab="quiz">クイズ</button>
-            <button type="button" class="pill-tab detail-tab-practical" data-detail-tab="actions" hidden>実践リスト</button>
+            <button type="button" class="pill-tab" data-detail-tab="actions">実践リスト</button>
           </div>
 
-          <!-- ---------- 記録・タイマー タブ ---------- -->
-          <div id="detail-record-panel" class="detail-tab-panel">
-            <!-- 読書タイマー -->
-            <div id="timer-section">
-              <!-- この本の記録がまだ1件も無いときだけ表示：初めて開いた本で、次に何をすればいいかを示すヒント -->
-              <p id="timer-first-time-hint" class="timer-first-time-hint" hidden>
-                リングの中で時間を選んで「スタート」を押しましょう。読み終えたら記録を入力できます。
-              </p>
-
-              <!-- 円形のタイマーリングとボタン。作動中は親の#timer-sectionに.timer-runningが付き、リングが少し大きくなる（js/screens/timer.js） -->
-              <div id="timer-ring-and-controls">
-                <div class="timer-ring">
-                  <svg class="timer-ring-svg" viewBox="0 0 100 100">
-                    <circle class="timer-ring-track" cx="50" cy="50" r="42" />
-                    <circle class="timer-ring-fill" id="timer-ring-fill" cx="50" cy="50" r="42" />
-                  </svg>
-                  <div class="timer-ring-center">
-                    <!-- 開始前だけ表示：リングの真ん中で「時間・分」をスクロールして選ぶピッカー（Apple純正タイマーと同じ考え方） -->
-                    <div id="timer-picker" class="timer-picker">
-                      <div class="timer-picker-highlight"></div>
-                      <div class="scroll-date-col" id="timer-picker-hour-col"></div>
-                      <span class="timer-picker-separator">時</span>
-                      <div class="scroll-date-col" id="timer-picker-minute-col"></div>
-                      <span class="timer-picker-separator">分</span>
-                    </div>
-                    <!-- 作動中・一時停止中だけ表示：残り時間のカウントダウン -->
-                    <div id="timer-display" hidden>25:00</div>
-                  </div>
-                </div>
-
-                <!-- スタート/ストップは1つのボタンをトグルにして、テキストだけ差し替える。リセットはもう1つの独立したボタン -->
-                <div id="timer-control-buttons">
-                  <button type="button" id="timer-toggle-button" class="timer-primary-button">スタート</button>
-                  <button type="button" id="timer-reset-button" class="timer-secondary-button">リセット</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- 実践の入力（読書記録を保存した直後に表示される） -->
-            <div id="action-form-section" hidden>
-              <h3>この学びから何を実践しますか？</h3>
-              <form id="action-form">
-                <label>
-                  実践内容
-                  <input type="text" id="action-content" required>
-                </label>
-                <label>
-                  目的
-                  <input type="text" id="action-purpose">
-                </label>
-                <label>
-                  開始日
-                  <span class="date-field-row">
-                    <input type="text" id="action-start-date" class="scroll-date-input" placeholder="年-月-日" readonly>
-                    <button type="button" class="date-today-button" data-today-target="action-start-date">今日</button>
-                  </span>
-                </label>
-                <label>
-                  期限
-                  <span class="date-field-row">
-                    <input type="text" id="action-due-date" class="scroll-date-input" placeholder="年-月-日" readonly>
-                    <button type="button" class="date-today-button" data-today-target="action-due-date">今日</button>
-                  </span>
-                </label>
-
-                <!-- やることリスト（TODO）は、実践を作るときに一緒に入力できる。あとから実践のブロックを開いても追加・編集できる -->
-                <div class="todo-draft-field">
-                  <p class="todo-draft-label">やることリスト（任意・あとからでも追加できます）</p>
-                  <ul class="todo-draft-list" id="action-todo-draft-list"></ul>
-                  <div class="todo-draft-input-row">
-                    <input type="text" id="action-todo-draft-input" placeholder="やることを入力">
-                    <button type="button" id="action-todo-draft-add-button">追加</button>
-                  </div>
-                </div>
-
-                <div class="action-form-buttons">
-                  <button type="submit">保存</button>
-                  <button type="button" id="action-skip-button">あとで</button>
-                </div>
-              </form>
-            </div>
-          </div>
-
-          <!-- ---------- 読書履歴 タブ ---------- -->
-          <div id="detail-history-panel" class="detail-tab-panel" hidden>
-            <div class="detail-history-summary">
-              <div class="dashboard-tile dashboard-tile-primary">
-                <span class="dashboard-icon icon-blue">🕐</span>
-                <p class="dashboard-value" id="stats-total-minutes">0</p>
-                <p class="dashboard-label">累計読書時間（分）</p>
-              </div>
-              <div class="dashboard-tile dashboard-tile-primary">
-                <span class="dashboard-icon icon-green">📝</span>
-                <p class="dashboard-value" id="stats-session-count">0</p>
-                <p class="dashboard-label">読書回数</p>
-              </div>
-            </div>
-
-            <!-- 押すと開閉する横バー。読書履歴は件数が増えると縦に長くなりがちなので、
-               既定では畳んでおき、見たいときだけ開く -->
-            <button type="button" id="history-toggle-button" class="history-toggle-bar" aria-expanded="false">
-              <span class="history-toggle-label">読書履歴</span>
-              <span class="history-toggle-count" id="history-toggle-count">0件</span>
-              <svg class="history-toggle-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-            <ul id="history-list" hidden></ul>
-          </div>
-
-          <!-- ---------- 学んだこと タブ（読了レビュー・読了カードも、振り返り系としてここにまとめる） ---------- -->
-          <div id="detail-learning-panel" class="detail-tab-panel" hidden>
-            <!-- 読了レビュー（★評価・本文・ネタバレ配慮） -->
+          <!-- ---------- 感想 タブ（レビュー・好きだった文章・学んだこと・読了カードをまとめる） ---------- -->
+          <div id="detail-review-panel" class="detail-tab-panel">
+            <!-- 読了レビュー（★評価・本文・好きだった文章） -->
             <div id="review-section">
-              <h3>レビュー</h3>
+              <h3>感想</h3>
               <div id="review-display">
-                <!-- ここに保存済みレビューがJavaScriptで表示されます -->
+                <!-- ここに保存済みの感想がJavaScriptで表示されます -->
               </div>
-              <button type="button" id="write-review-button">レビューを書く</button>
+              <button type="button" id="write-review-button">感想を書く</button>
             </div>
 
             <!-- 読了した本だけ表示：読んだ成果をカードで見る -->
@@ -696,23 +496,9 @@
               <button type="button" id="open-share-card-button" class="add-item-button">🎉 読了カードを見る</button>
             </div>
 
-            <h4 id="notes-list-heading">学んだこと一覧</h4>
-
-            <!-- 実用書のときだけ表示：読書記録とは別に、学んだことを直接追加できる -->
-            <button type="button" id="learning-add-trigger-button" class="dashed-add-button" hidden>＋ 学んだことを追加</button>
-
-            <ul id="learning-list"></ul>
-          </div>
-
-          <!-- ---------- 好きな言葉 タブ（小説のみ）：この本の記録から集まった好きな言葉だけを表示 ---------- -->
-          <div id="detail-quotes-panel" class="detail-tab-panel" hidden>
-            <!-- 押すと、この本を選んだ状態で「好きな言葉／名言を追加」モーダルが開く -->
-            <button type="button" id="detail-quote-add-trigger-button" class="dashed-add-button">＋ 追加</button>
-
-            <p id="detail-quotes-empty" class="page-placeholder" hidden>
-              まだこの本の好きな言葉がありません。読書記録の「印象に残ったセリフ」に書くと、ここに集まります。
-            </p>
-            <ul id="detail-quotes-list" class="quote-list"></ul>
+            <h4>学んだこと</h4>
+            <button type="button" id="learning-add-trigger-button" class="dashed-add-button">＋ 学んだことを追加</button>
+            <ul id="learning-list" class="quote-list"></ul>
           </div>
 
           <!-- ---------- AIに質問 タブ（js/screens/bookQuestion.js）：この本について自由に質問できる ---------- -->
@@ -790,13 +576,13 @@
             </div>
           </div>
 
-          <!-- ---------- 実践リスト タブ（実用書のみ）：この本から生まれた実践だけを表示 ---------- -->
+          <!-- ---------- 実践リスト タブ：この本から生まれた実践だけを表示 ---------- -->
           <div id="detail-actions-panel" class="detail-tab-panel" hidden>
             <!-- 押すと、この本を選んだ状態で「実践を追加」モーダルが開く -->
             <button type="button" id="detail-action-add-trigger-button" class="dashed-add-button">＋ 実践を追加</button>
 
             <p id="detail-actions-empty" class="page-placeholder" hidden>
-              まだこの本の実践がありません。読書記録を保存すると、実践を入力できます。
+              まだこの本の実践がありません。「＋ 実践を追加」から追加してみましょう。
             </p>
             <ul id="detail-actions-list"></ul>
           </div>
@@ -806,9 +592,8 @@
         </div>
 
         <!-- 「学んだことを追加」モーダル。
-           以前は#detail-learning-panel（「学んだこと」タブ）の中にあったが、他のタブを見ているときは
-           #detail-learning-panelごと非表示になるため、そこから開こうとしても親ごと隠れたままで実質何も起きず、
-           「学んだこと」タブに切り替えて初めて表示されてしまっていた（record-form-sectionと同じ理由でタブの外に出す）。 -->
+           #detail-review-panel（「感想」タブ）の中に置くと、他のタブを見ているときは
+           親ごと非表示になり、そこから開こうとしても実質何も起きなくなるため、タブの外に出す。 -->
         <div id="learning-add-panel" class="modal-overlay floating-modal" hidden>
           <div class="modal-card floating-modal-card">
             <div class="floating-modal-header">
@@ -819,69 +604,6 @@
             <form id="learning-add-form" class="quote-add-form">
               <textarea id="learning-add-text" rows="3" placeholder="学んだことを入力" required></textarea>
               <button type="submit">追加</button>
-            </form>
-          </div>
-        </div>
-
-        <!-- 読書記録の入力（タイマー終了後・記録の編集時に、ふわっと浮かび上がるモーダルとして表示される。
-           実用書・小説でフィールドが切り替わる）。
-           以前は#detail-record-panel（「記録・タイマー」タブ）の中にあったが、「読書履歴」タブなど
-           他のタブを見ているときは#detail-record-panelごと非表示になるため、そこから編集を開こうとしても
-           親ごと隠れたままで実質何も起きず、「記録・タイマー」タブに切り替えて初めて表示されてしまっていた。
-           他の共有モーダル（action-add-panelなど）と同じくタブの外に出す。 -->
-        <div id="record-form-section" class="modal-overlay floating-modal" hidden>
-          <div class="modal-card floating-modal-card">
-            <div class="floating-modal-header">
-              <h3>読書記録を入力</h3>
-              <button type="button" id="record-form-close-button" class="modal-close-button"
-                aria-label="閉じる">×</button>
-            </div>
-            <form id="record-form">
-              <p class="field-hint">ページ数とひとことメモだけでも保存できます。他の項目は任意です。</p>
-              <label>
-                今日読んだページ
-                <input type="text" inputmode="numeric" id="record-pages">
-              </label>
-
-              <!-- 実用書のときだけ表示 -->
-              <div id="record-fields-practical">
-                <label>
-                  今日学んだこと（任意）
-                  <textarea id="record-learning" rows="3"></textarea>
-                </label>
-                <details id="record-details-practical">
-                  <summary>詳しく記録する（任意）</summary>
-                  <label>
-                    名言・印象に残った言葉（任意）
-                    <input type="text" id="record-quote">
-                  </label>
-                </details>
-              </div>
-
-              <!-- 小説のときだけ表示 -->
-              <div id="record-fields-novel" hidden>
-                <label>
-                  今日の感想（任意）
-                  <textarea id="record-impression" rows="3"></textarea>
-                </label>
-                <details id="record-details-novel">
-                  <summary>詳しく記録する（任意）</summary>
-                  <label>
-                    印象に残ったセリフ（任意）
-                    <input type="text" id="record-memorable-quote">
-                  </label>
-                  <label>
-                    好きな登場人物（任意）
-                    <input type="text" id="record-favorite-character">
-                  </label>
-                  <label>
-                    考察メモ（任意）
-                    <textarea id="record-notes" rows="3"></textarea>
-                  </label>
-                </details>
-              </div>
-
-              <button type="submit" id="record-save-button">保存</button>
             </form>
           </div>
         </div>
@@ -929,7 +651,7 @@
               <label>
                 どの本の実践か
                 <select id="action-add-book-select" required>
-                  <!-- ここに実用書の本の選択肢がJavaScriptで追加されていきます -->
+                  <!-- ここに登録済みの本の選択肢がJavaScriptで追加されていきます -->
                 </select>
               </label>
               <label>
@@ -995,178 +717,31 @@
           </div>
         </div>
 
-        <!-- 名言集画面（実用書専用）：読書記録の「名言・印象に残った言葉」が自動的に集まる -->
-        <div id="screen-practicalQuotes" class="page" hidden>
-          <!-- 押すと、名言を追加するモーダルがふわっと浮かび上がって表示される -->
-          <button type="button" id="practical-quote-add-trigger-button" class="dashed-add-button">＋ 名言を追加</button>
-
-          <p id="practical-quote-empty-message" class="page-placeholder" hidden>
-            まだ名言がありません。読書記録の「名言・印象に残った言葉」に書くか、「＋ 名言を追加」から追加すると、ここに集まります。
-          </p>
-          <ul id="practical-quote-list" class="quote-list">
-            <!-- ここに名言がJavaScriptで追加されていきます -->
-          </ul>
-        </div>
-
-        <!-- 名言を直接追加するモーダル（名言集画面・本の詳細画面「名言」タブの、どちらの「＋」からも開く共通のモーダル）。
-           以前は#screen-practicalQuotesの中にあったが、本の詳細画面を表示中は#screen-practicalQuotesごと
-           非表示になるため、そこから開こうとしても親ごと隠れたままだった。他の共有モーダルと同じくページの外に出す。 -->
-        <div id="practical-quote-add-panel" class="modal-overlay floating-modal" hidden>
-          <div class="modal-card floating-modal-card">
-            <div class="floating-modal-header">
-              <h3>💡 名言を追加</h3>
-              <button type="button" id="practical-quote-add-close-button" class="modal-close-button"
-                aria-label="閉じる">×</button>
-            </div>
-
-            <form id="practical-quote-add-form" class="quote-add-form">
-              <textarea id="practical-quote-add-text" rows="2" placeholder="名言・印象に残った言葉を入力" required></textarea>
-              <div class="quote-add-form-row">
-                <select id="practical-quote-add-book-select">
-                  <option value="">本を選ばない</option>
-                  <!-- ここに実用書の本の選択肢がJavaScriptで追加されていきます -->
-                </select>
-                <button type="submit">追加</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- 感想画面（小説専用）：読んだ本のタイトルを並べ、押すと自分の書いた感想が見られる。レビュー・感想はここで編集もできる -->
-        <div id="screen-reviewSummary" class="page" hidden>
-          <p id="review-summary-empty-message" class="page-placeholder" hidden>
-            まだ感想がありません。読書記録やレビューに感想を書くと、ここにまとまります。
-          </p>
-          <ul id="review-summary-list" class="review-summary-list">
-            <!-- ここに本ごとの感想がJavaScriptで追加されていきます -->
-          </ul>
-        </div>
-
-        <!-- 本ごとの感想の詳細モーダル（感想画面のブロックを押すと、ふわっと浮かび上がって表示される） -->
-        <div id="review-summary-detail-modal" class="modal-overlay floating-modal" hidden>
-          <div class="modal-card floating-modal-card">
-            <div class="floating-modal-header">
-              <h3 id="review-summary-detail-title"></h3>
-              <button type="button" id="review-summary-detail-close-button" class="modal-close-button"
-                aria-label="閉じる">×</button>
-            </div>
-            <div id="review-summary-detail-body"></div>
-          </div>
-        </div>
-
-        <!-- 好きな言葉画面（小説専用）：読書記録の「印象に残ったセリフ」が自動的に集まる -->
-        <div id="screen-novelQuotes" class="page" hidden>
-          <!-- 押すと、好きな言葉を追加するモーダルがふわっと浮かび上がって表示される -->
-          <button type="button" id="quote-add-trigger-button" class="dashed-add-button">＋ 好きな言葉を追加</button>
-
-          <p id="quote-empty-message" class="page-placeholder" hidden>
-            まだ好きな言葉がありません。読書記録で「印象に残ったセリフ」を書くか、「＋ 好きな言葉を追加」から追加すると、ここに集まります。
-          </p>
-          <ul id="quote-list" class="quote-list">
-            <!-- ここに好きな言葉がJavaScriptで追加されていきます -->
-          </ul>
-        </div>
-
-        <!-- 好きな言葉を直接追加するモーダル（好きな言葉画面・本の詳細画面「好きな言葉」タブの、どちらの「＋」からも開く共通のモーダル）。
-           以前は#screen-novelQuotesの中にあったが、本の詳細画面を表示中は#screen-novelQuotesごと
-           非表示になるため、そこから開こうとしても親ごと隠れたままだった。他の共有モーダルと同じくページの外に出す。 -->
-        <div id="quote-add-panel" class="modal-overlay floating-modal" hidden>
-          <div class="modal-card floating-modal-card">
-            <div class="floating-modal-header">
-              <h3>💬 好きな言葉を追加</h3>
-              <button type="button" id="quote-add-close-button" class="modal-close-button" aria-label="閉じる">×</button>
-            </div>
-
-            <form id="quote-add-form" class="quote-add-form">
-              <textarea id="quote-add-text" rows="2" placeholder="好きな言葉を入力" required></textarea>
-              <div class="quote-add-form-row">
-                <select id="quote-add-book-select">
-                  <option value="">本を選ばない</option>
-                  <!-- ここに小説の本の選択肢がJavaScriptで追加されていきます -->
-                </select>
-                <button type="submit">追加</button>
-              </div>
-            </form>
-          </div>
-        </div>
-
-        <!-- 記録画面：すべての本の読書記録を新しい順に一覧表示する -->
-        <div id="screen-records" class="page" hidden>
-          <h2 class="dashboard-summary-label">今までの累計</h2>
-          <div class="records-summary">
-            <div class="dashboard-tile dashboard-tile-primary">
-              <span class="dashboard-icon icon-blue">🕐</span>
-              <p class="dashboard-value" id="records-total-minutes">0</p>
-              <p class="dashboard-label">読書時間（分）</p>
-            </div>
-            <div class="dashboard-tile dashboard-tile-primary">
-              <span class="dashboard-icon icon-green">📖</span>
-              <p class="dashboard-value" id="records-book-count">0</p>
-              <p class="dashboard-label">読んだ本</p>
-            </div>
-            <div class="dashboard-tile">
-              <span class="dashboard-icon icon-rose">📝</span>
-              <p class="dashboard-value" id="records-session-count">0</p>
-              <p class="dashboard-label">記録回数</p>
-            </div>
-            <div class="dashboard-tile">
-              <span class="dashboard-icon icon-purple" id="records-learning-icon">💡</span>
-              <p class="dashboard-value" id="records-learning-count">0</p>
-              <p class="dashboard-label" id="records-learning-label">学んだこと</p>
-            </div>
-            <!-- 実用書のときだけ表示（実践の状況） -->
-            <div class="dashboard-tile dashboard-tile-practical">
-              <span class="dashboard-icon icon-yellow">🎯</span>
-              <p class="dashboard-value" id="records-in-progress-count">0</p>
-              <p class="dashboard-label">実践中</p>
-            </div>
-            <div class="dashboard-tile dashboard-tile-practical">
-              <span class="dashboard-icon icon-teal">✅</span>
-              <p class="dashboard-value" id="records-done-count">0</p>
-              <p class="dashboard-label">完了した実践</p>
-            </div>
-          </div>
-
-          <hr class="records-divider">
-
-          <ul id="all-records-list" class="record-list">
-            <!-- ここにすべての記録がJavaScriptで追加されていきます -->
-          </ul>
-        </div>
-
-        <!-- 本ごとの記録の詳細モーダル（記録画面のブロックを押すと、ふわっと浮かび上がって表示される） -->
-        <div id="record-detail-modal" class="modal-overlay floating-modal" hidden>
-          <div class="modal-card floating-modal-card">
-            <div class="floating-modal-header">
-              <h3 id="record-detail-title"></h3>
-              <button type="button" id="record-detail-close-button" class="modal-close-button"
-                aria-label="閉じる">×</button>
-            </div>
-            <div id="record-detail-body"></div>
-          </div>
-        </div>
-
         <!-- 統計画面 -->
         <div id="screen-stats" class="page" hidden>
-          <p id="stats-empty-message" class="page-placeholder" hidden>まだ読書記録がありません。読書タイマーで記録すると、ここに統計が表示されます。</p>
+          <p id="stats-empty-message" class="page-placeholder" hidden>まだ本が登録されていません。まず本を登録すると、ここに統計が表示されます。</p>
 
           <div id="stats-content">
             <div class="stats-summary">
-              <div class="dashboard-tile">
-                <span class="dashboard-icon icon-purple">⚡</span>
-                <p class="dashboard-value"><span id="stats-speed">―</span><span class="dashboard-unit">ページ</span></p>
-                <p class="dashboard-label">15分で読めるページ数（平均）</p>
+              <div class="dashboard-tile dashboard-tile-primary">
+                <span class="dashboard-icon icon-green">📖</span>
+                <p class="dashboard-value" id="stats-finished-count">0</p>
+                <p class="dashboard-label">読了した本</p>
+              </div>
+              <div class="dashboard-tile dashboard-tile-primary">
+                <span class="dashboard-icon icon-purple">💡</span>
+                <p class="dashboard-value" id="stats-learning-count">0</p>
+                <p class="dashboard-label">学んだこと</p>
               </div>
               <div class="dashboard-tile">
-                <span class="dashboard-icon icon-blue">⏱</span>
-                <p class="dashboard-value"><span id="stats-avg-session">―</span><span class="dashboard-unit">分</span>
-                </p>
-                <p class="dashboard-label">1回あたりの読書時間（平均）</p>
+                <span class="dashboard-icon icon-yellow">🔥</span>
+                <p class="dashboard-value" id="stats-streak-count">0</p>
+                <p class="dashboard-label">連続記録日数</p>
               </div>
             </div>
 
-            <h3>読書時間の推移</h3>
-            <div class="chart-period-tabs" role="tablist" aria-label="読書時間の推移：期間の切り替え">
+            <h3>学んだことの推移</h3>
+            <div class="chart-period-tabs" role="tablist" aria-label="学んだことの推移：期間の切り替え">
               <button type="button" class="chart-period-tab active" data-period="day" role="tab"
                 aria-selected="true">日</button>
               <button type="button" class="chart-period-tab" data-period="week" role="tab"
@@ -1456,18 +1031,6 @@
             <button type="button" id="settings-subscription-button" class="dashed-add-button" hidden>サブスクリプション管理</button>
           </div>
 
-          <div class="settings-card">
-            <h3>1日の読書目標時間</h3>
-            <p class="field-hint">
-              サイドバーの「今日の読書時間」リングで使う、1日あたりの目標時間（分）です。
-            </p>
-            <div class="settings-row">
-              <input type="text" inputmode="numeric" id="daily-goal-minutes-input" placeholder="例：30">
-              <button type="button" id="save-daily-goal-minutes-button">保存</button>
-            </div>
-            <p id="daily-goal-minutes-saved-note" class="field-hint" hidden>保存しました。</p>
-          </div>
-
           <!-- このアプリについて：バージョン表示のみ（更新時はこことpackage.jsonのversionを合わせて直す） -->
           <div class="settings-card">
             <h3>このアプリについて</h3>
@@ -1550,8 +1113,12 @@
 
       <form id="review-form">
         <label>
-          レビューを書く
-          <textarea id="review-body" rows="4" placeholder="この本の感想を書きましょう"></textarea>
+          感想
+          <textarea id="review-body" rows="4" placeholder="本を読んだ感想を書きましょう"></textarea>
+        </label>
+        <label>
+          好きだった文章（任意）
+          <input type="text" id="review-favorite-quote" placeholder="ここに引用を書く">
         </label>
         <label class="review-spoiler-label" id="review-spoiler-field">
           <input type="checkbox" id="review-spoiler-checkbox">
@@ -1608,69 +1175,42 @@
 
       <div class="help-modal-body">
         <section class="help-step">
-          <h4>📚 実用書・小説を切り替える</h4>
-          <ul>
-            <li>サイドバー上部（スマホでは画面上部）の切り替えタブで「実用書」「小説」を切り替えられます。本棚・記録・統計は、選んだカテゴリの本だけに絞って表示されます。</li>
-            <li>実用書では「実践リスト」「実績」、小説では「感想」「好きな言葉」など、カテゴリごとに使う機能が変わります。</li>
-          </ul>
-        </section>
-
-        <section class="help-step">
           <h4>📖 本を登録する</h4>
           <ul>
-            <li>本一覧の「＋ 新しい本を追加」から、タイトルで検索して表紙・著者・ページ数を自動入力するか、手入力で登録できます。</li>
+            <li>本棚の「＋ 新しい本を追加」から、タイトルで検索して表紙・著者・ページ数を自動入力するか、手入力で登録できます。</li>
             <li>「今から読む」「あとで読む」を選んでから追加できます。あとからでもステータスは変更できます。</li>
             <li>登録した本は本棚カードから詳細画面を開き、内容の編集や削除ができます。</li>
           </ul>
         </section>
 
         <section class="help-step">
-          <h4>⏱ 読書を記録する（タイマー）</h4>
-          <ul>
-            <li>本の詳細画面で時間を選び、中央の丸いボタンを押すとタイマーが始まります。もう一度押すと一時停止します。</li>
-            <li>時間になると自動的に終了し、読んだページ数や感想などの読書記録を入力できます。</li>
-            <li>途中で「リセット」を押したり、タイマー作動中に他の画面へ移動しようとしたりすると、それまでの時間を保存するかどうかを確認するので、記録を失う心配はありません。</li>
-          </ul>
-        </section>
-
-        <section class="help-step">
           <h4>📈 進捗・読書ステータス</h4>
           <ul>
-            <li>総ページ数を登録した本は、リングで読書の進捗が分かります。</li>
-            <li>「読みたい」「読書中」「読了」は自動的に切り替わります（最後まで読み終えると「読了」になります）。</li>
+            <li>総ページ数を登録した本は、リングで読書の進捗が分かります。「編集」から現在のページをいつでも更新できます。</li>
+            <li>「読みたい」「読書中」「読了」は自動的に切り替わります（総ページ数まで読み終えると「読了」になります）。</li>
           </ul>
         </section>
 
         <section class="help-step">
-          <h4>🎯 実践リスト・実績・名言集（実用書）</h4>
+          <h4>💬 感想を書く</h4>
           <ul>
-            <li>記録を保存すると「この学びから何を実践するか」を入力でき、やることリスト（TODO）も一緒に登録できます。本の詳細画面の「実践リスト」タブや、サイドバーの「実践リスト」ページで管理できます。</li>
-            <li>実践のブロックを押すと詳細が浮かび上がり、TODOの追加・チェック・内容の編集ができます。完了した実践は「実績」タブに移し、振り返りを書けます。実績もあとから編集できます。</li>
-            <li>名言・印象に残った言葉は、サイドバーの「名言集」ページでまとめて管理できます。</li>
+            <li>本の詳細画面の「感想」タブから、読み終えた本の星評価・感想・好きだった文章を書けます。読んでいる途中に学んだことをいつでも追加でき、あとから見返せます。</li>
+            <li>読み終えると、表紙・評価つきの「読了カード」を見て、テキストで共有・コピーできます。</li>
           </ul>
         </section>
 
         <section class="help-step">
-          <h4>💬 好きな言葉・感想（小説）</h4>
+          <h4>🎯 実践リスト</h4>
           <ul>
-            <li>読書記録の「印象に残ったセリフ」は自動的に「好きな言葉」に集まります。サイドバーの「好きな言葉」ページからも直接追加・編集できます。</li>
-            <li>読了レビューや読書中の感想は、サイドバーの「感想」ページからいつでも見返し、編集できます。</li>
+            <li>本から学んだことをもとに「何を実践するか」を登録し、やることリスト（TODO）も一緒に管理できます。サイドバーの「実践リスト」、または本の詳細画面の「実践リスト」タブから追加できます。</li>
+            <li>実践のブロックを押すと詳細が浮かび上がり、TODOの追加・チェック・内容の編集ができます。完了した実践は「実績」タブに移し、振り返りを書けます。</li>
           </ul>
         </section>
 
         <section class="help-step">
-          <h4>⭐ レビュー・読了カード</h4>
+          <h4>📊 統計の見方</h4>
           <ul>
-            <li>読み終えると、星評価とひとことレビューを書けます。</li>
-            <li>レビューを書いたあと、表紙・評価つきの「読了カード」を見て、テキストで共有・コピーできます。</li>
-          </ul>
-        </section>
-
-        <section class="help-step">
-          <h4>📊 記録・統計の見方</h4>
-          <ul>
-            <li>「記録」ページでは、これまでの読書記録が本ごとにまとまっています。タップすると開閉できます。</li>
-            <li>「統計」ページでは、読むスピードの目安や1回あたりの平均読書時間に加えて、日・週・月・年で切り替えられる読書時間の推移グラフが見られます。バーをタップ（PCではホバー）すると、その期間の分数が表示されます。</li>
+            <li>「統計」ページでは、読了した本の数・学んだことの件数・連続記録日数に加えて、日・週・月・年で切り替えられる学んだことの推移グラフが見られます。</li>
           </ul>
         </section>
 
@@ -1709,7 +1249,7 @@
           <h4>✨ AI本推薦（「おすすめ本」タブ）</h4>
           <ul>
             <li>「提案してもらう」ボタンを押すと、これまでの読書傾向から、次に読むとよさそうな本を3冊、AIが提案します。</li>
-            <li>「実用書が続いたので小説も」のように、バランスを見た提案もします。それぞれの本には、おすすめ理由・新しく学べること・難易度・おすすめ度が表示されます。</li>
+            <li>同じジャンルが続いていれば、視野を広げる一冊の提案もします。それぞれの本には、おすすめ理由・新しく学べること・難易度・おすすめ度が表示されます。</li>
           </ul>
         </section>
 
@@ -1760,21 +1300,6 @@
       </div>
 
       <button type="button" id="ai-info-done-button">閉じる</button>
-    </div>
-  </div>
-
-  <!-- 読書タイマーを途中でリセットしたとき・作動中に他の画面へ移動しようとしたときに出す確認モーダル
-       （どちらも「今の読書時間をどうするか」を聞く点は同じなので、js/screens/timer.jsで1つのモーダルを共用する） -->
-  <div id="timer-reset-modal" class="modal-overlay" hidden>
-    <div class="modal-card">
-      <h3>読書を終了しますか？</h3>
-      <p class="timer-reset-elapsed">現在の読書時間：<span id="timer-reset-elapsed-time">0分0秒</span></p>
-      <p>この読書記録を保存しますか？</p>
-      <div class="timer-reset-modal-buttons">
-        <button type="button" id="timer-reset-save-button">保存する</button>
-        <button type="button" id="timer-reset-discard-button">保存しない</button>
-        <button type="button" id="timer-reset-cancel-button">キャンセル</button>
-      </div>
     </div>
   </div>
 
@@ -1852,23 +1377,21 @@
   <!-- ads.jsは、planStatus.jsが取得した状態を見て広告エリアの表示・非表示を切り替えるだけの
        共通処理。#ad-containerはこのタグより前のbody内に存在する -->
   <script src="js/services/ads.js?v=2"></script>
-  <script src="js/services/cloudSync.js?v=8"></script>
+  <script src="js/services/cloudSync.js?v=9"></script>
   <script src="js/services/aiChat.js?v=6"></script>
   <script src="js/services/googleBooks.js?v=1"></script>
 
   <!-- ---------- モデル層（データの保存・読み込みのみ。DOM操作はしない） ---------- -->
   <script src="js/models/storage.js?v=26"></script>
-  <script src="js/models/booksModel.js?v=28"></script>
-  <script src="js/models/actionsModel.js?v=26"></script>
-  <script src="js/models/reviewsModel.js?v=25"></script>
-  <script src="js/models/favoriteQuotesModel.js?v=25"></script>
-  <script src="js/models/favoriteLearningsModel.js?v=25"></script>
-  <script src="js/models/categoryModel.js?v=25"></script>
-  <script src="js/models/settingsModel.js?v=25"></script>
+  <script src="js/models/booksModel.js?v=29"></script>
+  <script src="js/models/actionsModel.js?v=27"></script>
+  <script src="js/models/reviewsModel.js?v=26"></script>
+  <script src="js/models/favoriteLearningsModel.js?v=26"></script>
+  <script src="js/models/settingsModel.js?v=26"></script>
 
   <!-- AIの各機能（おすすめ本・クイズ・要約・学習コーチ）が共通で使う、読書データの要約ロジック。
        モデル層の関数（loadBooks等）を使うため、モデル層より後に読み込む -->
-  <script src="js/services/aiContext.js?v=2"></script>
+  <script src="js/services/aiContext.js?v=3"></script>
 
   <!-- ---------- 画面層（描画・イベント処理） ---------- -->
   <script src="js/screens/modal.js?v=26"></script>
@@ -1878,19 +1401,15 @@
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=25"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=33"></script>
+  <script src="js/screens/books.js?v=34"></script>
   <script src="js/screens/bookSearch.js?v=2"></script>
   <script src="js/screens/progress.js?v=24"></script>
-  <script src="js/screens/timer.js?v=27"></script>
-  <script src="js/screens/records.js?v=27"></script>
-  <script src="js/screens/allRecords.js?v=25"></script>
-  <script src="js/screens/stats.js?v=26"></script>
-  <script src="js/screens/actions.js?v=27"></script>
-  <script src="js/screens/reviews.js?v=25"></script>
-  <script src="js/screens/reviewSummary.js?v=25"></script>
-  <script src="js/screens/quotes.js?v=27"></script>
-  <script src="js/screens/motivationCard.js?v=25"></script>
-  <script src="js/screens/settings.js?v=26"></script>
+  <script src="js/screens/records.js?v=28"></script>
+  <script src="js/screens/stats.js?v=27"></script>
+  <script src="js/screens/actions.js?v=28"></script>
+  <script src="js/screens/reviews.js?v=26"></script>
+  <script src="js/screens/motivationCard.js?v=26"></script>
+  <script src="js/screens/settings.js?v=27"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/aiInfo.js?v=1"></script>
   <script src="js/screens/aiChat.js?v=3"></script>
@@ -1910,13 +1429,10 @@
   <!-- bookQuiz.jsは、本の詳細画面「クイズ」タブの処理。aiQuiz.jsのcreateAiQuizControllerを使うため、
        aiQuiz.jsより後に読み込む -->
   <script src="js/screens/bookQuiz.js?v=1"></script>
-  <script src="js/screens/app.js?v=33"></script>
-  <!-- categorySelect.jsは、起動時のホーム表示・カテゴリの切り替えを担うため、
-       goToNavPageなどapp.jsの関数が揃った一番最後に読み込む -->
-  <script src="js/screens/categorySelect.js?v=28"></script>
+  <script src="js/screens/app.js?v=34"></script>
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
-  <script src="js/screens/auth.js?v=9"></script>
+  <script src="js/screens/auth.js?v=10"></script>
 
   <!-- PWA対応（Service Worker登録・ホーム画面への追加導線・更新通知・オフライン表示）。
        他の画面の初期化とは独立しているため、一番最後に読み込めば十分 -->

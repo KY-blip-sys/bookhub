@@ -298,26 +298,6 @@ function computeStatusFromTodos(todos) {
   return "in-progress"; // 一部だけチェックした
 }
 
-// 実践・実績（どちらもbookIdを持つ配列）から、指定したカテゴリの本に紐づくものだけを返す
-function filterItemsByBookCategory(items, books, category) {
-  return items.filter(function (item) {
-    const book = books.find(function (b) {
-      return b.id === item.bookId;
-    });
-    return book && book.category === category;
-  });
-}
-
-// 今アクティブなカテゴリの本に紐づく実践だけを返す（ダッシュボードや実践リストで使う）
-function getActionsByActiveCategory() {
-  return filterItemsByBookCategory(loadActions(), loadBooks(), loadActiveCategory());
-}
-
-// 今アクティブなカテゴリの本に紐づく実績だけを返す
-function getAchievementsByActiveCategory() {
-  return filterItemsByBookCategory(loadAchievements(), loadBooks(), loadActiveCategory());
-}
-
 // 指定した本に紐づく実践・実績をまとめて削除する（本を削除したときに呼ぶ）。
 // Supabase側のactions.book_idは（本を削除したときに実践・実績まで消えてしまわないよう）
 // on delete set nullになっており本を消しても行自体は残るが、アプリ側は「実践・実績には

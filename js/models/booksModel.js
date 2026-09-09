@@ -15,13 +15,18 @@
 const LEGACY_BOOKS_KEY = "reading-app-books"; // 移行前の旧データ（ローカル。本と記録がひとつの配列に同居していた形）
 const INTERIM_LOCAL_RECORDS_KEY = "reading-app-book-records"; // 本の移行後・記録の移行前に、一時的に記録だけを置いていたキー
 
+// 実用書/小説の区分は廃止したが、Supabase側のbooks.categoryが必須列（not null）のまま残っているため、
+// 新しく登録する本には常にこの固定値を入れておく（アプリ側はこの値を一切参照・分岐しない）
+const BOOK_CATEGORY_DEFAULT = "practical";
+
 let cachedBooks = [];
 
 // 保存されている本の形が古い場合に、今の形へ補う
-// （例：カテゴリが無い本は、これまで通り「実用書」として扱う）
+// （例：categoryが無い本は、Supabase側の必須列を満たすための固定値を補う。
+// 実用書/小説の区分自体はアプリからは廃止済みで、この値をアプリ側が参照することはない）
 function normalizeBook(book) {
   if (!book.category) {
-    book.category = "practical";
+    book.category = BOOK_CATEGORY_DEFAULT;
   }
   return book;
 }
@@ -480,37 +485,13 @@ async function migrateLegacyBooksToCloud(userId) {
   return !hasError;
 }
 
-// 指定したカテゴリ（"practical" | "novel"）の本だけを返す
-// 一覧・ダッシュボード・記録・統計など、複数の本をまとめて表示する画面で使う
-function getBooksByCategory(category) {
-  return loadBooks().filter(function (book) {
-    return book.category === category;
-  });
-}
-
-// 今日読んだ時間の合計（分）を、カテゴリを問わずすべての本の記録から集計する
-// （サイドバーの読書時間リングで使う。record.dateと同じ形式で今日の日付を比べる）
-function getTodayTotalMinutes() {
-  const todayLabel = new Date().toLocaleDateString("ja-JP");
-  return loadBooks().reduce(function (sum, book) {
-    return sum + book.records.reduce(function (recordSum, record) {
-      return recordSum + (record.date === todayLabel ? record.minutes : 0);
-    }, 0);
-  }, 0);
-}
-
-// 何日連続で読書記録を付けられているか（連続読書日数）を返す。
-// カテゴリを問わず、すべての本の記録日（record.date）を対象にする。
+// 何日連続で「学んだこと」を記録できているか（連続記録日数）を返す。
 // 今日はまだ記録していなくても、昨日までの連続記録が続いていれば「継続中」として数える
 // （日付が変わった瞬間に0へ戻ってしまうと、その日読む前に達成感が失われてしまうため）。
 function getReadingStreakDays() {
   const recordedDateLabels = new Set();
-  loadBooks().forEach(function (book) {
-    book.records.forEach(function (record) {
-      if (record.date) {
-        recordedDateLabels.add(record.date);
-      }
-    });
+  loadFavoriteLearnings().forEach(function (learning) {
+    recordedDateLabels.add(new Date(learning.createdAt).toLocaleDateString("ja-JP"));
   });
 
   if (recordedDateLabels.size === 0) {
@@ -529,15 +510,6 @@ function getReadingStreakDays() {
     cursor.setDate(cursor.getDate() - 1);
   }
   return streakDays;
-}
-
-// 渡された本の記録をすべて合計した読書時間（分）を返す（「記録」ページの集計で使う）
-function getTotalMinutes(books) {
-  return books.reduce(function (sum, book) {
-    return sum + book.records.reduce(function (recordSum, record) {
-      return recordSum + record.minutes;
-    }, 0);
-  }, 0);
 }
 
 // 指定したタイムスタンプが「今週」（月曜始まり〜次の月曜の直前まで）に含まれるかどうかを判定する

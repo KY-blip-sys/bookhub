@@ -9,21 +9,17 @@
 // ログインしていない間は何もしない＝これまで通りlocalStorageだけで動く。
 
 // クラウドと同期する対象のlocalStorageキー一覧
-// （js/models/*.js で定義されている定数と同じ文字列。settingsModel.js・categoryModel.jsの
-//   単純な文字列の設定値も、同じ仕組みでそのまま同期する）
+// （js/models/settingsModel.jsで定義されている、単純な文字列の設定値をそのまま同期する）
 // 本そのもの（reading-app-books）・読書記録（reading-app-book-records）は、
 // js/models/booksModel.jsからSupabaseのbooks・book_recordsテーブルへ直接保存するようになったため、
 // 実践・実績（reading-app-actions・reading-app-achievements）は、
 // js/models/actionsModel.jsからSupabaseのactionsテーブルへ直接保存するようになったため、
 // レビュー（reading-app-reviews）は、js/models/reviewsModel.jsからSupabaseのreviewsテーブルへ、
-// 好きな言葉（reading-app-favorite-quotes）は、js/models/favoriteQuotesModel.jsから
-// Supabaseのfavorite_quotesテーブルへ、学んだこと（reading-app-favorite-learnings）は、
+// 学んだこと（reading-app-favorite-learnings）は、
 // js/models/favoriteLearningsModel.jsからSupabaseのfavorite_learningsテーブルへ
 // 直接保存するようになったため、いずれもここには含めない
 const CLOUD_SYNCED_KEYS = [
-  "reading-app-active-category",
-  "reading-app-dark-mode",
-  "reading-app-daily-goal-minutes"
+  "reading-app-dark-mode"
 ];
 
 // 今ログインしているユーザーのid（未ログイン時はnull）。js/screens/auth.jsが設定する

@@ -14,6 +14,10 @@ create table if not exists public.reviews (
   created_at timestamptz not null default now()
 );
 
+-- BookHubの簡素化リファクタリング（名言・好きな言葉を感想へ統合）に伴い追加した列。
+-- 既存のreviewsテーブルにも安全に追加できるよう、既存の行があっても実行できる形にしてある。
+alter table public.reviews add column if not exists favorite_quote text;
+
 alter table public.reviews enable row level security;
 
 -- ログインユーザー本人の行だけ読める
