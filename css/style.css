@@ -250,42 +250,15 @@ html.dark-mode .main-content::before {
 /* ---------- ヘッダー（常に上に表示される部分） ---------- */
 /* タイトル・カテゴリバッジの二重表示をやめ、「戻る／中央タイトル／使い方・日付」の3カラムに統一する */
 /* 画面幅いっぱいの帯ではなく、少し余白を持たせて浮かせた角丸カードにする */
+/* ページ名は表示せず、戻るボタン（本の詳細のときだけ）と今日の日付・使い方ボタンだけを
+   横に並べる薄いバー。以前はここに浮かせたカードでページ名も表示していたが、
+   ページ名はヘッダー中央・サイドバーロゴ（「BookHub」の位置）に表示するように変更した */
 .content-header {
-    position: sticky;
-    top: 16px;
-    z-index: 10;
-    /* 左右のボタン量（戻るボタンの有無・日付の文字数）が非対称なため、grid/flexの
-       トラック幅だけに頼ると中央のタイトルが見た目上ずれてしまう。position:absolute +
-       left:50%で、左右の中身に関係なく常にヘッダー自体の真ん中にタイトルを置く */
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-    margin: -12px 0 28px;
-    padding: 14px 24px;
-    border-radius: var(--radius-lg);
-    /* --color-accent-softは半透明なので使わない（スクロールした中身が透けて見えてしまうため）。
-       不透明な色同士のグラデーションにする */
-    background: linear-gradient(135deg, var(--color-surface), var(--color-bg-secondary));
-    box-shadow: var(--shadow-md);
-    border: 1px solid var(--color-border);
-}
-
-/* ヘッダーは top:16px で浮いているため、スクロールすると
-   すぐ上の16px分だけカードなどが鋭く見切れて、ヘッダーと重なって見えてしまう。
-   ヘッダーの少し上からふわっと透明にフェードするレイヤーを重ねて、
-   見切れた文字を目立たなくし、ヘッダーの方が自然に目立つようにする。
-   z-index:-1でヘッダー自身の不透明な背景の下に隠れるので、ヘッダーの見た目には影響しない */
-.content-header::before {
-    content: "";
-    position: absolute;
-    left: 0;
-    right: 0;
-    top: -32px;
-    height: 48px;
-    z-index: -1;
-    pointer-events: none;
-    background: linear-gradient(to bottom, var(--color-surface), transparent);
+    margin: 0 0 20px;
 }
 
 .content-header-side {
@@ -294,31 +267,10 @@ html.dark-mode .main-content::before {
     gap: 10px;
     min-width: 0;
     flex: 0 0 auto;
-    /* タイトルは絶対配置で重なる位置に来るため、ボタンが常に押せるよう手前に出す */
-    position: relative;
-    z-index: 1;
 }
 
 .content-header-side-end {
     justify-content: flex-end;
-}
-
-/* ヘッダー自体の中央に固定する。左右のボタン量に左右されず常に真ん中に来るように、
-   flexの並びからは外し、position:absoluteでヘッダー基準に中央配置する
-   （.content-headerのposition:stickyが配置の基準になる）。
-   長いタイトルは、左右のボタンに重ならない幅までで折り返す */
-.content-header-title {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    max-width: min(60%, calc(100% - 220px));
-    font-size: 20px;
-    font-weight: 800;
-    letter-spacing: 0.2px;
-    color: var(--color-text);
-    overflow-wrap: break-word;
-    text-align: center;
 }
 
 /* 「本一覧に戻る」：丸いアイコンだけでなく、ラベルつきのピルにして分かりやすくする */
@@ -390,17 +342,6 @@ html.dark-mode .main-content::before {
     .today-date {
         display: none;
     }
-
-    /* スマホ幅は左右の列がタイトル用に確保できる幅がPCより狭いため、タイトルが長いと
-       何行にもなってヘッダーが縦に伸び続けてしまう。2行までにして、それでも長い場合は
-       「…」で省略する（戻るボタンが押せることが最優先で、タイトル全文はここでは折り返さない） */
-    .content-header-title {
-        display: -webkit-box;
-        -webkit-box-orient: vertical;
-        -webkit-line-clamp: 2;
-        line-clamp: 2;
-        overflow: hidden;
-    }
 }
 
 /* ---------- サイドバー全体 ---------- */
@@ -460,10 +401,15 @@ html.dark-mode .main-content::before {
 }
 
 .sidebar-brand-name {
+    flex: 1;
+    min-width: 0;
     font-size: 16px;
     font-weight: 700;
     letter-spacing: -0.01em;
     color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* ---------- タブ共通部品（実践中/実績、感想まとめ/好きな言葉、本の詳細のタブなどで共通使用） ---------- */
@@ -4738,13 +4684,6 @@ html.dark-mode .dashboard-hero-banner {
         padding: 24px 20px 24px;
     }
 
-    .content-header {
-        /* モバイルトップバー（56px）の下に少し余白を空けて留まるようにする */
-        top: 72px;
-        margin: -8px 0 24px;
-        padding: 12px 20px;
-    }
-
     #dashboard {
         grid-template-columns: repeat(3, 1fr);
     }
@@ -4762,11 +4701,6 @@ html.dark-mode .dashboard-hero-banner {
 
     .ad-container {
         padding: 20px 16px 18px;
-    }
-
-    .content-header {
-        margin: -6px 0 20px;
-        padding: 10px 16px;
     }
 
     h1 {

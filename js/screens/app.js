@@ -205,7 +205,7 @@ function showDetailScreenNow(bookId) {
 
   // 本の詳細画面のときだけ、ヘッダーに「本一覧に戻る」ボタンを出し、タイトルも本のタイトルに差し替える
   headerBackButton.hidden = false;
-  contentHeaderTitle.textContent = book.title;
+  setHeaderTitle(book.title);
 }
 
 // 本の一覧画面に戻る
@@ -366,7 +366,16 @@ const NAV_LABELS = {
   settings: "設定"
 };
 
-const contentHeaderTitle = document.getElementById("content-header-title");
+// 以前はメイン画面上部に浮かせたヘッダーで「今開いているページ」の名前を表示していたが、
+// スマホのトップバー・サイドバーの「BookHub」ロゴの位置に表示するよう変更したため、
+// そちらの2つの要素を書き換える
+const headerTopbarTitleEl = document.getElementById("mobile-topbar-title-button");
+const headerSidebarBrandNameEl = document.querySelector(".sidebar-brand-name");
+
+function setHeaderTitle(text) {
+  headerTopbarTitleEl.textContent = text;
+  headerSidebarBrandNameEl.textContent = text;
+}
 
 // 今開いているページ（サイドバーのnav属性の値）を覚えておく。
 // カテゴリを切り替えたときに、同じページを開き直すために使う。
@@ -377,7 +386,7 @@ function goToNavPage(navKey) {
   currentNavKey = navKey;
 
   showPage("screen-" + navKey);
-  contentHeaderTitle.textContent = NAV_LABELS[navKey] || "";
+  setHeaderTitle(NAV_LABELS[navKey] || "");
   headerBackButton.hidden = true; // 本の詳細から出たら、戻るボタンは隠す
   renderSidebarQuote(); // ページが変わるたびに「今日の一言」も選び直す
   renderReadingRing(); // 今日の読書時間リングも最新の状態にしておく
