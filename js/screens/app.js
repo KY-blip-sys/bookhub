@@ -595,8 +595,12 @@ function setupPullToRefresh() {
 
     if (currentDistance >= PULL_THRESHOLD) {
       refreshing = true;
-      contentAndAd.classList.remove("pull-refresh-dragging"); // ここからはtransitionで滑らかに動かす
-      setDistance(56); // インジケーターがしっかり見える位置で留めておく
+      // ここで0.25sのtransitionを使って滑らかに動かすと、指を離してから実際に
+      // 画面が切り替わり始めるまでの間、「まだ何か動いている（＝リロードはこれから）」ように
+      // 見えてしまい、体感のズレになっていた。リロードは即座に始まるものなので、
+      // 見た目もtransitionなしで一瞬で読み込み中の状態に固定する
+      setDistance(56); // インジケーターがしっかり見える位置で留めておく（.pull-refresh-draggingが
+      // 付いたままなのでtransitionは無効のまま＝アニメーションせず即座に反映される）
       indicator.classList.add("pull-refresh-spinning");
       indicator.style.opacity = "1";
       window.location.reload();
