@@ -10,6 +10,10 @@
 -- service role key（RLSを迂回できる鍵。ブラウザには絶対に渡さない）を使って書き込む。
 -- そのため、クライアント（authenticatedロール）向けのINSERT/UPDATE/DELETEポリシーはあえて用意しない。
 --
+-- このファイルにはgrant_plan_credits関数（決済直後にAIクレジットを即座に付与する関数。下部参照）も
+-- 含まれているため、以前このファイルを実行済みでも、Webhookのクレジット付与を有効にするには
+-- 再度このファイル全体を実行し直す必要がある（CREATE OR REPLACE等で書かれているため再実行は安全）。
+--
 -- 使い方：Supabaseの管理画面 → 「SQL Editor」→ このファイルの中身を貼り付けて実行する。
 
 create table if not exists public.subscriptions (
@@ -56,3 +60,56 @@ drop trigger if exists on_subscription_change on public.subscriptions;
 create trigger on_subscription_change
   after insert or update on public.subscriptions
   for each row execute function public.sync_profile_plan_from_subscription();
+
+-- ---------- 決済直後にAIクレジットを即座に付与する（api/stripe/webhook.jsから呼ぶ） ----------
+--
+-- 上のsync_profile_plan_from_subscriptionトリガーはprofiles.planを切り替えるだけで、
+-- ai_credit・credit_reset_dateには触れない。それらはsupabase/ai_credits.sqlの
+-- _reset_ai_credit_if_needed（get_ai_credit_status・check_ai_credit経由）が
+-- 「カレンダー上の月が変わったとき」にだけ遅延的にリセットする設計のため、
+-- このままだと契約直後のユーザーは次の月の1日になるまでクレジットが0のままになってしまう。
+--
+-- そのため、Webhookでsubscriptionsの更新（＝profiles.planの同期）が終わった直後に、
+-- この関数を明示的に呼んで、月替わりを待たずにそのプランの月間クレジットをその場で付与する。
+--
+-- p_monthly_credits の例： {"free": 0, "plus": 0, "premium": 1000, "pro": 3000}
+-- （api/_lib/aiCredits.jsのMONTHLY_CREDITSをそのまま渡す。値をこのSQLに書き写さないため）。
+-- 対象ユーザーのprofiles行が万一まだ無ければ、その場で作ってから付与する。
+
+create or replace function public.grant_plan_credits(
+  p_user_id uuid,
+  p_monthly_credits jsonb
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_plan text;
+  v_monthly integer;
+begin
+  select plan into v_plan from public.profiles where id = p_user_id;
+
+  if not found then
+    v_plan := 'free';
+    insert into public.profiles (id, plan)
+    values (p_user_id, v_plan)
+    on conflict (id) do nothing;
+  end if;
+
+  v_monthly := coalesce((p_monthly_credits ->> v_plan)::integer, 0);
+
+  update public.profiles
+    set ai_credit = v_monthly,
+        credit_reset_date = date_trunc('month', now())::date,
+        updated_at = now()
+    where id = p_user_id;
+
+  return jsonb_build_object('ok', true, 'plan', v_plan, 'granted', v_monthly);
+end;
+$$;
+
+-- Webhook（service role key経由）からのみ呼ぶ。ログインユーザーの操作からは呼べないようにする
+-- （＝authenticatedロールには渡さず、service_roleにだけ実行権限を与える）
+grant execute on function public.grant_plan_credits(uuid, jsonb) to service_role;

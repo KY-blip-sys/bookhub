@@ -2,7 +2,9 @@
 //
 // Stripe側の「決済確定・サブスクリプション更新・解約」イベントを受け取り、
 // Supabaseのsubscriptionsテーブルを更新する（そこからトリガーでprofiles.planにも自動反映される。
-// supabase/stripe_subscriptions.sql参照）。
+// supabase/stripe_subscriptions.sql参照）。プランが実際に切り替わったタイミングでは、
+// 月替わりを待たずにAIクレジットもその場で付与する（supabase/stripe_subscriptions.sqlの
+// grant_plan_credits関数参照）。
 //
 // ここだけはログインユーザーのアクセストークンを持たない（Stripeサーバーからの直接呼び出しのため）ので、
 // service role key（RLSを迂回できる鍵）を使って書き込む。この鍵はここ以外では使わない。
@@ -15,15 +17,22 @@
 //   SUPABASE_SERVICE_ROLE_KEY … Supabaseプロジェクトのservice role key（絶対にブラウザへは渡さない）
 //
 // Stripe Dashboard → 開発者 → Webhook で、このエンドポイント（https://<ドメイン>/api/stripe/webhook）に
-// 対して以下のイベントを送るよう設定する：
-//   checkout.session.completed / customer.subscription.updated / customer.subscription.deleted
+// 対して以下のイベントを送るよう設定する（1つでも選び忘れるとプラン・クレジットが反映されない）：
+//   checkout.session.completed / customer.subscription.created /
+//   customer.subscription.updated / customer.subscription.deleted
 //
 // 署名検証のため、Vercelの標準ボディパーサーを無効にし、生のリクエストボディをそのまま使う
 // （JSON化・整形してしまうと署名が一致しなくなるため）。
+//
+// 診断のしかた：Vercelのダッシュボード → Functions（またはLogs）→ api/stripe/webhook で、
+// ここから出しているconsole.log/console.errorがそのまま確認できる。
+// [stripe-webhook] event received: が出ていなければ、そもそもStripeからこのエンドポイントに
+// イベントが届いていない（Stripe Dashboard側のWebhook設定・URL・選択イベントを確認する）。
 
 const { getStripeClient } = require("../_lib/stripeClient");
 const { getSupabaseAdmin } = require("../_lib/supabaseAdmin");
 const { getPlanKeyByPriceId } = require("../_lib/stripePlans");
+const { MONTHLY_CREDITS } = require("../_lib/aiCredits");
 
 function readRawBody(req) {
   return new Promise(function (resolve, reject) {
@@ -49,15 +58,45 @@ function resolvePlanKeyFromSubscription(subscription) {
   return getPlanKeyByPriceId(priceId);
 }
 
+// 決済直後・プラン変更直後にAIクレジットを月替わりを待たずその場で付与する。
+// 失敗してもsubscriptions自体の反映は既に終わっているため、ここでは投げ直さずログのみ残す
+// （クレジット付与に失敗しても、次回の月替わりリセット・サポート対応でリカバリできるため）。
+async function grantPlanCreditsIfNeeded(supabaseAdmin, userId, planKey) {
+  const { data, error } = await supabaseAdmin.rpc("grant_plan_credits", {
+    p_user_id: userId,
+    p_monthly_credits: MONTHLY_CREDITS
+  });
+
+  if (error) {
+    console.error("[stripe-webhook] AIクレジットの付与に失敗しました。user_id=" + userId + " plan=" + planKey, error);
+    return;
+  }
+
+  console.log("[stripe-webhook] AIクレジットを付与しました。user_id=" + userId, data);
+}
+
 // subscriptionsテーブルへの反映（新規契約・プラン変更・更新のすべてで共通して使う）
 async function upsertSubscription(supabaseAdmin, userId, subscription, planKeyHint) {
   const planKey = planKeyHint || resolvePlanKeyFromSubscription(subscription);
   if (!planKey) {
     console.error(
-      "StripeのPrice IDから対応するBookHubのプランを特定できませんでした。subscription:",
-      subscription.id
+      "[stripe-webhook] StripeのPrice IDから対応するBookHubのプランを特定できませんでした。" +
+        " user_id=" + userId + " subscription=" + subscription.id + " price=" +
+        (subscription.items && subscription.items.data && subscription.items.data[0] &&
+          subscription.items.data[0].price && subscription.items.data[0].price.id)
     );
     return;
+  }
+
+  // プランが実際に切り替わったかどうかを、上書きする「前」に見ておく
+  // （切り替わっていないただの更新イベントで毎回クレジットを付与し直さないため）。
+  const { data: existingRow, error: existingError } = await supabaseAdmin
+    .from("subscriptions")
+    .select("plan, status")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (existingError) {
+    console.error("[stripe-webhook] 既存のsubscriptions行の取得に失敗しました。user_id=" + userId, existingError);
   }
 
   const { error } = await supabaseAdmin.from("subscriptions").upsert(
@@ -76,19 +115,60 @@ async function upsertSubscription(supabaseAdmin, userId, subscription, planKeyHi
   );
 
   if (error) {
-    console.error("subscriptionsテーブルの更新に失敗しました:", error);
+    // service role keyが正しく設定されていない・RLSでブロックされている・
+    // supabase/stripe_subscriptions.sqlが未実行（テーブル自体が無い）等はすべてここに出る
+    console.error(
+      "[stripe-webhook] subscriptionsテーブルの更新に失敗しました。user_id=" + userId + " plan=" + planKey,
+      error
+    );
+    return;
+  }
+
+  console.log(
+    "[stripe-webhook] subscriptionsテーブルを更新しました。user_id=" + userId +
+      " plan=" + planKey + " status=" + subscription.status
+  );
+
+  // 「新規に有効化された」「プランが変わった」「解約後に再契約した」のいずれかのときだけ、
+  // 月替わりを待たずその場でクレジットを付与する（ただの更新イベントで毎回付与し直さないため）。
+  // profiles.planへの反映自体はsupabase/stripe_subscriptions.sqlのトリガー（on_subscription_change）が
+  // このupsertと同じトランザクション内で既に行っているため、ここでは待たずにそのままRPCを呼べる。
+  const isActive = subscription.status === "active" || subscription.status === "trialing";
+  const wasActive = existingRow && (existingRow.status === "active" || existingRow.status === "trialing");
+  const planChanged = !existingRow || existingRow.plan !== planKey;
+  if (isActive && (planChanged || !wasActive)) {
+    await grantPlanCreditsIfNeeded(supabaseAdmin, userId, planKey);
   }
 }
 
 // customer.subscription.* イベントには、Checkout時にsubscription_data.metadataへ入れておいた
 // supabase_user_idが載っているはずだが、念のため見つからない場合はstripe_subscription_idで引き当てる
 async function findUserIdBySubscriptionId(supabaseAdmin, subscriptionId) {
-  const { data } = await supabaseAdmin
+  const { data, error } = await supabaseAdmin
     .from("subscriptions")
     .select("user_id")
     .eq("stripe_subscription_id", subscriptionId)
     .maybeSingle();
+  if (error) {
+    console.error("[stripe-webhook] stripe_subscription_idからのユーザー特定に失敗しました。subscription=" + subscriptionId, error);
+  }
   return data ? data.user_id : null;
+}
+
+// customer.subscription.created / updated で共通の処理
+// （created は初回契約時、updated はプラン変更・更新・支払い失敗などで発生する）
+async function handleSubscriptionEvent(supabaseAdmin, subscription) {
+  const userId =
+    (subscription.metadata && subscription.metadata.supabase_user_id) ||
+    (await findUserIdBySubscriptionId(supabaseAdmin, subscription.id));
+  if (userId) {
+    await upsertSubscription(supabaseAdmin, userId, subscription);
+  } else {
+    console.error(
+      "[stripe-webhook] subscriptionイベントでユーザーを特定できませんでした" +
+        "（metadata.supabase_user_id・subscriptionsテーブルのどちらからも見つからない）。subscription=" + subscription.id
+    );
+  }
 }
 
 module.exports = async function handler(req, res) {
@@ -98,6 +178,7 @@ module.exports = async function handler(req, res) {
   }
 
   if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error("[stripe-webhook] Stripeの環境変数（STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET）が未設定です。");
     res.status(500).json({
       error: "Stripeの環境変数（STRIPE_SECRET_KEY / STRIPE_WEBHOOK_SECRET）がVercelに設定されていません。"
     });
@@ -112,17 +193,20 @@ module.exports = async function handler(req, res) {
     const rawBody = await readRawBody(req);
     event = stripe.webhooks.constructEvent(rawBody, signature, process.env.STRIPE_WEBHOOK_SECRET);
   } catch (error) {
-    // 署名が一致しない＝Stripe以外からのリクエストの可能性があるため、中身は処理せず拒否する
-    console.error("Stripe Webhookの署名検証に失敗しました:", error.message);
+    // 署名が一致しない＝Stripe以外からのリクエストの可能性、またはSTRIPE_WEBHOOK_SECRETが
+    // Stripe Dashboard側のこのエンドポイント用の値と一致していない可能性が高い
+    console.error("[stripe-webhook] 署名検証に失敗しました:", error.message);
     res.status(400).json({ error: "署名の検証に失敗しました。" });
     return;
   }
+
+  console.log("[stripe-webhook] event received: " + event.type + " (" + event.id + ")");
 
   let supabaseAdmin;
   try {
     supabaseAdmin = getSupabaseAdmin();
   } catch (error) {
-    console.error(error.message);
+    console.error("[stripe-webhook] " + error.message);
     res.status(500).json({ error: error.message });
     return;
   }
@@ -133,27 +217,33 @@ module.exports = async function handler(req, res) {
         const session = event.data.object;
         if (session.mode === "subscription" && session.subscription) {
           const userId = session.client_reference_id || (session.metadata && session.metadata.supabase_user_id);
+          const planKeyHint = session.metadata && session.metadata.plan;
+          console.log(
+            "[stripe-webhook] checkout.session.completed: user_id=" + userId +
+              " plan_hint=" + planKeyHint + " subscription=" + session.subscription
+          );
           if (userId) {
             const subscription = await stripe.subscriptions.retrieve(session.subscription);
-            const planKeyHint = session.metadata && session.metadata.plan;
             await upsertSubscription(supabaseAdmin, userId, subscription, planKeyHint);
           } else {
-            console.error("checkout.session.completed: supabase_user_idを特定できませんでした。session:", session.id);
+            console.error(
+              "[stripe-webhook] checkout.session.completed: supabase_user_idを特定できませんでした" +
+                "（client_reference_id・metadata.supabase_user_idのいずれも無い）。session=" + session.id
+            );
           }
+        } else {
+          console.log(
+            "[stripe-webhook] checkout.session.completed: サブスクリプション以外のセッションのため無視します。" +
+              " mode=" + session.mode
+          );
         }
         break;
       }
 
+      case "customer.subscription.created":
       case "customer.subscription.updated": {
         const subscription = event.data.object;
-        const userId =
-          (subscription.metadata && subscription.metadata.supabase_user_id) ||
-          (await findUserIdBySubscriptionId(supabaseAdmin, subscription.id));
-        if (userId) {
-          await upsertSubscription(supabaseAdmin, userId, subscription);
-        } else {
-          console.error("customer.subscription.updated: ユーザーを特定できませんでした。subscription:", subscription.id);
-        }
+        await handleSubscriptionEvent(supabaseAdmin, subscription);
         break;
       }
 
@@ -164,18 +254,24 @@ module.exports = async function handler(req, res) {
           .update({ status: "canceled", updated_at: new Date().toISOString() })
           .eq("stripe_subscription_id", subscription.id);
         if (error) {
-          console.error("subscriptionsテーブルの解約反映に失敗しました:", error);
+          console.error(
+            "[stripe-webhook] subscriptionsテーブルの解約反映に失敗しました。subscription=" + subscription.id,
+            error
+          );
+        } else {
+          console.log("[stripe-webhook] 解約を反映しました。subscription=" + subscription.id);
         }
         break;
       }
 
       default:
+        console.log("[stripe-webhook] 未対応のイベントのため無視します: " + event.type);
         break; // BookHubで扱わないイベントは何もしない（200を返してStripe側の再送を止める）
     }
 
     res.status(200).json({ received: true });
   } catch (error) {
-    console.error("Stripe Webhookの処理でエラーが発生しました:", error);
+    console.error("[stripe-webhook] Webhookの処理で例外が発生しました。event=" + event.type, error);
     res.status(500).json({ error: "Webhookの処理に失敗しました。" });
   }
 };
