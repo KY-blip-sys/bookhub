@@ -58,6 +58,7 @@ function openReviewModal(bookId, options) {
 
   if (reviewModalIsCelebratory) {
     reviewCelebrationCover.innerHTML = "";
+    reviewCelebrationCover.className = "review-celebration-cover " + getBookCoverHueClass(book);
     reviewCelebrationCover.appendChild(buildBookCoverContent(book, "review-celebration-cover-initial"));
 
     reviewCelebrationStat.textContent = book.pageCount ? book.pageCount + "ページ読み終えました" : "読み終えました";

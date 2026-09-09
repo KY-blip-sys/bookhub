@@ -29,7 +29,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=54">
+  <link rel="stylesheet" href="css/style.css?v=55">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -297,6 +297,26 @@
             </p>
           </section>
 
+          <!-- AI機能への導線カード：この本について質問・要約・比較・次の本の提案ができることを、
+               ホーム画面からも思い出せるようにする（押すとAI画面へ。js/screens/app.jsのdata-nav-target共通処理） -->
+          <button type="button" class="ai-teaser-card" data-nav-target="ai">
+            <span class="ai-teaser-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
+                <path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z" />
+              </svg>
+            </span>
+            <span class="ai-teaser-text">
+              <span class="ai-teaser-title">AIに質問してみよう</span>
+              <span class="ai-teaser-desc">この本の要点、他の本との比較。次に読む本の提案などができます</span>
+            </span>
+            <svg class="ai-teaser-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m9 6 6 6-6 6" />
+            </svg>
+          </button>
+
         </div>
 
         <!-- 本一覧画面（本棚） -->
@@ -519,9 +539,18 @@
             </div>
             <div class="ai-chat-card">
               <div id="book-question-messages" class="ai-chat-messages">
-                <p id="book-question-empty-message" class="page-placeholder">
-                  この本について気になることをAIに質問できます。（登録済みの学んだこと・感想も参考にして答えます）
-                </p>
+                <div id="book-question-empty-message" class="ai-chat-empty-state">
+                  <p class="page-placeholder">
+                    この本について気になることをAIに質問できます。（登録済みの学んだこと・感想も参考にして答えます）
+                  </p>
+                  <div class="ai-suggestion-chips" id="book-question-suggestion-chips">
+                    <button type="button" class="ai-suggestion-chip" data-question="この本の要点を教えて">この本の要点を教えて</button>
+                    <button type="button" class="ai-suggestion-chip" data-question="他の本と比較して">他の本と比較して</button>
+                    <button type="button" class="ai-suggestion-chip"
+                      data-question="著者の考えを詳しく知りたい">著者の考えを詳しく知りたい</button>
+                    <button type="button" class="ai-suggestion-chip" data-question="次に読む本を提案して">次に読む本を提案して</button>
+                  </div>
+                </div>
               </div>
               <form id="book-question-form" class="ai-chat-form">
                 <input type="text" id="book-question-input" placeholder="この本について質問する" autocomplete="off" required>
@@ -828,9 +857,17 @@
           <div id="ai-chat-panel" class="ai-tab-panel">
             <div class="ai-chat-card">
               <div id="ai-chat-messages" class="ai-chat-messages">
-                <p id="ai-chat-empty-message" class="page-placeholder">
-                  AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
-                </p>
+                <div id="ai-chat-empty-message" class="ai-chat-empty-state">
+                  <p class="page-placeholder">
+                    AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
+                  </p>
+                  <div class="ai-suggestion-chips" id="ai-chat-suggestion-chips">
+                    <button type="button" class="ai-suggestion-chip" data-question="今の気分に合う本を提案して">今の気分に合う本を提案して</button>
+                    <button type="button" class="ai-suggestion-chip"
+                      data-question="最近読んだ本の感想をまとめる手伝いをして">感想をまとめる手伝いをして</button>
+                    <button type="button" class="ai-suggestion-chip" data-question="次に読む本を提案して">次に読む本を提案して</button>
+                  </div>
+                </div>
               </div>
               <form id="ai-chat-form" class="ai-chat-form">
                 <input type="text" id="ai-chat-input" placeholder="メッセージを入力" autocomplete="off" required>
@@ -1067,6 +1104,52 @@
         </div>
       </aside>
     </div>
+
+    <!-- スマホ・タブレット幅専用の下部タブバー（PC幅ではCSSで常に非表示）。
+         サイドバーの主要4項目（ホーム・本棚・統計・設定）と全く同じ仕組み（.nav-item／data-nav）を
+         使った“もう一つの入口”で、js/screens/app.jsの側は何も変更していない
+         （document.querySelectorAll(".nav-item")がこの4つも一緒に拾い、
+         クリック時のページ切り替え・アクティブ状態の更新がそのまま効く）。
+         実践リスト・AIなど残りの項目は、これまで通り左上「≡」から開くサイドバーで使える。 -->
+    <nav class="bottom-nav" aria-label="主要なページ切り替え">
+      <button class="nav-item" type="button" data-nav="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 11.5 12 4l8 7.5" />
+          <path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9" />
+        </svg>
+        <span>ホーム</span>
+      </button>
+      <button class="nav-item" type="button" data-nav="books">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
+          <path d="M12 6v14" />
+        </svg>
+        <span>本棚</span>
+      </button>
+      <button class="nav-item" type="button" data-nav="stats">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 20V10M12 20V4M19 20v-6" />
+        </svg>
+        <span>統計</span>
+      </button>
+      <button class="nav-item" type="button" data-nav="settings">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="4" y1="6" x2="10" y2="6" />
+          <circle cx="13" cy="6" r="2" />
+          <line x1="16" y1="6" x2="20" y2="6" />
+          <line x1="4" y1="12" x2="14" y2="12" />
+          <circle cx="17" cy="12" r="2" />
+          <line x1="4" y1="18" x2="6" y2="18" />
+          <circle cx="9" cy="18" r="2" />
+          <line x1="12" y1="18" x2="20" y2="18" />
+        </svg>
+        <span>設定</span>
+      </button>
+    </nav>
   </div>
 
   <!-- 本一覧から「編集」を選んだときに開く、本の情報を編集するモーダル -->
@@ -1401,18 +1484,18 @@
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=25"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=34"></script>
-  <script src="js/screens/bookSearch.js?v=2"></script>
+  <script src="js/screens/books.js?v=35"></script>
+  <script src="js/screens/bookSearch.js?v=3"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/records.js?v=28"></script>
   <script src="js/screens/stats.js?v=27"></script>
   <script src="js/screens/actions.js?v=28"></script>
-  <script src="js/screens/reviews.js?v=26"></script>
+  <script src="js/screens/reviews.js?v=27"></script>
   <script src="js/screens/motivationCard.js?v=26"></script>
   <script src="js/screens/settings.js?v=27"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/aiInfo.js?v=1"></script>
-  <script src="js/screens/aiChat.js?v=3"></script>
+  <script src="js/screens/aiChat.js?v=4"></script>
   <script src="js/screens/aiRecommend.js?v=3"></script>
   <script src="js/screens/aiQuiz.js?v=4"></script>
   <script src="js/screens/aiSummary.js?v=3"></script>
@@ -1425,11 +1508,11 @@
   <script src="js/screens/pricing.js?v=3"></script>
   <!-- bookQuestion.jsは、本の詳細画面「AIに質問」タブの処理。aiContext.js・booksModel.jsを使うため、
        それらより後に読み込む -->
-  <script src="js/screens/bookQuestion.js?v=2"></script>
+  <script src="js/screens/bookQuestion.js?v=3"></script>
   <!-- bookQuiz.jsは、本の詳細画面「クイズ」タブの処理。aiQuiz.jsのcreateAiQuizControllerを使うため、
        aiQuiz.jsより後に読み込む -->
   <script src="js/screens/bookQuiz.js?v=1"></script>
-  <script src="js/screens/app.js?v=34"></script>
+  <script src="js/screens/app.js?v=35"></script>
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
   <script src="js/screens/auth.js?v=10"></script>

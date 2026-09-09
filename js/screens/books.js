@@ -70,6 +70,19 @@ firstBookNudgeButton.addEventListener("click", function () {
   openBookFormPanel();
 });
 
+// 表紙画像が無い本の背景に彩りを出すため、id・タイトルから6色の中の1色を安定して選ぶ
+// （同じ本なら毎回同じ色になる。実際の本の装丁のように、本棚がカラフルに見えるようにする）
+const BOOK_COVER_HUE_COUNT = 6;
+
+function getBookCoverHueClass(book) {
+  const seed = String((book && (book.id ?? book.title)) || "");
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
+  }
+  return "cover-hue-" + (hash % BOOK_COVER_HUE_COUNT);
+}
+
 // 本の表紙（画像があればそれを、なければタイトルの頭文字を表示する）を組み立てる。
 // 本棚のカード・「今読んでいる本」のカードなど、表紙を使う場所ならどこでも使う。
 // initialClassName: 画像が無いときに表示する頭文字に付けるクラス名（サイズなどは呼び出し側のCSSで決める）
@@ -133,7 +146,7 @@ function renderBookList() {
 
     // 表紙（画像があればそれを、なければタイトルの頭文字を表示する）
     const cover = document.createElement("div");
-    cover.className = "book-cover";
+    cover.className = "book-cover " + getBookCoverHueClass(book);
     cover.appendChild(buildBookCoverContent(book, "book-cover-initial"));
 
     // 表紙の右上に、読書ステータス（読みたい・読書中・読了）のバッジを重ねる
@@ -168,6 +181,15 @@ function renderBookList() {
       authorEl.className = "book-card-author";
       authorEl.textContent = book.author;
       li.appendChild(authorEl);
+    }
+
+    // 読了レビューの★評価があれば、一覧でもひと目でわかるように表示する
+    const review = getReviewForBook(book.id); // reviewsModel.js
+    if (review && review.rating) {
+      const ratingEl = document.createElement("p");
+      ratingEl.className = "book-card-rating";
+      ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
+      li.appendChild(ratingEl);
     }
 
     // 実践中のものがあるときだけ、控えめなチップで知らせる（無ければ何も表示せず余白のままにする）
@@ -242,7 +264,7 @@ function buildCurrentlyReadingCard(book, staggerIndex) {
   });
 
   const cover = document.createElement("div");
-  cover.className = "currently-reading-cover";
+  cover.className = "currently-reading-cover " + getBookCoverHueClass(book);
   cover.appendChild(buildBookCoverContent(book, "currently-reading-cover-initial"));
   li.appendChild(cover);
 

@@ -135,6 +135,7 @@ function showDetailScreenNow(bookId) {
 
   // 表紙（books.jsのbuildBookCoverContentを再利用。画像が無ければタイトルの頭文字を表示する）
   detailHeaderCover.innerHTML = "";
+  detailHeaderCover.className = "detail-header-cover " + getBookCoverHueClass(book);
   detailHeaderCover.appendChild(buildBookCoverContent(book, "detail-header-cover-initial"));
 
   // 読書ステータス（読みたい・読書中・読了）を、本棚カードと同じ色分けで常に表示しておく
