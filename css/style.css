@@ -4545,8 +4545,14 @@ html.dark-mode .dashboard-hero-banner {
         white-space: nowrap;
     }
 
+    /* 見出しとして中央に表示しているだけの要素なので、押しても
+       ホバー色や縮小アニメーションが反応しないようにする（押せる機能自体は維持） */
     .mobile-topbar-title:hover {
-        background-color: var(--color-border);
+        background-color: transparent;
+    }
+
+    .mobile-topbar-title:active {
+        transform: none;
     }
 
     .mobile-topbar-spacer {
@@ -4577,7 +4583,8 @@ html.dark-mode .dashboard-hero-banner {
         transform: translateX(0);
     }
 
-    /* サイドバーを開く「≡」ボタン。画面左上に固定表示する丸いアイコンボタン（スマホでも押しやすい44px角）。
+    /* サイドバーを開く「≡」ボタン。画面左上に固定表示するアイコンだけのボタン（背景・影は付けず、
+       線３本のアイコンだけを表示。タップ領域はスマホでも押しやすい44px角を確保）。
        サイドバー本体（.sidebar）ではなく画面に対してposition:fixedで固定するため、
        サイドバーが画面外（閉時）でも常に同じ位置に表示できる。
        開いている間は下の.sidebar-open指定で非表示にし、代わりにサイドバー内の「◀」に役目を譲る */
@@ -4594,15 +4601,10 @@ html.dark-mode .dashboard-hero-banner {
         padding: 0;
         border: none;
         border-radius: 50%;
-        background-color: var(--color-bg-secondary);
-        box-shadow: var(--shadow-sm);
+        background-color: transparent;
+        box-shadow: none;
         color: var(--color-text);
         cursor: pointer;
-        transition: background-color var(--transition-fast) var(--ease-standard);
-    }
-
-    .sidebar-toggle-tab:hover {
-        background-color: var(--color-border);
     }
 
     .sidebar-toggle-tab svg {
