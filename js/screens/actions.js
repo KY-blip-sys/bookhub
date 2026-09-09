@@ -360,13 +360,6 @@ function buildActionBlock(action) {
     li.appendChild(purposeEl);
   }
 
-  if (action.dueDate) {
-    const dueDateEl = document.createElement("p");
-    dueDateEl.className = "action-meta";
-    dueDateEl.textContent = "期限：" + action.dueDate;
-    li.appendChild(dueDateEl);
-  }
-
   const statusEl = document.createElement("p");
   statusEl.className = "action-meta action-status";
   statusEl.textContent = "ステータス：" + ACTION_STATUS_LABELS[action.status];
@@ -756,10 +749,13 @@ function renderActionDetailModal() {
   actionDetailBody.appendChild(buildTodoChecklist(action));
   actionDetailBody.appendChild(buildAddTodoForm(action));
 
-  // 完了した実践だけ、振り返りの表示・入力欄と「実績にする」ボタンを出す
+  // 完了した実践だけ、振り返りの表示・入力欄と「実績にする」ボタンを出す（横に並べて表示する）
   if (action.status === "done") {
-    actionDetailBody.appendChild(buildReflectionSection(action));
-    actionDetailBody.appendChild(buildClearButton(action));
+    const reflectionAndClearRow = document.createElement("div");
+    reflectionAndClearRow.className = "reflection-achievement-row";
+    reflectionAndClearRow.appendChild(buildReflectionSection(action));
+    reflectionAndClearRow.appendChild(buildClearButton(action));
+    actionDetailBody.appendChild(reflectionAndClearRow);
   }
 
   actionDetailModal.hidden = false;

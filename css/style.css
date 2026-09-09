@@ -2648,9 +2648,7 @@ html.dark-mode .dashboard-tile::after {
 
 /* ---------- 「実績にする」ボタン ---------- */
 .action-clear-wrapper {
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--color-border);
+    flex: 0 0 auto;
 }
 
 .clear-action-button {
@@ -2827,11 +2825,20 @@ html.dark-mode .dashboard-tile::after {
     margin-bottom: 0;
 }
 
-/* ---------- 振り返り ---------- */
-.reflection-section {
+/* ---------- 振り返り・実績にするボタン（横に並べて配置する） ---------- */
+.reflection-achievement-row {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-start;
+    gap: 12px;
     margin-top: 14px;
     padding-top: 14px;
     border-top: 1px solid var(--color-border);
+}
+
+.reflection-section {
+    flex: 1 1 auto;
+    min-width: 0;
 }
 
 .reflection-form {
@@ -4780,11 +4787,11 @@ html.dark-mode .dashboard-hero-banner {
         flex-wrap: wrap;
     }
 
-    /* スマホでは1画面に見える冊数を増やすため、本一覧のカードを縮小する
-       （表紙・タイトル・ステータスなどの情報は削らず、余白と文字サイズだけを詰める。
+    /* スマホでは常に本を3冊横に並べる（画面幅によって2列・4列に変わらないよう固定する）。
+       表紙・タイトル・ステータスなどの情報は削らず、余白と文字サイズだけを詰める。
        PC・タブレット幅の.book-shelfはこの@media (max-width: 600px)の外にあるため変更されない） */
     .book-shelf {
-        grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+        grid-template-columns: repeat(3, 1fr);
         gap: 16px 10px;
     }
 
