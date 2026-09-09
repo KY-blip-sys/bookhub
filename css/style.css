@@ -184,49 +184,6 @@ html.dark-mode .main-content::before {
     display: flex;
     flex: 1;
     min-width: 0;
-    /* 下に引っ張ってリロードする演出の土台。JS(setupPullToRefresh)がここにtransformを付けて
-       指の動きに合わせて押し下げる。.mobile-topbar・.sidebarは兄弟要素なので、
-       ここをtransformで動かしても一緒には動かず、常に固定されたまま見える */
-    position: relative;
-    transition: transform 0.25s var(--ease-standard);
-}
-
-/* 指で引っ張っている最中はtransitionを切り、指の動きにぴったり追従させる
-   （離した瞬間だけ、上の.content-and-adのtransitionで滑らかに戻す／留める） */
-.content-and-ad.pull-refresh-dragging {
-    transition: none;
-}
-
-/* 「下に引っ張ってリロード」の丸いインジケーター。.content-and-adの上端よりさらに上（画面外）に
-   置いておき、.content-and-ad自体が下に押し出されるのに合わせて自然と現れる */
-.pull-refresh-indicator {
-    position: absolute;
-    top: -56px;
-    left: 0;
-    right: 0;
-    height: 56px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    pointer-events: none;
-    color: var(--color-accent);
-}
-
-.pull-refresh-spinner {
-    width: 24px;
-    height: 24px;
-}
-
-/* 閾値を超えて指を離した後、実際にページが再読み込みされるまでの間ぐるぐる回して「読み込み中」を示す */
-.pull-refresh-indicator.pull-refresh-spinning .pull-refresh-spinner {
-    animation: pull-refresh-spin 0.7s linear infinite;
-}
-
-@keyframes pull-refresh-spin {
-    to {
-        transform: rotate(360deg);
-    }
 }
 
 /* 独立したaside要素。中の.ad-slotはあくまで開発中の仮表示で、
