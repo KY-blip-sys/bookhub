@@ -7,7 +7,6 @@
 const categorySwitcherButtons = document.querySelectorAll(".category-switcher-button");
 const sidebarNav = document.querySelector(".sidebar-nav");
 const sidebarBrandButton = document.getElementById("sidebar-brand-button");
-const mobileTopbarTitleButton = document.getElementById("mobile-topbar-title-button");
 
 // カテゴリごとに、サイドバーに表示できる画面（nav属性の値）の一覧
 // カテゴリを切り替えたときに、今開いている画面がもう存在しなければダッシュボードに戻すために使う
@@ -31,7 +30,8 @@ function updateNavVisibility() {
   sidebarNav.classList.toggle("nav-novel-mode", activeCategory === "novel");
 }
 
-// サイドバー左上・スマホ/タブレット幅のヘッダー中央「BookHub」ロゴが押されたら、ホームに戻る
+// サイドバー左上の「BookHub」ロゴが押されたら、ホームに戻る
+// （スマホ/タブレット幅のヘッダー中央のタイトルは現在ページ名の表示専用で、押しても反応しない）
 function goHome() {
   confirmLeaveWhileTimerRunning(function () {
     goToNavPage("dashboard");
@@ -40,7 +40,6 @@ function goHome() {
 }
 
 sidebarBrandButton.addEventListener("click", goHome);
-mobileTopbarTitleButton.addEventListener("click", goHome);
 
 // 切り替えピルが押されたときの処理（サイドバー・ホーム画面のどちらの切り替えタブから押しても同じ処理）
 categorySwitcherButtons.forEach(function (button) {

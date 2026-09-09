@@ -4517,42 +4517,39 @@ html.dark-mode .dashboard-hero-banner {
         padding: 0 12px;
         background-color: var(--color-bg-secondary);
         border-bottom: 1px solid var(--color-border);
-        /* メイン画面をスクロールしても、常に画面の一番上に留まる */
-        position: sticky;
+        /* position:stickyだと親要素の構成次第で固定が外れることがあったため、
+           画面（ビューポート）に対して直接固定するposition:fixedにする。
+           フローから外れる分の高さは.content-and-adのpadding-topで補っている */
+        position: fixed;
         top: 0;
+        left: 0;
+        right: 0;
         z-index: 11;
     }
 
-    /* アプリ名／ページ名はヘッダー中央に固定表示（開閉は#sidebar-toggle-tabが担うため、
-       左側に別途ボタン用の横幅は確保しない）。右の使い方ボタンと同じ幅の空白（.mobile-topbar-spacer）を
-       左に置くことで、タイトルの中央寄せがヘッダー全体の真ん中に来るようにする。
-       押すと最初のカテゴリ選択画面に戻るボタンなので、ボタンとしての見た目はリセットしておく */
+    /* .mobile-topbarをposition:fixedにした分、その場所に空いた高さを本文側で補い、
+       本文の先頭がヘッダーの下に隠れないようにする */
+    .content-and-ad {
+        padding-top: 56px;
+    }
+
+    /* アプリ名／ページ名をヘッダー中央に表示するだけの見出し。押しても何も起きない
+       （ホームに戻る操作はサイドバー側のロゴ・ナビ項目で行う） */
     .mobile-topbar-title {
         flex: 1;
         min-width: 0;
         border: none;
         background: none;
         padding: 8px 4px;
-        border-radius: var(--radius-sm);
         text-align: center;
         font-size: 20px;
         font-weight: 700;
         font-family: inherit;
         color: var(--color-text);
-        cursor: pointer;
+        cursor: default;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-    }
-
-    /* 見出しとして中央に表示しているだけの要素なので、押しても
-       ホバー色や縮小アニメーションが反応しないようにする（押せる機能自体は維持） */
-    .mobile-topbar-title:hover {
-        background-color: transparent;
-    }
-
-    .mobile-topbar-title:active {
-        transform: none;
     }
 
     .mobile-topbar-spacer {

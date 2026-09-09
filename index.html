@@ -50,10 +50,9 @@
            バランス調整用で、押せる要素ではない -->
       <span class="mobile-topbar-spacer" aria-hidden="true"></span>
 
-      <!-- サイドバー内のロゴ（PC幅専用）と同じ役割：押すとホームに戻る。
-           ドロワーの中に同じボタンを重複して置かない分、ナビ項目を大きくする余白に使う -->
-      <button type="button" class="mobile-topbar-title" id="mobile-topbar-title-button"
-        aria-label="ホームに戻る">BookHub</button>
+      <!-- 現在のページ名を表示するだけの見出し（押しても何も起きない）。
+           ホームに戻る操作はサイドバー内のロゴ・ナビ項目で行う -->
+      <span class="mobile-topbar-title" id="mobile-topbar-title-button">BookHub</span>
 
       <!-- 使い方（説明）ボタン。以前は.content-header側にあったが、スクロールで流れず
            常に見える位置に置きたいため、固定表示のこのヘッダーに移した -->
