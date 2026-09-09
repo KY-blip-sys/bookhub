@@ -63,7 +63,7 @@ function buildBookSearchResultCard(result) {
   });
 
   const cover = document.createElement("div");
-  cover.className = "book-search-result-cover " + getBookCoverHueClass(result); // books.js
+  cover.className = "book-search-result-cover";
   cover.appendChild(buildBookCoverContent(result, "book-search-result-cover-initial")); // books.js
   li.appendChild(cover);
 

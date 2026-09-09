@@ -70,19 +70,6 @@ firstBookNudgeButton.addEventListener("click", function () {
   openBookFormPanel();
 });
 
-// 表紙画像が無い本の背景に彩りを出すため、id・タイトルから6色の中の1色を安定して選ぶ
-// （同じ本なら毎回同じ色になる。実際の本の装丁のように、本棚がカラフルに見えるようにする）
-const BOOK_COVER_HUE_COUNT = 6;
-
-function getBookCoverHueClass(book) {
-  const seed = String((book && (book.id ?? book.title)) || "");
-  let hash = 0;
-  for (let i = 0; i < seed.length; i++) {
-    hash = (hash * 31 + seed.charCodeAt(i)) >>> 0;
-  }
-  return "cover-hue-" + (hash % BOOK_COVER_HUE_COUNT);
-}
-
 // 本の表紙（画像があればそれを、なければタイトルの頭文字を表示する）を組み立てる。
 // 本棚のカード・「今読んでいる本」のカードなど、表紙を使う場所ならどこでも使う。
 // initialClassName: 画像が無いときに表示する頭文字に付けるクラス名（サイズなどは呼び出し側のCSSで決める）
@@ -146,7 +133,7 @@ function renderBookList() {
 
     // 表紙（画像があればそれを、なければタイトルの頭文字を表示する）
     const cover = document.createElement("div");
-    cover.className = "book-cover " + getBookCoverHueClass(book);
+    cover.className = "book-cover";
     cover.appendChild(buildBookCoverContent(book, "book-cover-initial"));
 
     // 表紙の右上に、読書ステータス（読みたい・読書中・読了）のバッジを重ねる
@@ -183,15 +170,6 @@ function renderBookList() {
       li.appendChild(authorEl);
     }
 
-    // 読了レビューの★評価があれば、一覧でもひと目でわかるように表示する
-    const review = getReviewForBook(book.id); // reviewsModel.js
-    if (review && review.rating) {
-      const ratingEl = document.createElement("p");
-      ratingEl.className = "book-card-rating";
-      ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
-      li.appendChild(ratingEl);
-    }
-
     // 実践中のものがあるときだけ、控えめなチップで知らせる（無ければ何も表示せず余白のままにする）
     if (hasInProgressAction) {
       const actionChip = document.createElement("span");
@@ -205,7 +183,6 @@ function renderBookList() {
 
   renderDashboard(books);
   renderCurrentlyReading(books);
-  renderRecentlyRead(books);
   renderMotivationCarousel(books); // motivationCard.js
 
   if (celebratedCardEl) {
@@ -265,7 +242,7 @@ function buildCurrentlyReadingCard(book, staggerIndex) {
   });
 
   const cover = document.createElement("div");
-  cover.className = "currently-reading-cover " + getBookCoverHueClass(book);
+  cover.className = "currently-reading-cover";
   cover.appendChild(buildBookCoverContent(book, "currently-reading-cover-initial"));
   li.appendChild(cover);
 
@@ -291,66 +268,6 @@ function buildCurrentlyReadingCard(book, staggerIndex) {
     authorEl.textContent = book.author;
     li.appendChild(authorEl);
   }
-
-  return li;
-}
-
-// ---------- ダッシュボード：最近読んだ本 ----------
-
-const recentlyReadSection = document.getElementById("recently-read-section");
-const recentlyReadList = document.getElementById("recently-read-list");
-const RECENTLY_READ_MAX_CARDS = 10;
-
-// 感想（★評価）を書いた本を、書いた順が新しい順に並べて表示する
-function renderRecentlyRead(books) {
-  const reviewed = books
-    .map(function (book) {
-      return { book: book, review: getReviewForBook(book.id) }; // reviewsModel.js
-    })
-    .filter(function (entry) {
-      return !!entry.review;
-    })
-    .sort(function (a, b) {
-      return (b.review.createdAt || 0) - (a.review.createdAt || 0);
-    });
-
-  recentlyReadSection.hidden = reviewed.length === 0;
-
-  recentlyReadList.innerHTML = "";
-  reviewed.slice(0, RECENTLY_READ_MAX_CARDS).forEach(function (entry) {
-    recentlyReadList.appendChild(buildRecentlyReadCard(entry.book, entry.review));
-  });
-}
-
-// 「最近読んだ本」1冊ぶんのカード（表紙・タイトル・著者・★評価）を組み立てる
-function buildRecentlyReadCard(book, review) {
-  const li = document.createElement("li");
-  li.className = "recently-read-card";
-  makeRowClickable(li, function () {
-    showDetailScreen(book.id);
-  });
-
-  const cover = document.createElement("div");
-  cover.className = "recently-read-cover " + getBookCoverHueClass(book);
-  cover.appendChild(buildBookCoverContent(book, "recently-read-cover-initial"));
-  li.appendChild(cover);
-
-  const titleEl = document.createElement("p");
-  titleEl.className = "recently-read-title";
-  titleEl.textContent = book.title;
-  li.appendChild(titleEl);
-
-  if (book.author) {
-    const authorEl = document.createElement("p");
-    authorEl.className = "recently-read-author";
-    authorEl.textContent = book.author;
-    li.appendChild(authorEl);
-  }
-
-  const ratingEl = document.createElement("p");
-  ratingEl.className = "recently-read-rating";
-  ratingEl.textContent = "★".repeat(review.rating) + "☆".repeat(5 - review.rating);
-  li.appendChild(ratingEl);
 
   return li;
 }

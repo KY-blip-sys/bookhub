@@ -28,10 +28,8 @@
   <!-- 見出し・本文用のフォント（読み込めない場合は、システムフォントに自動で切り替わります） -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap"
-    rel="stylesheet">
-  <link rel="stylesheet" href="css/style.css?v=57">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css?v=54">
   <!-- Google AdSense（自動広告）。広告の掲載箇所はGoogleが自動で判断するため、
        #ad-container内の.ad-slot（開発中の仮表示）とは連動しない。
        .ad-slotの中に広告を出したい場合は、AdSenseの管理画面で「広告ユニット」を作成し、
@@ -48,49 +46,24 @@
          このバー自体をCSSで非表示にする）。開くのは左上固定の「≡」ボタン（#sidebar-toggle-tab）が
          担うため、ここにはボタン用の横幅を確保せず、タイトルがそのまま全幅を使う -->
     <header class="mobile-topbar">
-      <!-- ホーム画面だけの行：BookHubのロゴ＋検索ボタン（画像のレイアウトに合わせる）。
-           js/screens/app.jsのgoToNavPageが、ホームかどうかでこの行と下の.mobile-topbar-page-rowを出し分ける -->
-      <div class="mobile-topbar-home-row" id="mobile-topbar-home-row">
-        <span class="mobile-topbar-brand">
-          <span class="mobile-topbar-brand-icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-              stroke-linejoin="round">
-              <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
-              <path d="M12 6v14" />
-            </svg>
-          </span>
-          BookHub
-        </span>
-        <button type="button" class="mobile-topbar-icon-button" id="mobile-topbar-search-button" aria-label="本を検索">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="7" />
-            <path d="m20 20-3.5-3.5" />
-          </svg>
-        </button>
-      </div>
+      <!-- 右の使い方ボタンと同じ幅の空白。中央のタイトルが（見た目上の）真ん中に来るようにするための
+           バランス調整用で、押せる要素ではない -->
+      <span class="mobile-topbar-spacer" aria-hidden="true"></span>
 
-      <!-- それ以外の画面用の行：現在のページ名（押しても何も起きない）＋使い方ボタン -->
-      <div class="mobile-topbar-page-row" id="mobile-topbar-page-row" hidden>
-        <!-- 右の使い方ボタンと同じ幅の空白。中央のタイトルが（見た目上の）真ん中に来るようにするための
-             バランス調整用で、押せる要素ではない -->
-        <span class="mobile-topbar-spacer" aria-hidden="true"></span>
+      <!-- 現在のページ名を表示するだけの見出し（押しても何も起きない）。
+           ホームに戻る操作はサイドバー内のロゴ・ナビ項目で行う -->
+      <span class="mobile-topbar-title" id="mobile-topbar-title-button">BookHub</span>
 
-        <!-- 現在のページ名を表示するだけの見出し（押しても何も起きない）。
-             ホームに戻る操作はサイドバー内のロゴ・ナビ項目で行う -->
-        <span class="mobile-topbar-title" id="mobile-topbar-title-button">ホーム</span>
-
-        <!-- 使い方（説明）ボタン。以前は.content-header側にあったが、スクロールで流れず
-             常に見える位置に置きたいため、固定表示のこのヘッダーに移した -->
-        <button type="button" class="header-help-button mobile-topbar-help-button" aria-label="使い方">
-          <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="9" />
-            <path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.5" />
-            <path d="M12 17.5h.01" />
-          </svg>
-        </button>
-      </div>
+      <!-- 使い方（説明）ボタン。以前は.content-header側にあったが、スクロールで流れず
+           常に見える位置に置きたいため、固定表示のこのヘッダーに移した -->
+      <button type="button" class="header-help-button mobile-topbar-help-button" aria-label="使い方">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9" />
+          <path d="M9.5 9.5a2.5 2.5 0 0 1 4.9.8c0 1.7-2.4 1.9-2.4 3.5" />
+          <path d="M12 17.5h.01" />
+        </svg>
+      </button>
     </header>
 
     <!-- スマホ・タブレット幅でサイドバーをドロワー表示にしたとき、裏のメイン画面を暗くして
@@ -251,89 +224,11 @@
 
         <!-- ダッシュボード画面 -->
         <div id="screen-dashboard" class="page">
-          <!-- 押すと本一覧に移動する、あたたかみのあるヒーローバナー（data-nav-targetの仕組みはapp.jsが処理する） -->
+          <!-- 押すと本一覧に移動する、中央寄せのヒーローバナー（data-nav-targetの仕組みはapp.jsが処理する） -->
           <button type="button" class="dashboard-header dashboard-hero-banner" data-nav-target="books">
-            <p class="dashboard-slogan">本があると<br>人生はもっと豊かになる</p>
-
-            <!-- 積み重ねた本と観葉植物のイラスト（写真は使わず、本の装丁らしいアースカラーの
-                 線画イラストにすることで、軽量かつどのテーマ色でも馴染むようにする） -->
-            <svg class="dashboard-hero-illustration" viewBox="0 0 160 120" aria-hidden="true">
-              <!-- 地面の影 -->
-              <ellipse cx="76" cy="111" rx="60" ry="6" fill="#000000" opacity="0.08" />
-
-              <!-- 本の積み重ね（下から3冊、少しずつ角度をつけて自然な山にする） -->
-              <g>
-                <rect x="12" y="88" width="94" height="17" rx="4" fill="#B5502F" />
-                <rect x="93" y="90" width="7" height="13" rx="1.5" fill="#F3E9D6" opacity="0.9" />
-              </g>
-              <g transform="rotate(-2 60 80)">
-                <rect x="20" y="72" width="78" height="16" rx="4" fill="#7C8B69" />
-                <rect x="84" y="74" width="7" height="12" rx="1.5" fill="#F3E9D6" opacity="0.9" />
-              </g>
-              <g transform="rotate(3 55 65)">
-                <rect x="28" y="57" width="58" height="16" rx="4" fill="#DCA753" />
-                <rect x="72" y="59" width="7" height="12" rx="1.5" fill="#F3E9D6" opacity="0.9" />
-              </g>
-
-              <!-- 観葉植物：鉢＋葉 -->
-              <path d="M126 100c0-15 5-27 16-31" stroke="#8B6A4F" stroke-width="3" stroke-linecap="round"
-                fill="none" />
-              <path d="M117 95c9 4 15 1 19-4" stroke="#8B6A4F" stroke-width="2.5" stroke-linecap="round"
-                fill="none" />
-              <path d="M129 88c-2 6-1 11 3 15" stroke="#8B6A4F" stroke-width="2.5" stroke-linecap="round"
-                fill="none" />
-              <ellipse cx="112" cy="93" rx="10" ry="14" fill="#4F7549" transform="rotate(-25 112 93)" />
-              <ellipse cx="121" cy="82" rx="9" ry="13" fill="#6B9163" transform="rotate(8 121 82)" />
-              <ellipse cx="140" cy="86" rx="9" ry="13" fill="#5C8557" transform="rotate(30 140 86)" />
-              <path d="M110 96h30l-3 14a4 4 0 0 1-4 3.5h-16a4 4 0 0 1-4-3.5Z" fill="#A9663F" />
-              <rect x="108" y="92" width="34" height="7" rx="2.5" fill="#B5502F" />
-            </svg>
-          </button>
-
-          <!-- 初めて開いたときの案内：本が1冊も無いときだけ表示する -->
-          <div id="first-book-nudge" class="first-book-nudge" hidden>
-            <p class="first-book-nudge-icon">📚</p>
-            <p class="first-book-nudge-title">読書の記録を始めましょう</p>
-            <p class="first-book-nudge-text">まずは1冊、今読んでいる本（またはこれから読みたい本）を登録してみましょう。</p>
-            <button type="button" id="first-book-nudge-button" class="dashed-add-button">＋ 1冊目を登録する</button>
-          </div>
-
-          <!-- 最近読んだ本：感想（★評価）を書いた本を、新しい順に横スクロールで見せる。
-               1件も無ければ丸ごと隠す（js/screens/books.jsのrenderRecentlyRead） -->
-          <section id="recently-read-section" class="recently-read-section" hidden>
-            <div class="dashboard-summary-header">
-              <h2 class="dashboard-summary-label">最近読んだ本</h2>
-              <button type="button" class="section-more-link" data-nav-target="books">
-                もっと見る
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                  stroke-linejoin="round" aria-hidden="true">
-                  <path d="m9 6 6 6-6 6" />
-                </svg>
-              </button>
-            </div>
-            <ul id="recently-read-list" class="recently-read-list">
-              <!-- ここに最近読んだ本がJavaScriptで追加されていきます -->
-            </ul>
-          </section>
-
-          <!-- AI機能への導線カード：この本について質問・要約・比較・次の本の提案ができることを、
-               ホーム画面からも思い出せるようにする（押すとAI画面へ。js/screens/app.jsのdata-nav-target共通処理） -->
-          <button type="button" class="ai-teaser-card" data-nav-target="ai">
-            <span class="ai-teaser-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
-                <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z" />
-                <path d="M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z" />
-              </svg>
-            </span>
-            <span class="ai-teaser-text">
-              <span class="ai-teaser-title">AIに質問してみよう</span>
-              <span class="ai-teaser-desc">この本の要点、他の本との比較。次に読む本の提案などができます</span>
-            </span>
-            <svg class="ai-teaser-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="m9 6 6 6-6 6" />
-            </svg>
+            <p class="dashboard-slogan">読書が人生を変える</p>
+            <p class="page-subtitle" id="dashboard-subtitle">今日も一冊未来のために</p>
+            <span class="dashboard-hero-cta">読み始める</span>
           </button>
 
           <!-- ダッシュボード：今週の活動をまとめて表示する（「記録」ページのサマリー＝これまでの累計と区別できるようにしている） -->
@@ -380,6 +275,14 @@
                 aria-label="次のカード">›</button>
             </div>
           </section>
+
+          <!-- 初めて開いたときの案内：このカテゴリに本が1冊も無いときだけ表示する -->
+          <div id="first-book-nudge" class="first-book-nudge" hidden>
+            <p class="first-book-nudge-icon">📚</p>
+            <p class="first-book-nudge-title">読書の記録を始めましょう</p>
+            <p class="first-book-nudge-text">まずは1冊、今読んでいる本（またはこれから読みたい本）を登録してみましょう。</p>
+            <button type="button" id="first-book-nudge-button" class="dashed-add-button">＋ 1冊目を登録する</button>
+          </div>
 
           <!-- 今読んでいる本：進捗つきで、押すとそのまま続きから読める。
              カードサイズは固定のまま、PCは最大8冊・タブレット横向きは最大7冊・スマホは最大10冊を
@@ -616,18 +519,9 @@
             </div>
             <div class="ai-chat-card">
               <div id="book-question-messages" class="ai-chat-messages">
-                <div id="book-question-empty-message" class="ai-chat-empty-state">
-                  <p class="page-placeholder">
-                    この本について気になることをAIに質問できます。（登録済みの学んだこと・感想も参考にして答えます）
-                  </p>
-                  <div class="ai-suggestion-chips" id="book-question-suggestion-chips">
-                    <button type="button" class="ai-suggestion-chip" data-question="この本の要点を教えて">この本の要点を教えて</button>
-                    <button type="button" class="ai-suggestion-chip" data-question="他の本と比較して">他の本と比較して</button>
-                    <button type="button" class="ai-suggestion-chip"
-                      data-question="著者の考えを詳しく知りたい">著者の考えを詳しく知りたい</button>
-                    <button type="button" class="ai-suggestion-chip" data-question="次に読む本を提案して">次に読む本を提案して</button>
-                  </div>
-                </div>
+                <p id="book-question-empty-message" class="page-placeholder">
+                  この本について気になることをAIに質問できます。（登録済みの学んだこと・感想も参考にして答えます）
+                </p>
               </div>
               <form id="book-question-form" class="ai-chat-form">
                 <input type="text" id="book-question-input" placeholder="この本について質問する" autocomplete="off" required>
@@ -934,17 +828,9 @@
           <div id="ai-chat-panel" class="ai-tab-panel">
             <div class="ai-chat-card">
               <div id="ai-chat-messages" class="ai-chat-messages">
-                <div id="ai-chat-empty-message" class="ai-chat-empty-state">
-                  <p class="page-placeholder">
-                    AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
-                  </p>
-                  <div class="ai-suggestion-chips" id="ai-chat-suggestion-chips">
-                    <button type="button" class="ai-suggestion-chip" data-question="今の気分に合う本を提案して">今の気分に合う本を提案して</button>
-                    <button type="button" class="ai-suggestion-chip"
-                      data-question="最近読んだ本の感想をまとめる手伝いをして">感想をまとめる手伝いをして</button>
-                    <button type="button" class="ai-suggestion-chip" data-question="次に読む本を提案して">次に読む本を提案して</button>
-                  </div>
-                </div>
+                <p id="ai-chat-empty-message" class="page-placeholder">
+                  AIに読みたい本の相談や、感想の言語化を手伝ってもらいましょう。
+                </p>
               </div>
               <form id="ai-chat-form" class="ai-chat-form">
                 <input type="text" id="ai-chat-input" placeholder="メッセージを入力" autocomplete="off" required>
@@ -1181,52 +1067,6 @@
         </div>
       </aside>
     </div>
-
-    <!-- スマホ・タブレット幅専用の下部タブバー（PC幅ではCSSで常に非表示）。
-         サイドバーの主要4項目（ホーム・本棚・統計・設定）と全く同じ仕組み（.nav-item／data-nav）を
-         使った“もう一つの入口”で、js/screens/app.jsの側は何も変更していない
-         （document.querySelectorAll(".nav-item")がこの4つも一緒に拾い、
-         クリック時のページ切り替え・アクティブ状態の更新がそのまま効く）。
-         実践リスト・AIなど残りの項目は、これまで通り左上「≡」から開くサイドバーで使える。 -->
-    <nav class="bottom-nav" aria-label="主要なページ切り替え">
-      <button class="nav-item" type="button" data-nav="dashboard">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 11.5 12 4l8 7.5" />
-          <path d="M6 10v9a1 1 0 0 0 1 1h3v-6h4v6h3a1 1 0 0 0 1-1v-9" />
-        </svg>
-        <span>ホーム</span>
-      </button>
-      <button class="nav-item" type="button" data-nav="books">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M12 6c-1.8-1.4-4.2-2-7-2v14c2.8 0 5.2.6 7 2 1.8-1.4 4.2-2 7-2V4c-2.8 0-5.2.6-7 2Z" />
-          <path d="M12 6v14" />
-        </svg>
-        <span>本棚</span>
-      </button>
-      <button class="nav-item" type="button" data-nav="stats">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M5 20V10M12 20V4M19 20v-6" />
-        </svg>
-        <span>統計</span>
-      </button>
-      <button class="nav-item" type="button" data-nav="settings">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" y1="6" x2="10" y2="6" />
-          <circle cx="13" cy="6" r="2" />
-          <line x1="16" y1="6" x2="20" y2="6" />
-          <line x1="4" y1="12" x2="14" y2="12" />
-          <circle cx="17" cy="12" r="2" />
-          <line x1="4" y1="18" x2="6" y2="18" />
-          <circle cx="9" cy="18" r="2" />
-          <line x1="12" y1="18" x2="20" y2="18" />
-        </svg>
-        <span>設定</span>
-      </button>
-    </nav>
   </div>
 
   <!-- 本一覧から「編集」を選んだときに開く、本の情報を編集するモーダル -->
@@ -1561,18 +1401,18 @@
   <script src="js/screens/scrollDatePicker.js?v=24"></script>
   <script src="js/screens/starPicker.js?v=25"></script>
   <script src="js/screens/progressRing.js?v=24"></script>
-  <script src="js/screens/books.js?v=36"></script>
-  <script src="js/screens/bookSearch.js?v=3"></script>
+  <script src="js/screens/books.js?v=34"></script>
+  <script src="js/screens/bookSearch.js?v=2"></script>
   <script src="js/screens/progress.js?v=24"></script>
   <script src="js/screens/records.js?v=28"></script>
   <script src="js/screens/stats.js?v=27"></script>
   <script src="js/screens/actions.js?v=28"></script>
-  <script src="js/screens/reviews.js?v=27"></script>
+  <script src="js/screens/reviews.js?v=26"></script>
   <script src="js/screens/motivationCard.js?v=26"></script>
   <script src="js/screens/settings.js?v=27"></script>
   <script src="js/screens/help.js?v=24"></script>
   <script src="js/screens/aiInfo.js?v=1"></script>
-  <script src="js/screens/aiChat.js?v=4"></script>
+  <script src="js/screens/aiChat.js?v=3"></script>
   <script src="js/screens/aiRecommend.js?v=3"></script>
   <script src="js/screens/aiQuiz.js?v=4"></script>
   <script src="js/screens/aiSummary.js?v=3"></script>
@@ -1585,11 +1425,11 @@
   <script src="js/screens/pricing.js?v=3"></script>
   <!-- bookQuestion.jsは、本の詳細画面「AIに質問」タブの処理。aiContext.js・booksModel.jsを使うため、
        それらより後に読み込む -->
-  <script src="js/screens/bookQuestion.js?v=3"></script>
+  <script src="js/screens/bookQuestion.js?v=2"></script>
   <!-- bookQuiz.jsは、本の詳細画面「クイズ」タブの処理。aiQuiz.jsのcreateAiQuizControllerを使うため、
        aiQuiz.jsより後に読み込む -->
   <script src="js/screens/bookQuiz.js?v=1"></script>
-  <script src="js/screens/app.js?v=36"></script>
+  <script src="js/screens/app.js?v=34"></script>
   <!-- auth.jsは、ここまでのgoToNavPageなどの関数がすべて揃った状態で、
        ログイン確認とアプリの表示切り替えを行うため、一番最後に読み込む -->
   <script src="js/screens/auth.js?v=10"></script>

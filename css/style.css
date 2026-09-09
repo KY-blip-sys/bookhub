@@ -19,21 +19,18 @@
    個別の部品を作るときは、なるべく色を直接書かず、この変数を使います。
    こうしておくと、後から配色を変えたいときにここだけ直せばよくなります。 */
 :root {
-    /* 2026-09-09 追加のリファレンス（BookHub Japanese Reading App UI Mockup）に合わせた配色。
-       Apple／Notion／Kindle／無印良品のような「シンプル・上質・温かみ」を狙い、
-       色数を増やさずクリーム背景＋白カード＋テラコッタ1色のアクセントに絞っている。 */
-    --color-bg: #faf7f2;
-    --color-bg-secondary: #f2ece2;
+    /* 「紙とインク」をイメージした、あたたかみのある配色（本を読むアプリらしい落ち着いた色に）。
+       アクセントは、よくあるSaaS的な青ではなく、装丁の革やインクを思わせるテラコッタに。 */
+    --color-bg: #faf8f5;
+    --color-bg-secondary: #f3ede3;
     --color-surface: #ffffff;
-    --color-text: #2c2c2c;
-    --color-text-secondary: #555555;
-    --color-text-tertiary: #8a8a8a;
-    --color-border: #ececec;
-    --color-accent: #d67a45;
-    --color-accent-hover: #b8632f;
-    --color-accent-soft: rgba(214, 122, 69, 0.14);
-    --color-accent-2: #f5c39b;
-    --color-glass: rgba(255, 255, 255, 0.75);
+    --color-text: #2a241e;
+    --color-text-secondary: #7c7367;
+    --color-border: rgba(43, 32, 20, 0.09);
+    --color-accent: #c15f3c;
+    --color-accent-hover: #a94e2f;
+    --color-accent-soft: rgba(193, 95, 60, 0.12);
+    --color-glass: rgba(255, 255, 255, 0.72);
 
     /* PWAのインストール導線・更新通知ボタン専用。白文字での十分なコントラスト比(4.5:1以上)を
        ライト・ダーク両方で保証するため、通常のアクセント色より濃くし、テーマで変えない固定値にしている */
@@ -47,19 +44,11 @@
     --color-danger-soft: rgba(175, 59, 50, 0.12);
 
     --radius-lg: 24px;
-    --radius-md: 18px;
-    --radius-sm: 12px;
-    /* ボタン専用の完全な丸角（カードのradius-lgとは独立させ、ピル型ボタンにだけ使う） */
-    --radius-pill: 999px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
 
-    /* スマホ・タブレット幅の下部タブバー（.bottom-nav）の高さ。トースト・PWAバナーが
-       バーに隠れないよう、この値を基準に浮かせる位置を計算する */
-    --bottom-nav-height: 62px;
-
-    /* カードの影は「ほぼ気づかないくらい弱く」がリファレンスの指定。sm/mdどちらも同じ弱さを基本にし、
-       hover時のmdだけごくわずかに強める程度に留める */
-    --shadow-sm: 0 8px 24px rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 10px 28px rgba(0, 0, 0, 0.06);
+    --shadow-sm: 0 1px 2px rgba(43, 32, 20, 0.05);
+    --shadow-md: 0 1px 2px rgba(43, 32, 20, 0.05), 0 8px 24px rgba(43, 32, 20, 0.08);
 
     --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
     /* カードの登場・達成演出など、少し弾む「気持ちよさ」を出したい場面専用のイージング */
@@ -67,14 +56,11 @@
     --transition-fast: 0.2s;
     --transition-standard: 0.3s;
 
-    /* 文字の大きさの階層：アプリ名など最大の見出し→画面タイトル→カード見出し→本文→補足→メタ情報。
-       リファレンスの「文字を小さくしないこと」指定に合わせ、captionの下限も14pxにしている */
-    --font-size-display: 31px;
-    --font-size-page-title: 27px;
-    --font-size-heading: 21px;
+    /* 文字の大きさの階層：セクション見出し→本文→補足→メタ情報 */
+    --font-size-heading: 20px;
     --font-size-body: 16px;
     --font-size-meta: 14px;
-    --font-size-caption: 14px;
+    --font-size-caption: 13px;
 
     /* ページ背景に敷く、ぼかした写真（main-contentで使う）。
        白オーバーレイは薄めにして、写真の色味がちゃんと見えるようにする */
@@ -89,13 +75,11 @@ html.dark-mode {
     --color-bg-secondary: #221c16;
     --color-surface: #221c16;
     --color-text: #f4ece0;
-    --color-text-secondary: #cfc4b6;
-    --color-text-tertiary: #a89c8c;
+    --color-text-secondary: #a89c8c;
     --color-border: rgba(255, 245, 230, 0.09);
     --color-accent: #e08355;
     --color-accent-hover: #eda274;
     --color-accent-soft: rgba(224, 131, 85, 0.18);
-    --color-accent-2: #f2c9a0;
     --color-glass: rgba(34, 28, 22, 0.72);
 
     --color-success: #6fb37e;
@@ -123,7 +107,7 @@ html.dark-mode {
 
 /* ---------- 基本スタイル ---------- */
 body {
-    font-family: "Noto Sans JP", "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
+    font-family: "Inter", -apple-system, "Hiragino Sans", "Yu Gothic", sans-serif;
     background-color: var(--color-bg);
     color: var(--color-text);
     line-height: 1.6;
@@ -314,8 +298,7 @@ html.dark-mode .main-content::before {
     height: 15px;
 }
 
-.header-help-button,
-.mobile-topbar-icon-button {
+.header-help-button {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -333,8 +316,7 @@ html.dark-mode .main-content::before {
 }
 
 .header-back-button:hover,
-.header-help-button:hover,
-.mobile-topbar-icon-button:hover {
+.header-help-button:hover {
     background-color: var(--color-accent-soft);
     color: var(--color-accent);
 }
@@ -970,40 +952,36 @@ h1 {
 }
 
 /* ---------- ダッシュボード見出し（スローガン） ---------- */
+/* ページタイトルはヘッダー中央に一本化したため、ここは合言葉のような一言だけ残す */
 .dashboard-slogan {
-    font-size: 30px;
+    font-size: 32px;
     font-weight: 700;
-    line-height: 1.35;
     letter-spacing: -0.02em;
-    color: var(--color-text);
+    margin-bottom: 6px;
 }
 
 /* ---------- ダッシュボード：見出しをそのまま「本一覧へ」のヒーローバナーにする ---------- */
-/* 写真ではなく、暖色のグラデーションカード＋線画イラストの軽量な組み合わせにする
-   （どのテーマ色・ダークモードでも自然に馴染み、読み込みも一瞬で終わる） */
+/* 背景はアクセントカラーのグラデーションを薄く重ねた上に写真を敷き、白文字の可読性を保つ
+   （main-content::beforeの写真背景と同じ考え方）。ダークモードでは写真の明るい色味と噛み合わないため、
+   下の html.dark-mode 側の指定で元のグラデーションだけに戻す */
 .dashboard-hero-banner {
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
+    display: block;
     width: 100%;
-    /* リファレンス指定の220〜240pxに合わせる */
-    min-height: 228px;
-    overflow: hidden;
     margin-bottom: 28px;
-    padding: 28px 24px;
+    padding: 40px 32px;
     border: none;
     border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--color-bg-secondary), rgba(214, 122, 69, 0.24));
-    text-align: left;
+    background:
+        linear-gradient(135deg, rgba(163, 76, 46, 0.22), rgba(163, 76, 46, 0.4)),
+        url("images/dashboard-hero-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    /* 写真込みで彩度を約8%落とし、高級感と落ち着きを出す */
+    filter: saturate(92%);
+    text-align: center;
     cursor: pointer;
     transition: transform var(--transition-fast) var(--ease-standard),
         box-shadow var(--transition-fast) var(--ease-standard);
-}
-
-html.dark-mode .dashboard-hero-banner {
-    background: linear-gradient(135deg, var(--color-bg-secondary), rgba(224, 131, 85, 0.3));
 }
 
 .dashboard-hero-banner:hover {
@@ -1011,191 +989,25 @@ html.dark-mode .dashboard-hero-banner {
     box-shadow: var(--shadow-md);
 }
 
-.dashboard-hero-illustration {
-    width: 148px;
-    height: 112px;
-    flex-shrink: 0;
-}
-
-/* ---------- ダッシュボード：最近読んだ本（横スクロール） ---------- */
-.recently-read-section {
-    margin-bottom: 8px;
-}
-
-.recently-read-section[hidden] {
-    display: none;
-}
-
-.section-more-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-    padding: 4px 2px;
-    border: none;
-    background: none;
-    color: var(--color-text-secondary);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-}
-
-.section-more-link:hover {
-    color: var(--color-accent);
-}
-
-.section-more-link svg {
-    width: 16px;
-    height: 16px;
-}
-
-.recently-read-list {
-    list-style: none;
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding-bottom: 6px;
-    scroll-snap-type: x proximity;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-}
-
-.recently-read-list::-webkit-scrollbar {
-    display: none;
-}
-
-.recently-read-card {
-    flex: 0 0 118px;
-    min-width: 0;
-    scroll-snap-align: start;
-    cursor: pointer;
-}
-
-.recently-read-cover {
-    position: relative;
-    aspect-ratio: 2 / 3;
-    border-radius: var(--radius-sm);
-    background: linear-gradient(160deg, var(--color-accent-soft), var(--color-bg-secondary));
-    box-shadow: var(--shadow-sm);
-    overflow: hidden;
-    margin-bottom: 8px;
-    transition: transform var(--transition-fast) var(--ease-standard);
-}
-
-.recently-read-card:hover .recently-read-cover {
-    transform: translateY(-4px);
-}
-
-.recently-read-cover img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.recently-read-cover-initial {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    font-weight: 700;
-    color: var(--color-accent);
-}
-
-.recently-read-title {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--color-text);
-    line-height: 1.4;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-}
-
-.recently-read-author {
-    margin-top: 2px;
-    font-size: 12px;
-    color: var(--color-text-secondary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.recently-read-rating {
-    margin-top: 3px;
-    font-size: 12px;
-    letter-spacing: 1px;
-    color: var(--color-accent);
-}
-
-/* ---------- ダッシュボード：AI機能への導線カード ---------- */
-.ai-teaser-card {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    width: 100%;
-    margin-top: 20px;
-    padding: 18px 20px;
-    border: none;
-    border-radius: var(--radius-lg);
-    background: linear-gradient(135deg, var(--color-accent-soft), var(--color-bg-secondary));
-    text-align: left;
-    cursor: pointer;
-    transition: transform var(--transition-fast) var(--ease-standard),
-        box-shadow var(--transition-fast) var(--ease-standard);
-}
-
-.ai-teaser-card:hover {
-    background: linear-gradient(135deg, var(--color-accent-soft), var(--color-bg-secondary));
-    transform: translateY(-2px);
-    box-shadow: var(--shadow-sm);
-}
-
-.ai-teaser-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    flex-shrink: 0;
-    border-radius: 50%;
-    background-color: var(--color-accent);
+.dashboard-hero-banner .dashboard-slogan {
     color: #ffffff;
+    text-shadow: 0 1px 12px rgba(74, 34, 18, 0.45);
 }
 
-.ai-teaser-icon svg {
-    width: 22px;
-    height: 22px;
+.dashboard-hero-banner .page-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    margin-bottom: 22px;
+    text-shadow: 0 1px 10px rgba(74, 34, 18, 0.4);
 }
 
-.ai-teaser-text {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-}
-
-.ai-teaser-title {
+.dashboard-hero-cta {
+    display: inline-block;
+    padding: 11px 24px;
+    border-radius: 999px;
+    background-color: #ffffff;
+    color: var(--color-accent);
     font-size: var(--font-size-body);
     font-weight: 700;
-    color: var(--color-text);
-}
-
-.ai-teaser-desc {
-    font-size: var(--font-size-caption);
-    color: var(--color-text-secondary);
-    line-height: 1.5;
-}
-
-.ai-teaser-chevron {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-    color: var(--color-text-secondary);
 }
 
 /* ---------- 空状態の共通表示（実践リスト・実績などで共通利用） ---------- */
@@ -1459,18 +1271,16 @@ select:hover {
 }
 
 button {
-    padding: 11px 18px;
+    padding: 10px 16px;
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background-color: var(--color-surface);
     color: var(--color-text);
     font-size: var(--font-size-body);
-    font-weight: 500;
     font-family: inherit;
     cursor: pointer;
     transition: background-color var(--transition-fast) var(--ease-standard),
         border-color var(--transition-fast) var(--ease-standard),
-        box-shadow var(--transition-fast) var(--ease-standard),
         transform 0.1s var(--ease-standard);
 }
 
@@ -1478,9 +1288,9 @@ button:hover {
     background-color: var(--color-bg-secondary);
 }
 
-/* タップ・クリック時に少し縮めて、押した手応えを全ボタン共通で出す（95%まで縮小） */
+/* タップ・クリック時に少し縮めて、押した手応えを全ボタン共通で出す */
 button:active {
-    transform: scale(0.95);
+    transform: scale(0.97);
 }
 
 button:focus-visible,
@@ -1493,40 +1303,32 @@ a:focus-visible,
     outline-offset: 2px;
 }
 
-/* 送信・保存ボタンや主要な操作ボタンは、アクセントカラーの丸い大きめピルにして「ここを押せばいい」を明確にする。
-   影は付けず（リファレンス指定）、56px前後の高さでタップしやすい大きさを確保する */
+/* 送信・保存ボタンや主要な操作ボタンは、アクセントカラーで「ここを押せばいい」を明確にする */
 button[type="submit"] {
-    min-height: 56px;
-    padding: 13px 28px;
     background-color: var(--color-accent);
     color: #ffffff;
     border-color: var(--color-accent);
-    box-shadow: none;
 }
 
 button[type="submit"]:hover {
     background-color: var(--color-accent-hover);
-    box-shadow: none;
 }
 
 /* 「＋ ○○を追加」のように、モーダルを開く起点になるボタン（本一覧の追加カードと揃えた見た目） */
 .add-item-button {
     display: inline-flex;
     align-items: center;
-    justify-content: center;
     gap: 6px;
-    min-height: 56px;
-    padding: 11px 28px;
+    padding: 10px 18px;
     margin-bottom: 20px;
     border: none;
-    border-radius: var(--radius-pill);
+    border-radius: var(--radius-sm);
     background-color: var(--color-accent);
     color: #ffffff;
     font-size: var(--font-size-body);
-    font-weight: 700;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
-    box-shadow: none;
     transition: background-color var(--transition-fast) var(--ease-standard);
 }
 
@@ -1547,12 +1349,12 @@ button[type="submit"]:hover {
     gap: 6px;
     padding: 10px 18px;
     margin-bottom: 20px;
-    border: 2px dashed rgba(44, 44, 44, 0.18);
-    border-radius: var(--radius-pill);
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-sm);
     background-color: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     font-size: var(--font-size-body);
-    font-weight: 500;
+    font-weight: 600;
     font-family: inherit;
     cursor: pointer;
     transition: border-color var(--transition-fast) var(--ease-standard),
@@ -1709,26 +1511,16 @@ button[type="submit"]:hover {
     width: 96px;
     height: 132px;
     flex-shrink: 0;
-    border: 2px dashed var(--color-border);
     border-radius: var(--radius-md);
     background-color: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     cursor: pointer;
     overflow: hidden;
-    transition: background-color var(--transition-fast) var(--ease-standard),
-        border-color var(--transition-fast) var(--ease-standard),
-        color var(--transition-fast) var(--ease-standard);
+    transition: background-color var(--transition-fast) var(--ease-standard);
 }
 
 .cover-upload:hover {
-    background-color: var(--color-accent-soft);
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-}
-
-/* 表紙画像を選択済みのときは、まだ何も選んでいない案内用の点線ではなく、実線の縁にする */
-.cover-upload:has(.cover-upload-preview:not([hidden])) {
-    border-style: solid;
+    background-color: var(--color-border);
 }
 
 .cover-upload-placeholder {
@@ -2489,7 +2281,6 @@ html.dark-mode .dashboard-tile::after {
 .achievement-card-rating {
     margin-top: 8px;
     font-size: 14px;
-    letter-spacing: 1px;
     color: var(--color-accent);
 }
 
@@ -2659,7 +2450,7 @@ html.dark-mode .dashboard-tile::after {
 
 .star-picker {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     margin-top: 4px;
 }
 
@@ -2667,23 +2458,22 @@ html.dark-mode .dashboard-tile::after {
     padding: 0;
     border: none;
     background: none;
-    font-size: 30px;
+    font-size: 24px;
     line-height: 1;
     cursor: pointer;
-    color: var(--color-border);
+    color: #dddddd;
     /* 光っていないときの薄い色 */
-    transition: color 0.35s ease, transform 0.2s var(--ease-emphasized);
+    transition: color 0.35s ease;
     /* 色の変化をゆっくりにする */
 }
 
 .star-button.star-filled {
-    color: var(--color-accent);
-    /* 光っているときの色（メインカラーのオレンジ） */
+    color: #333333;
+    /* 光っているときの濃い色 */
 }
 
 .star-button:hover {
     background: none;
-    transform: scale(1.12);
 }
 
 /* ---------- 本の一覧（本棚） ---------- */
@@ -2735,43 +2525,6 @@ html.dark-mode .dashboard-tile::after {
     color: var(--color-accent);
 }
 
-/* ---------- 表紙が無い本の色分け（books.jsのgetBookCoverHueClassが本ごとに1色を割り当てる） ----------
-   実際の本の装丁のように、本棚がカラフルに見えるようにする。画像があるときは
-   img（object-fit:cover）が上に重なって隠れるので、影響しない。 */
-.cover-hue-0 {
-    background: linear-gradient(160deg, #6f8fc4, #3d5a92) !important;
-}
-
-.cover-hue-1 {
-    background: linear-gradient(160deg, #e3a765, #c17f3b) !important;
-}
-
-.cover-hue-2 {
-    background: linear-gradient(160deg, #7fb69d, #4c8d74) !important;
-}
-
-.cover-hue-3 {
-    background: linear-gradient(160deg, #c98198, #9c5170) !important;
-}
-
-.cover-hue-4 {
-    background: linear-gradient(160deg, #8f8fd1, #5c5da8) !important;
-}
-
-.cover-hue-5 {
-    background: linear-gradient(160deg, #ea8f63, #d67a45) !important;
-}
-
-[class*="cover-hue-"] .book-cover-initial,
-[class*="cover-hue-"] .currently-reading-cover-initial,
-[class*="cover-hue-"] .recently-read-cover-initial,
-[class*="cover-hue-"] .detail-header-cover-initial,
-[class*="cover-hue-"] .book-search-result-cover-initial,
-[class*="cover-hue-"] .review-celebration-cover-initial {
-    color: #ffffff;
-    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
-}
-
 .book-card-title-row {
     display: flex;
     align-items: flex-start;
@@ -2796,13 +2549,6 @@ html.dark-mode .dashboard-tile::after {
     font-size: 13px;
     color: var(--color-text-secondary);
     margin-top: 2px;
-}
-
-.book-card-rating {
-    margin-top: 4px;
-    font-size: 13px;
-    letter-spacing: 1px;
-    color: var(--color-accent);
 }
 
 /* 実践中のときだけ表示する、控えめなチップ */
@@ -3480,8 +3226,7 @@ html.dark-mode .dashboard-tile::after {
 
 .review-rating {
     font-size: 18px;
-    letter-spacing: 1px;
-    color: var(--color-accent);
+    color: #333333;
     margin-bottom: 6px;
 }
 
@@ -3734,7 +3479,7 @@ html.dark-mode .dashboard-tile::after {
 
 .share-card-rating {
     margin-top: 12px;
-    color: var(--color-accent);
+    color: #c8971f;
     font-size: 17px;
     letter-spacing: 3px;
 }
@@ -3809,13 +3554,13 @@ html.dark-mode .icon-teal {
     background-image: linear-gradient(135deg, rgba(90, 191, 173, 0.28), rgba(90, 191, 173, 0.1));
 }
 
-/* ---------- モバイル用トップバー（☰メニュー＋アプリ名。PC幅では使わないので常に非表示） ---------- */
-.mobile-topbar {
-    display: none;
+/* ダッシュボードのヒーローバナーも、他の写真背景と同じく暗い色味と噛み合わないため、写真を消して元のグラデーションに戻す */
+html.dark-mode .dashboard-hero-banner {
+    background: linear-gradient(135deg, var(--color-accent), var(--color-accent-hover));
 }
 
-/* ---------- 下部タブバー（スマホ・タブレット幅専用。PC幅では常時表示のサイドバーがあるため非表示） ---------- */
-.bottom-nav {
+/* ---------- モバイル用トップバー（☰メニュー＋アプリ名。PC幅では使わないので常に非表示） ---------- */
+.mobile-topbar {
     display: none;
 }
 
@@ -3865,113 +3610,9 @@ html.dark-mode .icon-teal {
     }
 
     /* .mobile-topbarをposition:fixedにした分、その場所に空いた高さを本文側で補い、
-       本文の先頭がヘッダーの下に隠れないようにする。下側も.bottom-navの高さぶん
-       あらかじめ余白を取り、一番下のボタンなどがタブバーの裏に隠れないようにする */
+       本文の先頭がヘッダーの下に隠れないようにする */
     .content-and-ad {
         padding-top: 56px;
-        padding-bottom: calc(var(--bottom-nav-height) + 12px);
-    }
-
-    /* 画像のような、常に見えている下部タブバー。サイドバー・ハンバーガーメニューは
-       実践リスト・AI・ダークモード切り替えなど、その他の項目を開くための入り口として
-       そのまま残し、こちらは最もよく使う4項目への近道として並行して使えるようにする */
-    .bottom-nav {
-        display: flex;
-        align-items: stretch;
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        z-index: 12;
-        height: var(--bottom-nav-height);
-        padding-bottom: env(safe-area-inset-bottom, 0px);
-        background-color: var(--color-surface);
-        border-top: 1px solid var(--color-border);
-        box-shadow: 0 -6px 20px rgba(36, 28, 21, 0.06);
-    }
-
-    .bottom-nav .nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        padding: 6px 2px;
-        border: none;
-        border-radius: 0;
-        background: none;
-        color: var(--color-text-secondary);
-        font-size: 11px;
-        font-weight: 600;
-    }
-
-    .bottom-nav .nav-item .nav-icon {
-        width: 22px;
-        height: 22px;
-    }
-
-    .bottom-nav .nav-item:hover {
-        background: none;
-        color: var(--color-text-secondary);
-    }
-
-    .bottom-nav .nav-item.active {
-        background: none;
-        color: var(--color-accent);
-        font-weight: 700;
-    }
-
-    /* トースト・PWAバナーが下部タブバーに隠れないよう、その高さぶん浮かせる */
-    .toast {
-        bottom: calc(var(--bottom-nav-height) + 14px + env(safe-area-inset-bottom, 0px));
-    }
-
-    .pwa-banner-stack {
-        padding-bottom: calc(var(--bottom-nav-height) + 14px + env(safe-area-inset-bottom, 0px));
-    }
-
-    /* ホーム画面用の行・それ以外の画面用の行、どちらもバーの幅いっぱいに広げ、
-       左右の要素を両端に振り分ける（js/screens/app.jsが表示中の画面に応じて出し分ける） */
-    .mobile-topbar-home-row,
-    .mobile-topbar-page-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        width: 100%;
-    }
-
-    /* 左上固定の「≡」ボタン（#sidebar-toggle-tab）と文字が重ならないよう、
-       その分の幅をあらかじめ空けておく（.mobile-topbar-spacerと同じ考え方） */
-    .mobile-topbar-home-row {
-        padding-left: 34px;
-    }
-
-    .mobile-topbar-brand {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 18px;
-        font-weight: 700;
-        letter-spacing: -0.01em;
-        color: var(--color-text);
-    }
-
-    .mobile-topbar-brand-icon {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 28px;
-        height: 28px;
-        flex-shrink: 0;
-        border-radius: 9px;
-        background-color: var(--color-accent);
-        color: #ffffff;
-    }
-
-    .mobile-topbar-brand-icon svg {
-        width: 15px;
-        height: 15px;
     }
 
     /* アプリ名／ページ名をヘッダー中央に表示するだけの見出し。押しても何も起きない
@@ -4132,7 +3773,7 @@ html.dark-mode .icon-teal {
 
     .main-content {
         max-width: 100%;
-        padding: 32px 24px;
+        padding: 24px 20px;
     }
 
     .ad-container {
@@ -4151,8 +3792,7 @@ html.dark-mode .icon-teal {
 /* ---------- レスポンシブ対応（スマホ） ---------- */
 @media (max-width: 600px) {
     .main-content {
-        /* リファレンス指定：画面左右24px・上下32pxの余白 */
-        padding: 32px 24px;
+        padding: 18px 16px;
     }
 
     .ad-container {
@@ -4210,45 +3850,24 @@ html.dark-mode .icon-teal {
         flex-wrap: wrap;
     }
 
-    /* スマホでは、表紙をグリッドで並べる本棚ではなく、画像のように表紙サムネイル＋
-       タイトル・著者・評価を横に並べた「リスト」表示にする（縦スクロールで読みやすく、
-       ★評価や実践中チップも省略せず1行で見渡せる）。
+    /* スマホでは常に本を3冊横に並べる（画面幅によって2列・4列に変わらないよう固定する）。
+       表紙・タイトル・ステータスなどの情報は削らず、余白と文字サイズだけを詰める。
        PC・タブレット幅の.book-shelfはこの@media (max-width: 600px)の外にあるため変更されない） */
     .book-shelf {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .book-card {
-        display: grid;
-        grid-template-columns: 64px 1fr;
-        column-gap: 14px;
-        align-items: center;
-        padding: 10px;
-        border-radius: var(--radius-md);
-        background-color: var(--color-surface);
-        box-shadow: var(--shadow-sm);
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px 10px;
     }
 
     .book-shelf .book-cover {
-        grid-column: 1;
-        grid-row: 1 / -1;
-        align-self: start;
-        width: 64px;
-        margin-bottom: 0;
-    }
-
-    .book-card>*:not(.book-cover) {
-        grid-column: 2;
-        min-width: 0;
+        margin-bottom: 8px;
     }
 
     .book-shelf .book-cover-initial {
-        font-size: 22px;
+        font-size: 24px;
     }
 
     .book-shelf .book-card-title {
-        font-size: 15px;
+        font-size: 13px;
     }
 
     .book-shelf .book-card-author {
@@ -4256,47 +3875,32 @@ html.dark-mode .icon-teal {
         margin-top: 1px;
     }
 
-    .book-shelf .book-card-rating {
-        margin-top: 3px;
-    }
-
     .book-shelf .book-card-action-chip {
         margin-top: 4px;
         padding: 2px 7px;
-        font-size: 12px;
+        font-size: 13px;
     }
 
-    /* リスト表示では表紙が小さいため、文字入りバッジではなく色だけの小さな点にする */
     .book-shelf .book-status-badge {
-        top: 4px;
-        right: 4px;
-        width: 8px;
-        height: 8px;
-        padding: 0;
-        overflow: hidden;
-        font-size: 0;
-        border-radius: 50%;
-        background-color: currentColor;
-        box-shadow: none;
+        top: 5px;
+        right: 5px;
+        padding: 2px 6px;
+        font-size: 13px;
     }
 
     .book-shelf .mini-progress-ring.book-cover-progress-ring {
-        left: 3px;
-        bottom: 3px;
-        width: 20px;
-        height: 20px;
+        left: 4px;
+        bottom: 4px;
+        width: 22px;
+        height: 22px;
     }
 
     .book-shelf .book-cover-progress-ring .mini-progress-ring-label {
-        font-size: 7px;
+        font-size: 8px;
     }
 
     .book-shelf .add-book-trigger-cover {
-        font-size: 22px;
-    }
-
-    .book-shelf .add-book-trigger-card {
-        grid-template-columns: 64px 1fr;
+        font-size: 24px;
     }
 
     .book-form-row {
@@ -4586,46 +4190,15 @@ html.dark-mode .icon-teal {
     gap: 10px;
 }
 
-/* 会話が始まる前の案内文（＋質問例のチップ）は、吹き出しではなく縦方向の中央に置く */
-.ai-chat-empty-state {
+/* 会話が始まる前の案内文は、吹き出しではなく縦方向の中央に置く */
+.ai-chat-messages .page-placeholder {
     margin: auto 0;
-    text-align: center;
-}
-
-.ai-chat-empty-state .page-placeholder {
-    margin-bottom: 16px;
-}
-
-.ai-suggestion-chips {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 8px;
-}
-
-.ai-suggestion-chip {
-    padding: 9px 16px;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-pill);
-    background-color: var(--color-surface);
-    color: var(--color-accent);
-    font-size: 14px;
-    font-weight: 500;
-    font-family: inherit;
-    cursor: pointer;
-    transition: background-color var(--transition-fast) var(--ease-standard),
-        border-color var(--transition-fast) var(--ease-standard);
-}
-
-.ai-suggestion-chip:hover {
-    background-color: var(--color-accent-soft);
-    border-color: var(--color-accent);
 }
 
 .ai-chat-message {
     max-width: 82%;
     padding: 10px 14px;
-    border-radius: 20px;
+    border-radius: var(--radius-md);
     font-size: var(--font-size-body);
     line-height: 1.6;
     white-space: pre-wrap;
@@ -4639,34 +4212,11 @@ html.dark-mode .icon-teal {
     border-bottom-right-radius: 4px;
 }
 
-.ai-chat-message-ai,
-.ai-chat-message-error {
-    position: relative;
-    align-self: flex-start;
-    margin-left: 32px;
-    border-bottom-left-radius: 4px;
-}
-
-/* AIの発言だとひと目でわかるよう、吹き出しの左下にロボットのアイコンを添える */
-.ai-chat-message-ai::before,
-.ai-chat-message-error::before {
-    content: "";
-    position: absolute;
-    left: -32px;
-    bottom: 0;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: var(--color-accent);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3Z'/%3E%3Cpath d='M19 15l.7 2.3L22 18l-2.3.7L19 21l-.7-2.3L16 18l2.3-.7L19 15Z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: 13px;
-}
-
 .ai-chat-message-ai {
+    align-self: flex-start;
     background-color: var(--color-bg-secondary);
     color: var(--color-text);
+    border-bottom-left-radius: 4px;
 }
 
 /* 返答待ちの間だけ表示する「…」バブル */
@@ -4676,12 +4226,10 @@ html.dark-mode .icon-teal {
 }
 
 .ai-chat-message-error {
+    align-self: flex-start;
     background-color: var(--color-danger-soft);
     color: var(--color-danger);
-}
-
-.ai-chat-message-error::before {
-    background-color: var(--color-danger);
+    border-bottom-left-radius: 4px;
 }
 
 .ai-chat-form {

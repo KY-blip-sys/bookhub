@@ -64,14 +64,6 @@ function buildBookQuestionInstructions(book) {
   return lines.join("\n");
 }
 
-// 会話を始める前に表示する質問例（チップ）：押すとそのまま質問して送信する
-document.querySelectorAll("#book-question-suggestion-chips .ai-suggestion-chip").forEach(function (chip) {
-  chip.addEventListener("click", function () {
-    bookQuestionInput.value = chip.dataset.question;
-    bookQuestionForm.requestSubmit();
-  });
-});
-
 bookQuestionForm.addEventListener("submit", async function (event) {
   event.preventDefault();
 

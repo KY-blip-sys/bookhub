@@ -27,14 +27,6 @@ function appendAiChatBubble(text, className) {
   return bubble;
 }
 
-// 会話を始める前に表示する質問例（チップ）：押すとそのまま質問して送信する
-document.querySelectorAll("#ai-chat-suggestion-chips .ai-suggestion-chip").forEach(function (chip) {
-  chip.addEventListener("click", function () {
-    aiChatInput.value = chip.dataset.question;
-    aiChatForm.requestSubmit();
-  });
-});
-
 // AIチャット画面を開いたときの処理（js/screens/app.jsのgoToNavPageから呼ばれる）。
 // 会話履歴はそのまま保持し、最後に見ていた位置までスクロールし直すだけでよい
 function prepareAiChatScreen() {
