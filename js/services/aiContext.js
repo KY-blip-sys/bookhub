@@ -5,9 +5,8 @@
 
 const AI_CONTEXT_NOTES_PER_BOOK_LIMIT = 8;
 
-// 本1冊分の記録・学んだこと・感想から、テキストだけを集める
-// （record.learning／record.impression／record.notesは過去のセッション記録に残っている場合だけの
-// 参照で、今は「学んだこと」欄・感想欄から直接追加する形になっている）
+// 本1冊分の記録・レビューから、学んだこと／感想のテキストだけを集める
+// （実用書＝learning・quote、小説＝impression・memorableQuote・notesを対象にする）
 function collectAiNotesForBook(book) {
   const learnings = [];
   const impressions = [];
@@ -43,28 +42,30 @@ function collectAiNotesForBook(book) {
   };
 }
 
-// 本1冊分の記録・感想から、ハイライト（印象に残った言葉・好きだった文章）のテキストだけを集める
+// 本1冊分の記録・「好きな言葉」から、ハイライト（印象に残ったセリフ・名言）のテキストだけを集める
+// （js/screens/quotes.jsのgetCombinedQuotesと同じ2つのソース＝読書記録由来／直接追加分を対象にする）
 function collectAiHighlightsForBook(book) {
+  const quoteFieldName = book.category === "novel" ? "memorableQuote" : "quote";
   const highlights = [];
 
   book.records.forEach(function (record) {
-    if (record.quote) {
-      highlights.push(record.quote);
-    }
-    if (record.memorableQuote) {
-      highlights.push(record.memorableQuote);
+    if (record[quoteFieldName]) {
+      highlights.push(record[quoteFieldName]);
     }
   });
 
-  const review = getReviewForBook(book.id);
-  if (review && review.favoriteQuote) {
-    highlights.push(review.favoriteQuote);
-  }
+  loadFavoriteQuotes()
+    .filter(function (quote) {
+      return quote.bookId === book.id;
+    })
+    .forEach(function (quote) {
+      highlights.push(quote.text);
+    });
 
   return highlights.slice(-AI_CONTEXT_NOTES_PER_BOOK_LIMIT);
 }
 
-// AIに渡す「読書データ」を、本ごとにまとめた配列にする
+// AIに渡す「読書データ」を、本ごとにまとめた配列にする（実用書・小説の両カテゴリが対象）
 function buildAiReadingContext() {
   return loadBooks().map(function (book) {
     const notes = collectAiNotesForBook(book);
@@ -72,7 +73,9 @@ function buildAiReadingContext() {
       id: book.id,
       title: book.title,
       author: book.author || "",
+      genre: book.category === "novel" ? "小説" : "実用書",
       status: getBookStatusInfo(book).label,
+      totalMinutes: getTotalMinutes([book]),
       learnings: notes.learnings,
       impressions: notes.impressions,
       highlights: collectAiHighlightsForBook(book)
@@ -89,7 +92,7 @@ function formatAiReadingContext(context) {
   return context.map(function (book, index) {
     const lines = [
       (index + 1) + ". 『" + book.title + "』" + (book.author ? " / " + book.author : ""),
-      "  ステータス: " + book.status
+      "  ジャンル: " + book.genre + " ／ ステータス: " + book.status + " ／ 読書時間: " + book.totalMinutes + "分"
     ];
     if (book.learnings.length > 0) {
       lines.push("  学んだこと・メモ: " + book.learnings.join(" ／ "));
@@ -122,8 +125,8 @@ function filterAiContextForQuiz(context) {
 //
 // 学んだこと・感想の両方を1冊分まとめて渡すと、事実（学んだこと）と主観（感想・メモ）が
 // 混ざり合って「意味の通らないクイズ」になりやすいため、本1冊につき「学んだこと」があれば
-// それだけを使い、無い本（感想・メモしか記録がない本）だけ感想・メモを代わりに使う。
-// ハイライト（好きだった文章・印象に残った言葉）は、どちらの場合でもあれば追加の材料として渡す
+// それだけを使い、無い本（小説など、感想・メモしか記録がない本）だけ感想・メモを代わりに使う。
+// ハイライト（好きな言葉・名言）は、どちらの場合でもあれば追加の材料として渡す
 function formatAiLearningsContext(context, bookId) {
   const target = bookId
     ? context.filter(function (book) { return book.id === bookId; })

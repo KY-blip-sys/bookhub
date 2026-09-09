@@ -1,15 +1,20 @@
-// 「統計」画面（読了した本・学んだこと・連続記録日数・学んだことの推移）関連の要素を取得しておく
+// 「統計」画面（読書スピード・平均時間・読書時間の推移）関連の要素を取得しておく
 const statsEmptyMessage = document.getElementById("stats-empty-message");
 const statsContent = document.getElementById("stats-content");
-const statsFinishedCountEl = document.getElementById("stats-finished-count");
-const statsLearningCountEl = document.getElementById("stats-learning-count");
-const statsStreakCountEl = document.getElementById("stats-streak-count");
+const statsSpeedEl = document.getElementById("stats-speed");
+const statsAvgSessionEl = document.getElementById("stats-avg-session");
 
-// 「統計」画面を最新の状態で表示する
+// 「統計」画面を最新の状態で表示する（アクティブなカテゴリの本だけを対象にする）
 function renderStatsScreen() {
+  // 読書時間などの統計は、実用書・小説どちらかに絞らず、両方の記録を合計して出す
   const books = loadBooks();
+  const allRecords = collectAllRecords(books); // js/screens/allRecords.js の関数を再利用する
 
-  if (books.length === 0) {
+  if (allRecords.length === 0) {
+    // 本が1冊も無いときは「読書タイマーで記録すると」ではなく、まず本の登録を案内する
+    statsEmptyMessage.textContent = books.length === 0
+      ? "まだ本が登録されていません。まず本を登録すると、ここに統計が表示されます。"
+      : "まだ読書記録がありません。読書タイマーで記録すると、ここに統計が表示されます。";
     statsEmptyMessage.hidden = false;
     statsContent.hidden = true;
     return;
@@ -18,16 +23,23 @@ function renderStatsScreen() {
   statsEmptyMessage.hidden = true;
   statsContent.hidden = false;
 
-  const learnings = loadFavoriteLearnings();
-  const finishedCount = books.filter(function (book) {
-    return getBookStatusInfo(book).key === "done";
-  }).length;
+  const totalMinutes = allRecords.reduce(function (sum, record) {
+    return sum + record.minutes;
+  }, 0);
+  const totalPages = allRecords.reduce(function (sum, record) {
+    return sum + (record.pages || 0);
+  }, 0);
+  const sessionCount = allRecords.length;
 
-  animateNumber(statsFinishedCountEl, finishedCount);
-  animateNumber(statsLearningCountEl, learnings.length);
-  animateNumber(statsStreakCountEl, getReadingStreakDays());
+  // 平均読書スピード：15分あたり何ページ読めるか
+  const speedPer15Min = totalMinutes > 0 ? (totalPages / totalMinutes) * 15 : 0;
+  statsSpeedEl.textContent = totalMinutes > 0 ? speedPer15Min.toFixed(1) : "―";
 
-  trendAllLearnings = learnings;
+  // 1回あたりの平均読書時間
+  const avgSessionMinutes = sessionCount > 0 ? totalMinutes / sessionCount : 0;
+  statsAvgSessionEl.textContent = sessionCount > 0 ? Math.round(avgSessionMinutes) : "―";
+
+  trendAllRecords = allRecords;
   renderTrendChart(currentTrendPeriod);
 }
 
@@ -145,29 +157,29 @@ const TREND_PERIOD_CONFIG = {
   }
 };
 
-// 今、画面に表示している「学んだこと」（renderStatsScreenのたびに更新される）
-let trendAllLearnings = [];
+// 今、画面に表示している記録（renderStatsScreenのたびに更新される）
+let trendAllRecords = [];
 
 // 今、選択されている期間（"day" | "week" | "month" | "year"）
 let currentTrendPeriod = "day";
 
-// 指定した期間の区切りごとに、「学んだこと」の件数を合計する
-function buildTrendBucketTotals(learnings, keyFn) {
+// 指定した期間の区切りごとに、記録の分数を合計する
+function buildTrendBucketTotals(allRecords, keyFn) {
   const totals = {};
-  learnings.forEach(function (learning) {
-    if (!learning.createdAt) {
-      return; // 日時が分からないものは、区切りが分からないので集計から外す
+  allRecords.forEach(function (record) {
+    if (!record.timestamp) {
+      return; // timestampがない古い記録は、区切りが分からないので集計から外す
     }
-    const key = keyFn(new Date(learning.createdAt));
-    totals[key] = (totals[key] || 0) + 1;
+    const key = keyFn(new Date(record.timestamp));
+    totals[key] = (totals[key] || 0) + record.minutes;
   });
   return totals;
 }
 
-// 指定した期間の、直近ぶんのバー（区切り・ラベル・件数）を組み立てる
-function buildTrendBuckets(period, learnings) {
+// 指定した期間の、直近ぶんのバー（区切り・ラベル・分数）を組み立てる
+function buildTrendBuckets(period, allRecords) {
   const config = TREND_PERIOD_CONFIG[period];
-  const totals = buildTrendBucketTotals(learnings, config.keyFn);
+  const totals = buildTrendBucketTotals(allRecords, config.keyFn);
   const now = new Date();
 
   const buckets = [];
@@ -177,23 +189,23 @@ function buildTrendBuckets(period, learnings) {
     buckets.push({
       label: config.labelFn(bucketDate),
       fullLabel: config.fullLabelFn(bucketDate),
-      count: totals[key] || 0
+      minutes: totals[key] || 0
     });
   }
   return buckets;
 }
 
-// 棒グラフの一番高い値をもとに、縦軸のきりのいい上限（件数）を決める
-// （例：最大3件なら5件、最大37件なら50件、というように、TREND_AXIS_TICK_COUNT等分しやすい数に丸める）
-function computeTrendAxisMax(maxCount) {
-  if (maxCount <= 0) {
-    return 5; // 記録が無いときの目盛りの既定値
+// 棒グラフの一番高い値をもとに、縦軸のきりのいい上限（分）を決める
+// （例：最大37分なら50分、最大95分なら100分、というように、TREND_AXIS_TICK_COUNT等分しやすい数に丸める）
+function computeTrendAxisMax(maxMinutes) {
+  if (maxMinutes <= 0) {
+    return 60; // 記録が無いときの目盛りの既定値
   }
 
-  const roughStep = maxCount / (TREND_AXIS_TICK_COUNT - 1);
-  // 目盛りは常に件数の整数で表示するため、間隔（niceStep）が1未満にならないようにする。
-  // ここをMath.floorのままにすると、件数が少ないとき（例：最大2件）に間隔が0.5などの端数になり、
-  // 整数に丸めた際に同じ表記が連続するバグになる
+  const roughStep = maxMinutes / (TREND_AXIS_TICK_COUNT - 1);
+  // 目盛りは常に「分」の整数で表示するため、間隔（niceStep）が1分未満にならないようにする。
+  // ここをMath.floorのままにすると、読書時間が短いとき（例：最大2分）に間隔が0.5分などの端数になり、
+  // 整数に丸めた際に「1分・1分・2分・2分」のように同じ表記が連続するバグになる
   const magnitude = Math.pow(10, Math.max(0, Math.floor(Math.log10(roughStep))));
   const normalized = roughStep / magnitude;
 
@@ -212,7 +224,7 @@ function computeTrendAxisMax(maxCount) {
   return niceStep * (TREND_AXIS_TICK_COUNT - 1);
 }
 
-// 縦軸の目盛り（件数）と、横のグリッド線を描画する
+// 縦軸の目盛り（分の数字）と、横のグリッド線を描画する
 function renderTrendAxis(axisMax) {
   trendChartAxis.innerHTML = "";
   trendChartGrid.innerHTML = "";
@@ -222,7 +234,7 @@ function renderTrendAxis(axisMax) {
 
     const labelEl = document.createElement("span");
     labelEl.className = "trend-chart-axis-label";
-    labelEl.textContent = tickValue + "件";
+    labelEl.textContent = tickValue + "分";
     trendChartAxis.appendChild(labelEl);
 
     const lineEl = document.createElement("div");
@@ -231,7 +243,7 @@ function renderTrendAxis(axisMax) {
   }
 }
 
-// 選択中の期間で、学んだことの推移を棒グラフとして描画する
+// 選択中の期間で、読書時間の推移を棒グラフとして描画する
 function renderTrendChart(period) {
   currentTrendPeriod = period;
 
@@ -244,11 +256,11 @@ function renderTrendChart(period) {
   hideTrendTooltip();
   trendChartBars.innerHTML = "";
 
-  const buckets = buildTrendBuckets(period, trendAllLearnings);
-  const maxCount = buckets.reduce(function (max, bucket) {
-    return Math.max(max, bucket.count);
+  const buckets = buildTrendBuckets(period, trendAllRecords);
+  const maxMinutes = buckets.reduce(function (max, bucket) {
+    return Math.max(max, bucket.minutes);
   }, 0);
-  const axisMax = computeTrendAxisMax(maxCount);
+  const axisMax = computeTrendAxisMax(maxMinutes);
   renderTrendAxis(axisMax);
 
   buckets.forEach(function (bucket) {
@@ -260,13 +272,13 @@ function renderTrendChart(period) {
 
     const bar = document.createElement("div");
     bar.className = "trend-chart-bar";
-    // 縦軸の上限を100%とした割合で高さを決める（0件はバーが見えないよう高さ0のままにする）
-    const heightPercent = axisMax > 0 && bucket.count > 0 ? (bucket.count / axisMax) * 100 : 0;
-    bar.style.height = (bucket.count > 0 ? Math.max(heightPercent, 3) : 0) + "%";
+    // 縦軸の上限を100%とした割合で高さを決める（0分はバーが見えないよう高さ0のままにする）
+    const heightPercent = axisMax > 0 && bucket.minutes > 0 ? (bucket.minutes / axisMax) * 100 : 0;
+    bar.style.height = (bucket.minutes > 0 ? Math.max(heightPercent, 3) : 0) + "%";
 
     bar.tabIndex = 0;
     bar.setAttribute("role", "img");
-    bar.setAttribute("aria-label", bucket.fullLabel + "：" + bucket.count + "件");
+    bar.setAttribute("aria-label", bucket.fullLabel + "：" + bucket.minutes + "分");
 
     bar.addEventListener("mouseenter", function () {
       showTrendTooltip(bar, bucket);
@@ -307,12 +319,12 @@ document.addEventListener("click", function () {
   }
 });
 
-// バーの上に、詳しいラベルと件数を表示するツールチップを出す
+// バーの上に、詳しいラベルと分数を表示するツールチップを出す
 function showTrendTooltip(barEl, bucket) {
   trendTooltip.textContent = "";
 
   const valueEl = document.createElement("strong");
-  valueEl.textContent = bucket.count + "件";
+  valueEl.textContent = bucket.minutes + "分";
   trendTooltip.appendChild(valueEl);
 
   const labelEl = document.createElement("span");

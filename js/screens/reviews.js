@@ -6,7 +6,6 @@ const reviewModalTitle = document.getElementById("review-modal-title");
 const reviewStarPicker = document.getElementById("review-star-picker");
 const reviewForm = document.getElementById("review-form");
 const reviewBodyInput = document.getElementById("review-body");
-const reviewFavoriteQuoteInput = document.getElementById("review-favorite-quote");
 const reviewSpoilerField = document.getElementById("review-spoiler-field");
 const reviewSpoilerCheckbox = document.getElementById("review-spoiler-checkbox");
 const reviewCancelButton = document.getElementById("review-cancel-button");
@@ -60,21 +59,27 @@ function openReviewModal(bookId, options) {
     reviewCelebrationCover.innerHTML = "";
     reviewCelebrationCover.appendChild(buildBookCoverContent(book, "review-celebration-cover-initial"));
 
-    reviewCelebrationStat.textContent = book.pageCount ? book.pageCount + "ページ読み終えました" : "読み終えました";
+    const totalMinutes = book.records.reduce(function (sum, record) {
+      return sum + record.minutes;
+    }, 0);
+    reviewCelebrationStat.textContent =
+      (book.pageCount ? book.pageCount + "ページ・" : "") + totalMinutes + "分の読書でした";
 
-    // 「何を得たか」を振り返れるよう、すでに保存されている学び・実践の件数もあわせて見せる
-    const learningCount = loadFavoriteLearnings().filter(function (learning) {
-      return learning.bookId === book.id;
+    // 「何を得たか」を振り返れるよう、すでに保存されている記録・学び・実践の件数もあわせて見せる
+    // （新しい集計の仕組みは作らず、既存のrecords／actionsのデータをそのまま数えるだけ）
+    const isNovel = book.category === "novel";
+    const learningCount = book.records.filter(function (record) {
+      return isNovel ? record.impression : record.learning;
     }).length;
-    const secondaryParts = [];
-    if (learningCount > 0) {
-      secondaryParts.push("学んだこと" + learningCount + "件");
-    }
-    const doneActionCount = loadActions().filter(function (action) {
-      return action.bookId === book.id && action.status === "done";
-    }).length;
-    if (doneActionCount > 0) {
-      secondaryParts.push("実践" + doneActionCount + "件");
+    const secondaryParts = ["記録" + book.records.length + "回"];
+    secondaryParts.push((isNovel ? "感想" : "学んだこと") + learningCount + "件");
+    if (!isNovel) {
+      const doneActionCount = loadActions().filter(function (action) {
+        return action.bookId === book.id && action.status === "done";
+      }).length;
+      if (doneActionCount > 0) {
+        secondaryParts.push("実践" + doneActionCount + "件");
+      }
     }
     reviewCelebrationStatSecondary.textContent = secondaryParts.join("・");
 
@@ -83,11 +88,13 @@ function openReviewModal(bookId, options) {
     reviewCelebrationHeader.hidden = true;
   }
 
-  reviewModalTitle.textContent = existingReview ? "感想を編集する" : "この本はどうでしたか？";
+  reviewModalTitle.textContent = existingReview ? "レビューを編集する" : "この本はどうでしたか？";
   selectedReviewRating = existingReview ? existingReview.rating : 0;
   reviewBodyInput.value = existingReview ? existingReview.body : "";
-  reviewFavoriteQuoteInput.value = existingReview ? (existingReview.favoriteQuote || "") : "";
   reviewSpoilerCheckbox.checked = existingReview ? existingReview.containsSpoiler : false;
+
+  // ネタバレは物語がある小説だけの概念のため、実用書のレビューではチェック欄ごと出さない
+  reviewSpoilerField.hidden = book.category !== "novel";
 
   buildReviewStarButtons();
   reviewModal.hidden = false;
@@ -127,12 +134,11 @@ reviewForm.addEventListener("submit", function (event) {
   saveReview(book.id, book.category, {
     rating: selectedReviewRating,
     body: reviewBodyInput.value.trim(),
-    favoriteQuote: reviewFavoriteQuoteInput.value.trim(),
     containsSpoiler: reviewSpoilerCheckbox.checked
   });
 
   closeReviewModal();
-  showToast("感想を保存しました");
+  showToast("レビューを保存しました");
   renderBookReview(book.id);
 
   // 読み終えた直後の感想だけ、そのままの流れで読了カード（表紙・評価・共有ボタン）を見せる。
@@ -142,22 +148,22 @@ reviewForm.addEventListener("submit", function (event) {
   }
 });
 
-// 「感想を書く」ボタンが押されたら、今開いている本のレビューモーダルを開く
+// 「レビューを書く」ボタンが押されたら、今開いている本のレビューモーダルを開く
 writeReviewButton.addEventListener("click", function () {
   openReviewModal(currentBookId);
 });
 
-// 本の詳細画面に、保存済みの感想を表示する（無ければボタンだけ見せる）
+// 本の詳細画面に、保存済みのレビューを表示する（無ければボタンだけ見せる）
 function renderBookReview(bookId) {
   const review = getReviewForBook(bookId);
   reviewDisplay.innerHTML = "";
 
   if (!review) {
-    writeReviewButton.textContent = "感想を書く";
+    writeReviewButton.textContent = "レビューを書く";
     return;
   }
 
-  writeReviewButton.textContent = "感想を編集する";
+  writeReviewButton.textContent = "レビューを編集する";
 
   const card = document.createElement("div");
   card.className = "review-card";
@@ -175,13 +181,6 @@ function renderBookReview(bookId) {
     bodyEl.className = "review-body";
     bodyEl.textContent = review.body || "（本文はありません）";
     card.appendChild(bodyEl);
-  }
-
-  if (review.favoriteQuote && !review.containsSpoiler) {
-    const quoteEl = document.createElement("p");
-    quoteEl.className = "review-favorite-quote";
-    quoteEl.textContent = "「" + review.favoriteQuote + "」";
-    card.appendChild(quoteEl);
   }
 
   const dateEl = document.createElement("p");
@@ -266,20 +265,22 @@ function openShareCardModal() {
     shareCardRating.removeAttribute("aria-label");
   }
 
-  // カードの引用：好きだった文章があればそれを、無ければ感想本文を短く区切って使う。
-  // ネタバレ付きの感想は共有カードに出さない
-  if (review && !review.containsSpoiler && (review.favoriteQuote || review.body)) {
+  // 一言感想：ネタバレ付きのレビューは共有カードに出さない。長い本文は短い引用として区切る
+  if (review && review.body && !review.containsSpoiler) {
     const quoteLimit = 42;
-    const sourceText = review.favoriteQuote || review.body;
-    const quoteText = sourceText.length > quoteLimit ? sourceText.slice(0, quoteLimit) + "…" : sourceText;
+    const quoteText =
+      review.body.length > quoteLimit ? review.body.slice(0, quoteLimit) + "…" : review.body;
     shareCardQuote.textContent = "「" + quoteText + "」";
     shareCardQuote.hidden = false;
   } else {
     shareCardQuote.hidden = true;
   }
 
-  // 読了日：感想を書いていればその投稿日を目安にする
-  const finishedDateLabel = review ? new Date(review.createdAt).toLocaleDateString("ja-JP") : "";
+  // 読了日：レビューを書いていればその投稿日を、無ければ最後の読書記録の日付を目安にする
+  const lastRecord = book.records[book.records.length - 1];
+  const finishedDateLabel = review
+    ? new Date(review.createdAt).toLocaleDateString("ja-JP")
+    : (lastRecord ? lastRecord.date : "");
 
   const footerParts = [];
   if (finishedDateLabel) {

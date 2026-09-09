@@ -1,5 +1,6 @@
 // ---------- 実践を作るときに、やることリスト（TODO）を一緒に入力する仕組み ----------
 // フォームを開いている間だけメモリ上に持つ「下書き」のやることリスト。保存時に実践のtodosとして登録する。
+// action-form（記録直後の入力）・action-add-form（あとから追加）の両方で使う、同じ形の仕組み。
 function createTodoDraftController(listEl, inputEl, addButtonEl) {
   let drafts = [];
 
@@ -59,6 +60,69 @@ function createTodoDraftController(listEl, inputEl, addButtonEl) {
     }
   };
 }
+
+// 実践フォーム関連の要素を取得しておく
+const actionFormSection = document.getElementById("action-form-section");
+const actionForm = document.getElementById("action-form");
+const actionContentInput = document.getElementById("action-content");
+const actionPurposeInput = document.getElementById("action-purpose");
+const actionStartDateInput = document.getElementById("action-start-date");
+const actionDueDateInput = document.getElementById("action-due-date");
+const actionSkipButton = document.getElementById("action-skip-button");
+
+const actionTodoDraft = createTodoDraftController(
+  document.getElementById("action-todo-draft-list"),
+  document.getElementById("action-todo-draft-input"),
+  document.getElementById("action-todo-draft-add-button")
+);
+
+// 実践の入力フォームを表示する
+function showActionForm() {
+  // 前回開いたときの入力が残っていないよう、表示するたびに空の状態にしておく
+  actionForm.reset();
+  actionTodoDraft.reset();
+  actionFormSection.hidden = false;
+}
+
+// 実践の入力フォームを隠して、中身を空に戻す
+function hideActionForm() {
+  actionFormSection.hidden = true;
+  actionForm.reset();
+  actionTodoDraft.reset();
+}
+
+// 「あとで」ボタン：今は入力せず閉じる
+actionSkipButton.addEventListener("click", hideActionForm);
+
+// 実践フォームが送信された（保存ボタンが押された）ときの処理
+actionForm.addEventListener("submit", function (event) {
+  event.preventDefault();
+
+  const content = actionContentInput.value.trim();
+  if (!content) {
+    return; // 実践内容が空なら何もしない
+  }
+
+  const newAction = {
+    id: generateActionId(), // js/models/actionsModel.js（Supabaseのactions.idがuuid型のため）
+    bookId: currentBookId, // どの本から生まれた実践かを紐づける
+    content: content,
+    purpose: actionPurposeInput.value.trim(),
+    startDate: actionStartDateInput.value,
+    dueDate: actionDueDateInput.value,
+    status: "not-started", // 未開始・実践中・完了のいずれか
+    todos: actionTodoDraft.getTodos(), // やることリスト（{ text, done } の配列。作成時に一緒に登録できる）
+    reflection: null // 振り返り（完了したときに入力する）
+  };
+  newAction.status = computeStatusFromTodos(newAction.todos);
+
+  const actions = loadActions();
+  actions.push(newAction);
+  saveActions(actions);
+
+  hideActionForm();
+  showToast("実践を保存しました。「実践リスト」から確認できます");
+});
 
 // ---------- 実践リスト画面 ----------
 // 実践の状態を計算する関数（computeStatusFromTodos）は js/models/actionsModel.js にある。
@@ -144,10 +208,10 @@ actionAddCloseButton.addEventListener("click", closeActionAddPanel);
 
 bindModalDismissal(actionAddPanel, closeActionAddPanel);
 
-// 「実践を追加」フォームの本の選択肢を、今登録されている本で作り直す
+// 「実践を追加」フォームの本の選択肢を、今登録されている実用書で作り直す
 function updateActionAddBookOptions() {
   const selectedValue = actionAddBookSelect.value;
-  const books = loadBooks();
+  const books = getBooksByCategory("practical");
 
   actionAddBookSelect.innerHTML = "";
 
@@ -198,11 +262,11 @@ actionAddForm.addEventListener("submit", function (event) {
   renderActionList();
 });
 
-// 実践リストを、本ごとにグループ分けして画面に表示する
+// 実践リストを、本ごとにグループ分けして画面に表示する（アクティブなカテゴリの本だけを対象にする）
 function renderActionList() {
   updateActionAddBookOptions();
 
-  const actions = loadActions();
+  const actions = getActionsByActiveCategory();
   const books = loadBooks();
   actionList.innerHTML = "";
   actionListEmptyMessage.hidden = actions.length > 0;
@@ -709,9 +773,9 @@ function refreshActionsView() {
 
 const achievementList = document.getElementById("achievement-list");
 
-// 実績（クリアした実践）を、新しい順に並べて画面に表示する
+// 実績（クリアした実践）を、新しい順に並べて画面に表示する（アクティブなカテゴリの本だけを対象にする）
 function renderAchievementList() {
-  const achievements = loadAchievements();
+  const achievements = getAchievementsByActiveCategory();
   const books = loadBooks();
   achievementList.innerHTML = "";
 

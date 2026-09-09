@@ -50,10 +50,15 @@ function resetReadingStatusToggle() {
 
 // ダッシュボードの表示に使う要素を取得しておく
 const dashboardGrid = document.getElementById("dashboard");
+const dashboardTotalMinutes = document.getElementById("dashboard-total-minutes");
 const dashboardBookCount = document.getElementById("dashboard-book-count");
+const dashboardSessionCount = document.getElementById("dashboard-session-count");
+const dashboardLearningIcon = document.getElementById("dashboard-learning-icon");
 const dashboardLearningCount = document.getElementById("dashboard-learning-count");
+const dashboardLearningLabel = document.getElementById("dashboard-learning-label");
 const dashboardInProgressCount = document.getElementById("dashboard-in-progress-count");
 const dashboardDoneCount = document.getElementById("dashboard-done-count");
+const dashboardSubtitle = document.getElementById("dashboard-subtitle");
 const dashboardStreakBadge = document.getElementById("dashboard-streak-badge");
 const streakBadgeText = document.getElementById("streak-badge-text");
 
@@ -69,6 +74,12 @@ firstBookNudgeButton.addEventListener("click", function () {
   goToNavPage("books");
   openBookFormPanel();
 });
+
+// カテゴリごとのダッシュボード副題
+const DASHBOARD_SUBTITLES = {
+  practical: "今日も一冊未来のために",
+  novel: "今日も一冊心を動かす旅へ"
+};
 
 // 本の表紙（画像があればそれを、なければタイトルの頭文字を表示する）を組み立てる。
 // 本棚のカード・「今読んでいる本」のカードなど、表紙を使う場所ならどこでも使う。
@@ -89,15 +100,15 @@ function buildBookCoverContent(book, initialClassName) {
   return initial;
 }
 
-// 本の一覧（本棚）を画面に表示する
+// 本の一覧（本棚）を画面に表示する（アクティブなカテゴリの本だけを対象にする）
 function renderBookList() {
   // 読了した本は後ろへ送る（Array.sortは安定ソートなので、読了同士・未読了同士の順番はそのまま保たれる）
-  const books = loadBooks().slice().sort(function (a, b) {
+  const books = getBooksByCategory(loadActiveCategory()).slice().sort(function (a, b) {
     const aDone = getBookStatusInfo(a).key === "done" ? 1 : 0;
     const bDone = getBookStatusInfo(b).key === "done" ? 1 : 0;
     return aDone - bDone;
   });
-  const actions = loadActions(); // 「実践中」の表示に使う
+  const actions = loadActions(); // 「実践中」の表示に使う（実用書のみ紐づくが、本の種類は問わず調べてよい）
 
   booksCountSubtitle.hidden = books.length === 0;
   booksCountSubtitle.textContent = books.length + "冊の本棚";
@@ -269,7 +280,32 @@ function buildCurrentlyReadingCard(book, staggerIndex) {
     li.appendChild(authorEl);
   }
 
+  // 「読書時間」「記録」を2列の小さな数値で並べて、一目で分かるようにする
+  const statsRow = document.createElement("div");
+  statsRow.className = "currently-reading-stats";
+  statsRow.appendChild(buildCurrentlyReadingStat("読書時間", getTotalMinutes([book]) + "分"));
+  statsRow.appendChild(buildCurrentlyReadingStat("記録", book.records.length + "回"));
+  li.appendChild(statsRow);
+
   return li;
+}
+
+// 「今読んでいる本」カードの小さな数値1つ分（ラベル＋値）を組み立てる
+function buildCurrentlyReadingStat(label, value) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "currently-reading-stat";
+
+  const labelEl = document.createElement("span");
+  labelEl.className = "currently-reading-stat-label";
+  labelEl.textContent = label;
+  wrapper.appendChild(labelEl);
+
+  const valueEl = document.createElement("span");
+  valueEl.className = "currently-reading-stat-value";
+  valueEl.textContent = value;
+  wrapper.appendChild(valueEl);
+
+  return wrapper;
 }
 
 // ---------- 本一覧の「＋ 新しい本を追加」カード ----------
@@ -482,22 +518,55 @@ bookEditForm.addEventListener("submit", function (event) {
   }
 });
 
-// アプリ全体の活動（読んだ本・学んだこと・実践中・完了した実践）を表示する。
+// アプリ全体の活動（読書時間・読んだ本・学んだこと・実践中・完了した実践）を表示する。
+// 同じ集計は「記録」ページ（allRecords.js）にもあるが、ダッシュボードでもすぐ確認できるようにしている。
 // 「これまでに◯読みました」的な実績表示は、ダッシュボード上部のモチベーションカード（motivationCard.js）に置き換えた。
+// booksはすでにアクティブなカテゴリで絞り込まれたものが渡される
 function renderDashboard(books) {
-  const actions = loadActions();
-  const learnings = loadFavoriteLearnings();
+  const actions = getActionsByActiveCategory();
+  const activeCategory = loadActiveCategory();
+  const isNovel = activeCategory === "novel";
 
-  // 本が1冊も無ければ、初めての案内を表示し、「今読んでいる本」欄は隠しておく
+  // このカテゴリに本が1冊も無ければ、初めての案内を表示し、「今読んでいる本」欄は隠しておく。
+  // 小説は実用書と表示を合わせるため、1冊も無くても「1冊目を登録する」の案内は出さず、
+  // 実用書と同じ「まだ読書中の本がありません」の空メッセージ（currently-reading-empty）を出す
   const hasNoBooks = books.length === 0;
-  firstBookNudge.hidden = !hasNoBooks;
-  currentlyReadingSection.hidden = hasNoBooks;
+  firstBookNudge.hidden = isNovel || !hasNoBooks;
+  currentlyReadingSection.hidden = !isNovel && hasNoBooks;
 
-  // ダッシュボードは「今週」だけを集計する（統計ページの、これまでの累計と区別するため）
-  const learningCount = learnings.filter(function (learning) {
-    return isInCurrentWeek(learning.createdAt);
-  }).length;
+  // 小説のときは「実践」中・完了の2枠を隠し、タイルが4枚（2列）になる
+  dashboardGrid.classList.toggle("dashboard-novel-mode", isNovel);
 
+  // カテゴリに合わせて、ダッシュボードの副題も差し替える
+  dashboardSubtitle.textContent = DASHBOARD_SUBTITLES[activeCategory] || DASHBOARD_SUBTITLES.practical;
+
+  // ダッシュボードは「今週の記録」だけを集計する（「記録」ページの、これまでの累計と区別するため）
+  let totalMinutes = 0;
+  let sessionCount = 0;
+  let learningCount = 0;
+  books.forEach(function (book) {
+    book.records.forEach(function (record) {
+      if (!isInCurrentWeek(record.timestamp)) {
+        return;
+      }
+      totalMinutes += record.minutes;
+      sessionCount += 1; // 記録回数（今週分のみ）
+      if (record.learning || record.impression) {
+        learningCount += 1; // 学んだこと・感想が書かれている記録の数を数える
+      }
+    });
+  });
+
+  // 実用書は「学んだこと」が書かれた記録の数、小説は「好きな言葉」の数を表示する（記録画面と同じタイル構成）
+  dashboardLearningIcon.textContent = isNovel ? "💬" : "💡";
+  dashboardLearningLabel.textContent = isNovel ? "好きな言葉" : "学んだこと";
+  const learningTileCount = isNovel
+    ? getCombinedQuotes("novel").filter(function (quote) {
+      return isInCurrentWeek(quote.timestamp);
+    }).length
+    : learningCount;
+
+  // 「実践中」「完了した実践」は完了日を記録していないため今週分だけに絞れず、これまでの累計を表示する
   const inProgressCount = actions.filter(function (action) {
     return action.status === "in-progress";
   }).length;
@@ -506,23 +575,25 @@ function renderDashboard(books) {
     return action.status === "done";
   }).length;
 
-  // 「読んだ本」は登録した本の数ではなく、読了した本の数を数える（累計）
+  // 「読んだ本」は登録した本の数ではなく、読了した本の数を数える（読了日を記録していないため、これも累計のまま）
   const finishedBookCount = books.filter(function (book) {
     return getBookStatusInfo(book).key === "done";
   }).length;
 
+  animateNumber(dashboardTotalMinutes, totalMinutes);
   animateNumber(dashboardBookCount, finishedBookCount);
-  animateNumber(dashboardLearningCount, learningCount);
+  animateNumber(dashboardSessionCount, sessionCount);
+  animateNumber(dashboardLearningCount, learningTileCount);
   animateNumber(dashboardInProgressCount, inProgressCount);
   animateNumber(dashboardDoneCount, doneCount);
 
   replayDashboardTileEntrance(dashboardGrid); // タイルのフェードインを毎回確実に再生させる（app.js）
 
-  // 連続記録日数：ある程度続いていることが伝わる日数からだけ、控えめなバッジで知らせる
+  // 連続読書日数：ある程度続いていることが伝わる日数からだけ、控えめなバッジで知らせる
   const streakDays = getReadingStreakDays();
   dashboardStreakBadge.hidden = streakDays < 2;
   if (streakDays >= 2) {
-    streakBadgeText.textContent = streakDays + "日連続で記録中";
+    streakBadgeText.textContent = streakDays + "日連続で読書中";
   }
 }
 
@@ -586,7 +657,7 @@ function buildNewBook(title, author, extra) {
   return Object.assign(
     {
       id: generateBookId(), // 本ごとの一意なID（js/models/booksModel.js。SupabaseのbooksテーブルがUUID型のため）
-      category: BOOK_CATEGORY_DEFAULT, // 実用書/小説の区分は廃止したが、Supabase側の必須列のため固定値を入れておく（js/models/booksModel.js）
+      category: loadActiveCategory(), // 今開いているカテゴリ（実用書/小説）をそのまま付ける
       title: title,
       author: author,
       coverImage: null,
@@ -604,8 +675,8 @@ let bookIdToCelebrate = null;
 
 // 本を保存し、一覧を更新する（本一覧・ダッシュボードどちらの追加フォームからも呼び出す）
 function addBook(newBook) {
-  // 初めての1冊かどうかを、保存する前に確認しておく
-  const wasFirstBook = loadBooks().length === 0;
+  // このカテゴリで初めての1冊かどうかを、保存する前に確認しておく
+  const wasFirstBookInCategory = getBooksByCategory(newBook.category).length === 0;
 
   const books = loadBooks();
   books.push(newBook);
@@ -613,9 +684,9 @@ function addBook(newBook) {
 
   showToast("📚「" + newBook.title + "」を本棚に追加しました");
 
-  // 初めての1冊（かつ「読みたい本」として追加したのではない）ときは、
-  // 一覧から自分で探させず、そのまま読書を始められる詳細画面へ直接進む
-  if (wasFirstBook && !newBook.wantToRead) {
+  // このカテゴリで初めての1冊（かつ「読みたい本」として追加したのではない）ときは、
+  // 一覧から自分で探させず、そのまま読書を始められる詳細画面（タイマー）へ直接進む
+  if (wasFirstBookInCategory && !newBook.wantToRead) {
     renderBookList();
     showDetailScreen(newBook.id);
     return;

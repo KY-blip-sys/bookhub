@@ -80,12 +80,16 @@ const detailBookAuthor = document.getElementById("detail-book-author");
 const detailBookPurpose = document.getElementById("detail-book-purpose");
 const detailStatusBadge = document.getElementById("detail-status-badge");
 const deleteBookButton = document.getElementById("delete-book-button");
+const timerFirstTimeHint = document.getElementById("timer-first-time-hint");
 
 // ---------- 本の詳細画面：タブ切り替え ----------
-// 「感想（振り返り）」「AIに質問」「クイズ」「実践リスト」の4つに絞る
+// 「記録・タイマー（能動的に読む・記録する）」と、振り返り系（読書履歴／学んだこと／好きな言葉／実践リスト）を分ける
 const detailTabButtons = document.querySelectorAll(".pill-tab[data-detail-tab]");
 const detailTabPanels = {
-  review: document.getElementById("detail-review-panel"),
+  record: document.getElementById("detail-record-panel"),
+  history: document.getElementById("detail-history-panel"),
+  learning: document.getElementById("detail-learning-panel"),
+  quotes: document.getElementById("detail-quotes-panel"),
   aiQuestion: document.getElementById("detail-ai-question-panel"),
   quiz: document.getElementById("detail-quiz-panel"),
   actions: document.getElementById("detail-actions-panel")
@@ -99,6 +103,14 @@ function showDetailTab(tabName) {
   Object.keys(detailTabPanels).forEach(function (key) {
     detailTabPanels[key].hidden = key !== tabName;
   });
+
+  // 「記録・タイマー」タブから離れるときは、記録フォーム（js/screens/records.js）を閉じておく。
+  // 閉じないと、パネル自体はhiddenで隠れていてもフォーム自身のhiddenは変わらないままなので、
+  // 他のタブを見てから「記録・タイマー」タブに戻ったときに、タイマー終了時のフォームが
+  // 勝手に再表示されてしまう（本を開き直したときのhideRecordForm()と同じ扱いに揃える）
+  if (tabName !== "record") {
+    hideRecordForm();
+  }
 
   if (tabName === "aiQuestion") {
     prepareBookQuestionTab(currentBookId); // js/screens/bookQuestion.js
@@ -116,7 +128,15 @@ detailTabButtons.forEach(function (button) {
 
 // 指定した本の詳細画面を表示する
 function showDetailScreen(bookId) {
-  showDetailScreenNow(bookId);
+  // 今開いている本自身の表示を更新するだけ（編集内容の反映など）なら確認しない。
+  // 別の本の詳細に切り替えようとしたときだけ、タイマー作動中の移動確認をする
+  if (bookId === currentBookId) {
+    showDetailScreenNow(bookId);
+    return;
+  }
+  confirmLeaveWhileTimerRunning(function () {
+    showDetailScreenNow(bookId);
+  });
 }
 
 // showDetailScreenの本体（確認が終わった、または不要だったあとに実行する）
@@ -150,12 +170,27 @@ function showDetailScreenNow(bookId) {
     detailBookPurpose.hidden = true;
   }
 
-  showDetailTab("review"); // 本を開くたびに、いちばん使う「感想」タブから始める
+  // 「実践リスト」タブは実用書のときだけ表示する（「好きな言葉／名言」タブはどちらのカテゴリでも常に表示し、
+  // 中身の文言だけquotes.jsのrenderBookQuotesTabでカテゴリに応じて出し分ける）
+  detailTabButtons.forEach(function (button) {
+    if (button.classList.contains("detail-tab-practical")) {
+      button.hidden = book.category !== "practical";
+    }
+  });
+  showDetailTab("record"); // 本を開くたびに、いちばん使う「記録・タイマー」タブから始める
 
+  setTimerDuration(25); // タイマーを毎回25分の初期状態にしておく
+  timerFirstTimeHint.hidden = book.records.length > 0; // まだ一度も記録が無い本だけ、次にすることのヒントを出す
+  hideRecordForm(); // 記録フォームを毎回隠した状態にしておく
+  hideActionForm(); // 実践フォームも毎回隠した状態にしておく
+  // 読書履歴の横バーは、本を開くたびに必ず畳んだ状態から始める（前の本で開いていた状態を持ち越さない）
+  historyToggleButton.setAttribute("aria-expanded", "false");
+  historyList.hidden = true;
+  renderBookStats(); // この本のこれまでの記録を表示する
   renderReadingProgress(); // 総ページ数に対する読書の進捗を表示する
-  renderBookReview(bookId); // 感想（レビュー）を表示する
+  renderBookReview(bookId); // 読了レビューを表示する
   updateShareSectionVisibility(book); // 読み終えていれば「読了カードを見る」ボタンを出す
-  renderBookLearnings(bookId); // この本の「学んだこと」一覧を最新の状態にする（records.js）
+  renderBookQuotesTab(bookId); // この本の「好きな言葉」タブを最新の状態にする（quotes.js）
   renderBookActionsTab(bookId); // この本の「実践リスト」タブを最新の状態にする（actions.js）
 
   // 本の詳細は「本一覧」の中のサブ画面という位置づけなので、
@@ -175,11 +210,16 @@ function showDetailScreenNow(bookId) {
 
 // 本の一覧画面に戻る
 function showBookListScreen() {
+  pauseTimer(); // 一覧に戻るときは、動いているタイマーを止めておく
   currentBookId = null;
   goToNavPage("books"); // 本一覧ページに戻り、一覧も最新の状態にする
 }
 
-headerBackButton.addEventListener("click", showBookListScreen);
+headerBackButton.addEventListener("click", function () {
+  confirmLeaveWhileTimerRunning(function () {
+    showBookListScreen();
+  });
+});
 
 // 「この本を削除」ボタンの処理
 deleteBookButton.addEventListener("click", function () {
@@ -274,6 +314,7 @@ function showPage(pageId) {
 const navActiveIndicator = document.getElementById("nav-active-indicator");
 
 // 今.activeが付いている項目の位置・高さに、インジケーターを合わせる。
+// カテゴリの切り替えで項目が表示/非表示になったあとも呼べるよう、独立した関数にしてある
 function updateNavIndicator() {
   const activeItem = document.querySelector(".nav-item.active");
   if (!activeItem || activeItem.offsetParent === null) {
@@ -289,7 +330,7 @@ function updateNavIndicator() {
 // サイドバーのドロワー開閉・画面幅の変化で項目の高さが変わることがあるため、位置を再計算する
 window.addEventListener("resize", updateNavIndicator);
 
-// .dashboard-tile（#dashboardのタイル）は本一覧のカードと違い、
+// .dashboard-tile（#dashboardや.records-summaryのタイル）は本一覧のカードと違い、
 // 画面を描画し直すたびに作り直されず中身のテキストだけ更新される静的な要素のため、
 // フェードインがdisplay:none→blockへの復帰だけに頼ることになり、連続で画面を切り替えると
 // 再生されないことがあった。一時的にアニメーションを止めるクラスを付け、リフローを強制してから
@@ -313,8 +354,12 @@ function replayDashboardTileEntrance(container) {
 // サイドバーの項目名（nav属性の値）と、ヘッダーに表示する日本語ラベルの対応表
 const NAV_LABELS = {
   dashboard: "ホーム",
-  books: "本棚",
+  books: "本一覧",
   actions: "実践リスト",
+  practicalQuotes: "名言集",
+  reviewSummary: "感想",
+  novelQuotes: "好きな言葉",
+  records: "記録",
   stats: "統計",
   ai: "AI",
   pricing: "料金プラン",
@@ -333,6 +378,7 @@ function setHeaderTitle(text) {
 }
 
 // 今開いているページ（サイドバーのnav属性の値）を覚えておく。
+// カテゴリを切り替えたときに、同じページを開き直すために使う。
 let currentNavKey = "dashboard";
 
 // サイドバーの項目名（nav属性の値）を指定して、そのページに移動する
@@ -342,6 +388,8 @@ function goToNavPage(navKey) {
   showPage("screen-" + navKey);
   setHeaderTitle(NAV_LABELS[navKey] || "");
   headerBackButton.hidden = true; // 本の詳細から出たら、戻るボタンは隠す
+  renderSidebarQuote(); // ページが変わるたびに「今日の一言」も選び直す
+  renderReadingRing(); // 今日の読書時間リングも最新の状態にしておく
 
   // ページを開くたびに、その中身を最新の状態にしておく
   if (navKey === "dashboard" || navKey === "books") {
@@ -349,6 +397,18 @@ function goToNavPage(navKey) {
   }
   if (navKey === "actions") {
     showActionsTab("inProgress"); // サイドバーから開いたときは、常に「実践中」タブから始める
+  }
+  if (navKey === "practicalQuotes") {
+    renderPracticalQuoteList(); // quotes.js
+  }
+  if (navKey === "reviewSummary") {
+    renderReviewSummary(); // reviewSummary.js
+  }
+  if (navKey === "novelQuotes") {
+    renderQuoteList(); // quotes.js
+  }
+  if (navKey === "records") {
+    renderAllRecordsScreen();
   }
   if (navKey === "stats") {
     renderStatsScreen();
@@ -366,16 +426,20 @@ function goToNavPage(navKey) {
 
 navItems.forEach(function (navItem) {
   navItem.addEventListener("click", function () {
-    goToNavPage(navItem.dataset.nav);
-    closeSidebarDrawer(); // スマホ・タブレット幅でドロワーから選んだときは、選んだら自動で閉じる
+    confirmLeaveWhileTimerRunning(function () {
+      goToNavPage(navItem.dataset.nav);
+      closeSidebarDrawer(); // スマホ・タブレット幅でドロワーから選んだときは、選んだら自動で閉じる
+    });
   });
 });
 
 // 「data-nav-target」属性を持つボタン（ヒーローバナーのボタンなど）も、同じ仕組みでページ移動できるようにする
 document.querySelectorAll("[data-nav-target]").forEach(function (button) {
   button.addEventListener("click", function () {
-    goToNavPage(button.dataset.navTarget);
-    closeSidebarDrawer();
+    confirmLeaveWhileTimerRunning(function () {
+      goToNavPage(button.dataset.navTarget);
+      closeSidebarDrawer();
+    });
   });
 });
 
@@ -418,5 +482,46 @@ darkModeToggle.addEventListener("change", function () {
   saveDarkModePreference(darkModeToggle.checked);
 });
 
+// ---------- サイドバー：今日の読書時間リング ----------
+
+const readingRingProgress = document.getElementById("reading-ring-progress");
+const readingRingValue = document.getElementById("reading-ring-value");
+const readingRingGoal = document.getElementById("reading-ring-goal");
+
+// SVGのcircleの半径（index.htmlのr属性と合わせる）から、リング1周ぶんの長さを求めておく
+const READING_RING_RADIUS = 42;
+const READING_RING_CIRCUMFERENCE = 2 * Math.PI * READING_RING_RADIUS;
+readingRingProgress.style.strokeDasharray = READING_RING_CIRCUMFERENCE;
+
+// 今日、目標時間の達成をすでにお祝いしたかどうか（起動中ずっと保持し、達成した最初の1回だけ演出する）
+let readingGoalCelebratedToday = false;
+
+// 今日の読書時間と、設定されている1日の目標時間から、リングを描き直す
+function renderReadingRing() {
+  const todayMinutes = getTodayTotalMinutes();
+  const goalMinutes = loadDailyReadingGoalMinutes();
+  const progress = goalMinutes > 0 ? Math.min(todayMinutes / goalMinutes, 1) : 0;
+  const goalReachedNow = goalMinutes > 0 && todayMinutes >= goalMinutes;
+
+  readingRingProgress.style.strokeDashoffset = READING_RING_CIRCUMFERENCE * (1 - progress);
+  animateNumber(readingRingValue, todayMinutes, { suffix: "分" });
+  readingRingGoal.textContent = "目標 " + goalMinutes + "分";
+
+  // 目標を達成した瞬間だけ、控えめに弾ませてお祝いする
+  if (goalReachedNow && !readingGoalCelebratedToday) {
+    readingGoalCelebratedToday = true;
+    const ringCard = document.querySelector(".sidebar-reading-ring-card");
+    ringCard.classList.remove("reading-ring-celebrate");
+    void ringCard.offsetWidth; // 続けて再生できるよう、一度リフローを挟む
+    ringCard.classList.add("reading-ring-celebrate");
+  }
+  if (!goalReachedNow) {
+    readingGoalCelebratedToday = false; // 目標時間を上げ直す等で未達成に戻ったら、次の達成時にまたお祝いできるようにする
+  }
+}
+
+renderReadingRing(); // 起動時にも一度描画しておく
+
 // アプリは起動したら常にホーム（ダッシュボード）から始まる。
-goToNavPage("dashboard");
+// 実際にgoToNavPage("dashboard")を呼んで描画するのはjs/screens/categorySelect.js
+// （カテゴリの読み込み・記憶とあわせて、起動時の初期化をまとめて担当する）。

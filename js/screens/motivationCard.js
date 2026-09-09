@@ -1,14 +1,14 @@
 // ---------- ダッシュボードのモチベーションカード（横スライドカルーセル） ----------
 // 「これまでに何ページ読みました」という実績表示の代わりに、
-// 「今読んでいる本」ごとに、実践中の次の一歩、または感想に書いた「好きだった文章」をスライドで見せる。
+// 「今読んでいる本」ごとに、自分が登録した好きな言葉／今日の一歩（💬・💡）をスライドで見せる。
 //
-// 中身は、半日単位のバケットID（日付＋午前午後）をもとにした決定的なハッシュで選ぶ。
-// 乱数は使わないため、同じ半日のうちはリロードしても内容が変わらない。バケットが変わる
-// （＝半日〜1日たつ）か、候補そのものが変わる（実践を完了して候補から外れる、など）と、
-// 選ばれる内容も変わる。
+// ハイライト（好きな言葉／今日の一歩）の中身は、半日単位のバケットID（日付＋午前午後）を
+// もとにした決定的なハッシュで選ぶ。乱数は使わないため、同じ半日のうちはリロードしても
+// 内容が変わらない。バケットが変わる（＝半日〜1日たつ）か、候補そのものが変わる
+// （実践を完了して候補から外れる、など）と、選ばれる内容も変わる。
 //
 // AIサービス（aiService.js等）はここでは一切使わない。表示する言葉・実践項目は
-// すべてユーザー自身が登録したデータ（reviewsModel.js／actionsModel.jsの既存関数）から選ぶだけ。
+// すべてユーザー自身が登録したデータ（quotes.js／actionsModel.jsの既存関数）から選ぶだけ。
 
 const MOTIVATION_CAROUSEL_MAX_BOOKS = 3; // 対象本を直近に読んだ順で絞り込む数（カードを増やしすぎない）
 
@@ -31,39 +31,43 @@ function hashStringToInt(str) {
   return Math.abs(hash);
 }
 
-// 1冊ぶんのカードを組み立てる（実践の次の一歩／好きだった文章カードの最大1枚。候補が無ければ作らない）
+// 1冊ぶんのカードを組み立てる（好きな言葉／今日の一歩カードの最大1枚。候補が無ければ作らない）
 function buildMotivationCardsForBook(book, bucketId, actions) {
   const cards = [];
 
-  const bookActions = actions.filter(function (action) {
-    return action.bookId === book.id && action.status !== "done";
-  });
-  if (bookActions.length > 0) {
-    const index = hashStringToInt(bucketId + "-" + book.id + "-action") % bookActions.length;
-    const chosenAction = bookActions[index];
-    const nextTodo = (chosenAction.todos || []).find(function (todo) {
-      return !todo.done;
+  if (book.category === "novel") {
+    const quotes = getCombinedQuotes("novel").filter(function (quote) {
+      return quote.bookId === book.id;
     });
-    cards.push({
-      type: "action",
-      book: book,
-      stepText: nextTodo ? nextTodo.text : chosenAction.content
+    if (quotes.length > 0) {
+      const index = hashStringToInt(bucketId + "-" + book.id + "-quote") % quotes.length;
+      cards.push({ type: "quote", book: book, quote: quotes[index] });
+    }
+  } else {
+    const bookActions = actions.filter(function (action) {
+      return action.bookId === book.id && action.status !== "done";
     });
-    return cards;
-  }
-
-  const review = getReviewForBook(book.id);
-  if (review && review.favoriteQuote) {
-    cards.push({ type: "quote", book: book, quoteText: review.favoriteQuote });
+    if (bookActions.length > 0) {
+      const index = hashStringToInt(bucketId + "-" + book.id + "-action") % bookActions.length;
+      const chosenAction = bookActions[index];
+      const nextTodo = (chosenAction.todos || []).find(function (todo) {
+        return !todo.done;
+      });
+      cards.push({
+        type: "action",
+        book: book,
+        stepText: nextTodo ? nextTodo.text : chosenAction.content
+      });
+    }
   }
 
   return cards;
 }
 
-// カルーセルに並べるカードを組み立てる
+// カルーセルに並べるカードを組み立てる（booksは呼び出し側ですでにアクティブなカテゴリで絞り込み済み）
 function buildMotivationCards(books) {
   const bucketId = getMotivationBucketId();
-  const actions = loadActions();
+  const actions = getActionsByActiveCategory();
 
   const readingBooks = books.filter(function (book) {
     return getBookStatusInfo(book).key === "reading";
@@ -113,7 +117,7 @@ function renderMotivationCarouselFrame() {
 
 // カード1枚ぶんのDOMを組み立てる（押すとその本の詳細画面に移動する）。
 // 1行目：アイコン＋本のタイトル（どの本の情報か一目でわかるように必ず表示）
-// 2行目：好きだった文章／今日の一歩の本文
+// 2行目：好きな言葉／今日の一歩の本文
 function buildMotivationCardEl(card) {
   const el = document.createElement("div");
   el.className = "motivation-carousel-card";
@@ -132,7 +136,7 @@ function buildMotivationCardEl(card) {
   mainTextEl.className = "motivation-carousel-main-text";
 
   if (card.type === "quote") {
-    mainTextEl.textContent = "「" + card.quoteText + "」";
+    mainTextEl.textContent = "「" + card.quote.quote + "」";
   } else {
     mainTextEl.textContent = "今日は「" + card.stepText + "」してみよう";
   }
